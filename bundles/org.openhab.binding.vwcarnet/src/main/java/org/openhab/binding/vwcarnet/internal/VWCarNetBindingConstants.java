@@ -12,6 +12,10 @@
  */
 package org.openhab.binding.vwcarnet.internal;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 
@@ -26,25 +30,91 @@ public class VWCarNetBindingConstants {
 
     public static final String BINDING_ID = "vwcarnet";
 
-    // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
+    // Vehicle properties
+    public static final String VIN = "vin";
+
+    // List of Thing Type UIDs
+    public static final ThingTypeUID APIBRIDGE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vwcarnetapi");
+    public static final ThingTypeUID VEHICLE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vehicle");
+
     public static final ThingTypeUID THING_TYPE_ALARM = new ThingTypeUID(BINDING_ID, "alarm");
-    public static final ThingTypeUID THING_TYPE_SMARTPLUG = new ThingTypeUID(BINDING_ID, "smartPlug");
-    public static final ThingTypeUID THING_TYPE_SMOKEDETECTOR = new ThingTypeUID(BINDING_ID, "smokeDetector");
-    public static final ThingTypeUID THING_TYPE_WATERDETECTOR = new ThingTypeUID(BINDING_ID, "waterDetector");
-    public static final ThingTypeUID THING_TYPE_SIREN = new ThingTypeUID(BINDING_ID, "siren");
-    public static final ThingTypeUID THING_TYPE_DOORWINDOW = new ThingTypeUID(BINDING_ID, "doorWindowSensor");
-    public static final ThingTypeUID THING_TYPE_USERPRESENCE = new ThingTypeUID(BINDING_ID, "userPresence");
     public static final ThingTypeUID THING_TYPE_SMARTLOCK = new ThingTypeUID(BINDING_ID, "smartLock");
-    public static final ThingTypeUID THING_TYPE_BROADBAND_CONNECTION = new ThingTypeUID(BINDING_ID,
-            "broadbandConnection");
-    public static final ThingTypeUID THING_TYPE_NIGHT_CONTROL = new ThingTypeUID(BINDING_ID, "nightControl");
+
+    // List of Channel id's
+    public static final String TAILGATE = "tailgate";
+    public static final String REAR_RIGHT = "rearRight";
+    public static final String REAR_LEFT = "rearLeft";
+    public static final String FRONT_RIGHT = "frontRight";
+    public static final String FRONT_LEFT = "frontLeft";
+    public static final String HOOD = "hood";
+    public static final String REAR_RIGHT_WND = "rearRightWnd";
+    public static final String REAR_LEFT_WND = "rearLeftWnd";
+    public static final String FRONT_RIGHT_WND = "frontRightWnd";
+    public static final String FRONT_LEFT_WND = "frontLeftWnd";
+    public static final String ODOMETER = "odometer";
+    public static final String TRIPMETER1 = "tripmeter1";
+    public static final String TRIPMETER2 = "tripmeter2";
+    public static final String DISTANCE_TO_EMPTY = "distanceToEmpty";
+    public static final String FUEL_AMOUNT = "fuelAmount";
+    public static final String FUEL_LEVEL = "fuelLevel";
+    public static final String FUEL_CONSUMPTION = "fuelConsumption";
+    public static final String FUEL_ALERT = "fuelAlert";
+    public static final String CALCULATED_LOCATION = "calculatedLocation";
+    public static final String ACTUAL_LOCATION = "location";
+    public static final String LOCATION_TIMESTAMP = "locationTimestamp";
+    public static final String HEADING = "heading";
+    public static final String CAR_LOCKED = "carLocked";
+    public static final String ENGINE_RUNNING = "engineRunning";
+    public static final String WASHER_FLUID = "washerFluidLevel";
+    public static final String SERVICE_WARNING = "serviceWarningStatus";
+    // Last Trip Channel Id's
+    public static final String LAST_TRIP_GROUP = "lasttrip";
+    public static final String TRIP_CONSUMPTION = "tripConsumption";
+    public static final String TRIP_DISTANCE = "tripDistance";
+    public static final String TRIP_DURATION = "tripDuration";
+    public static final String TRIP_START_TIME = "tripStartTime";
+    public static final String TRIP_END_TIME = "tripEndTime";
+    public static final String TRIP_START_ODOMETER = "tripStartOdometer";
+    public static final String TRIP_STOP_ODOMETER = "tripStopOdometer";
+    public static final String TRIP_START_POSITION = "startPosition";
+    public static final String TRIP_END_POSITION = "endPosition";
+
+    // Optional Channels depends upon vehicle version
+    public static final String CAR_LOCATOR = "carLocator";
+    public static final String JOURNAL_LOG = "journalLog";
+
+    // Vehicle properties
+    public static final String ENGINE_START = "engineStart";
+    public static final String UNLOCK = "unlock";
+    public static final String UNLOCK_TIME = "unlockTimeFrame";
+    public static final String LOCK = "lock";
+    public static final String HONK = "honk";
+    public static final String BLINK = "blink";
+    public static final String HONK_BLINK = "honkAndBlink";
+    public static final String HONK_AND_OR_BLINK = "honkAndOrBlink";
+    public static final String REMOTE_HEATER = "remoteHeater";
+    public static final String PRECLIMATIZATION = "preclimatization";
+    public static final String LAST_TRIP_ID = "lastTripId";
+
+    // Vehicle details
+    public static final String NAME = "name";
+    public static final String MODEL = "model";
+    public static final String MODEL_CODE = "modelCode";
+    public static final String MODEL_YEAR = "modelYear";
+    public static final String ENROLLMENT_DATE = "enrollmentDate";
+    public static final String DASHBOARD_URL = "dashboardURL";
+    public static final String IMAGE_URL = "imageURL";
+    public static final String ENGINE_TYPE_COMBUSTIAN = "engineTypeCombustian";
+    public static final String ENGINE_TYPE_ELECTRIC = "engineTypeElectic";
+
+    public static final String LOGIN_CHECK = "-/msgc/get-new-messages";
+
+    // List of all addressable things in OH = SUPPORTED_DEVICE_THING_TYPES_UIDS + the virtual bridge
+    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream
+            .of(APIBRIDGE_THING_TYPE, VEHICLE_THING_TYPE).collect(Collectors.toSet());
 
     // List of all Channel ids
     public static final String CHANNEL_NUMERIC_STATUS = "numericStatus";
-    public static final String CHANNEL_TEMPERATURE = "temperature";
-    public static final String CHANNEL_HUMIDITY = "humidity";
-    public static final String CHANNEL_HUMIDITY_ENABLED = "humidityEnabled";
     public static final String CHANNEL_LOCATION = "location";
     public static final String CHANNEL_STATUS = "status";
     public static final String CHANNEL_CONNECTED = "connected";
@@ -65,8 +135,6 @@ public class VWCarNetBindingConstants {
     public static final String CHANNEL_TIMESTAMP = "timestamp";
     public static final String CHANNEL_HAZARDOUS = "hazardous";
     public static final String CHANNEL_MOTOR_JAM = "motorJam";
-    public static final String CHANNEL_INSTALLATION_NAME = "installationName";
-    public static final String CHANNEL_INSTALLATION_ID = "installationId";
 
     // REST URI constants
     public static final String USERNAME = "username";

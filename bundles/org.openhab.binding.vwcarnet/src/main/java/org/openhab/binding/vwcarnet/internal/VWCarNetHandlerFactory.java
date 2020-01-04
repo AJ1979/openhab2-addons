@@ -13,10 +13,8 @@
 package org.openhab.binding.vwcarnet.internal;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -34,12 +32,8 @@ import org.eclipse.smarthome.io.net.http.HttpClientFactory;
 import org.openhab.binding.vwcarnet.internal.discovery.VWCarNetThingDiscoveryService;
 import org.openhab.binding.vwcarnet.internal.handler.VWCarNetAlarmThingHandler;
 import org.openhab.binding.vwcarnet.internal.handler.VWCarNetBridgeHandler;
-import org.openhab.binding.vwcarnet.internal.handler.VWCarNetBroadbandConnectionThingHandler;
-import org.openhab.binding.vwcarnet.internal.handler.VWCarNetClimateDeviceThingHandler;
-import org.openhab.binding.vwcarnet.internal.handler.VWCarNetDoorWindowThingHandler;
 import org.openhab.binding.vwcarnet.internal.handler.VWCarNetSmartLockThingHandler;
-import org.openhab.binding.vwcarnet.internal.handler.VWCarNetSmartPlugThingHandler;
-import org.openhab.binding.vwcarnet.internal.handler.VWCarNetUserPresenceThingHandler;
+import org.openhab.binding.vwcarnet.internal.handler.VehicleHandler;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -50,23 +44,11 @@ import org.slf4j.LoggerFactory;
  * The {@link VWCarNetHandlerFactory} is responsible for creating things and thing
  * handlers.
  *
- * @author Jarle Hjortland - Initial contribution
+ * @author Jan Gustafsson - Initial contribution
  */
 @NonNullByDefault
 @Component(service = ThingHandlerFactory.class, configurationPid = "binding.vwcarnet")
 public class VWCarNetHandlerFactory extends BaseThingHandlerFactory {
-
-    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<ThingTypeUID>();
-    static {
-        SUPPORTED_THING_TYPES.addAll(VWCarNetBridgeHandler.SUPPORTED_THING_TYPES);
-        SUPPORTED_THING_TYPES.addAll(VWCarNetAlarmThingHandler.SUPPORTED_THING_TYPES);
-        SUPPORTED_THING_TYPES.addAll(VWCarNetSmartLockThingHandler.SUPPORTED_THING_TYPES);
-        SUPPORTED_THING_TYPES.addAll(VWCarNetSmartPlugThingHandler.SUPPORTED_THING_TYPES);
-        SUPPORTED_THING_TYPES.addAll(VWCarNetClimateDeviceThingHandler.SUPPORTED_THING_TYPES);
-        SUPPORTED_THING_TYPES.addAll(VWCarNetBroadbandConnectionThingHandler.SUPPORTED_THING_TYPES);
-        SUPPORTED_THING_TYPES.addAll(VWCarNetDoorWindowThingHandler.SUPPORTED_THING_TYPES);
-        SUPPORTED_THING_TYPES.addAll(VWCarNetUserPresenceThingHandler.SUPPORTED_THING_TYPES);
-    }
 
     private final Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
     private final Logger logger = LoggerFactory.getLogger(VWCarNetHandlerFactory.class);
@@ -76,7 +58,7 @@ public class VWCarNetHandlerFactory extends BaseThingHandlerFactory {
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
-        return SUPPORTED_THING_TYPES.contains(thingTypeUID);
+        return VWCarNetBindingConstants.SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
     }
 
     public VWCarNetHandlerFactory() {
@@ -87,7 +69,7 @@ public class VWCarNetHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         logger.debug("createHandler this: {}", thing);
         final ThingHandler thingHandler;
-        if (VWCarNetBridgeHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
+        if (VWCarNetBindingConstants.SUPPORTED_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
             logger.debug("Create VWCarNetBridgeHandler");
             thingHandler = new VWCarNetBridgeHandler((Bridge) thing, httpClient);
             registerObjectDiscoveryService((VWCarNetBridgeHandler) thingHandler);
@@ -97,21 +79,9 @@ public class VWCarNetHandlerFactory extends BaseThingHandlerFactory {
         } else if (VWCarNetSmartLockThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
             logger.debug("Create VWCarNetSmartLockThingHandler {}", thing.getThingTypeUID());
             thingHandler = new VWCarNetSmartLockThingHandler(thing);
-        } else if (VWCarNetSmartPlugThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("Create VWCarNetSmartPlugThingHandler {}", thing.getThingTypeUID());
-            thingHandler = new VWCarNetSmartPlugThingHandler(thing);
-        } else if (VWCarNetClimateDeviceThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("Create VWCarNetClimateDeviceThingHandler {}", thing.getThingTypeUID());
-            thingHandler = new VWCarNetClimateDeviceThingHandler(thing);
-        } else if (VWCarNetBroadbandConnectionThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("Create VWCarNetBroadbandConnectionThingHandler {}", thing.getThingTypeUID());
-            thingHandler = new VWCarNetBroadbandConnectionThingHandler(thing);
-        } else if (VWCarNetDoorWindowThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("Create VWCarNetDoorWindowThingHandler {}", thing.getThingTypeUID());
-            thingHandler = new VWCarNetDoorWindowThingHandler(thing);
-        } else if (VWCarNetUserPresenceThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("Create VWCarNetUserPresenceThingHandler {}", thing.getThingTypeUID());
-            thingHandler = new VWCarNetUserPresenceThingHandler(thing);
+        } else if (VWCarNetBindingConstants.SUPPORTED_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
+            logger.debug("Create VehicleHandler {}", thing.getThingTypeUID());
+            thingHandler = new VehicleHandler(thing);
         } else {
             logger.debug("Not possible to create thing handler for thing {}", thing);
             thingHandler = null;

@@ -30,7 +30,7 @@ import com.google.gson.annotations.SerializedName;
  *
  */
 @NonNullByDefault
-public class VWCarNetAlarmsJSON extends VWCarNetBaseThingJSON {
+public class VWCarNetAlarmsJSON extends VWCarNetBaseVehicle {
 
     private @Nullable Data data;
 

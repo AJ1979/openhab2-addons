@@ -26,6 +26,5 @@ import org.openhab.binding.vwcarnet.internal.handler.VWCarNetBridgeHandler;
 public class VWCarNetBridgeConfiguration {
     public @Nullable String username;
     public @Nullable String password;
-    public int refresh;
     public @Nullable String pin;
 }

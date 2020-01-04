@@ -12,17 +12,14 @@
  */
 package org.openhab.binding.vwcarnet.internal.handler;
 
-import static org.openhab.binding.vwcarnet.internal.VWCarNetBindingConstants.*;
+import static org.openhab.binding.vwcarnet.internal.VWCarNetBindingConstants.CHANNEL_TIMESTAMP;
 
-import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DateTimeType;
-import org.eclipse.smarthome.core.library.types.DecimalType;
-import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -35,33 +32,34 @@ import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.vwcarnet.internal.DeviceStatusListener;
 import org.openhab.binding.vwcarnet.internal.VWCarNetSession;
-import org.openhab.binding.vwcarnet.internal.VWCarNetThingConfiguration;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetThingJSON;
+import org.openhab.binding.vwcarnet.internal.VehicleConfiguration;
+import org.openhab.binding.vwcarnet.internal.model.VWCarNetBaseVehicle;
+import org.openhab.binding.vwcarnet.internal.model.VWCarNetVehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Base class and handler for some of the different thing types that VWCarNet provides.
  *
- * @author Jarle Hjortland - Initial contribution
+ * @author Jan Gustafsson - Initial contribution
  *
  */
 @NonNullByDefault
-public class VWCarNetThingHandler extends BaseThingHandler implements DeviceStatusListener {
+public class VWCarNetHandler extends BaseThingHandler implements DeviceStatusListener {
 
-    protected final Logger logger = LoggerFactory.getLogger(VWCarNetThingHandler.class);
+    protected final Logger logger = LoggerFactory.getLogger(VWCarNetHandler.class);
 
     protected @Nullable VWCarNetSession session;
 
-    protected @Nullable VWCarNetThingConfiguration config;
+    protected @NonNullByDefault({}) VehicleConfiguration config;
 
-    public VWCarNetThingHandler(Thing thing) {
+    public VWCarNetHandler(Thing thing) {
         super(thing);
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        logger.debug("VWCarNetThingHandler handleCommand, channel: {}, command: {}", channelUID, command);
+        logger.debug("VWCarNetHandler handleCommand, channel: {}, command: {}", channelUID, command);
         if (command instanceof RefreshType) {
             Bridge bridge = getBridge();
             if (bridge != null) {
@@ -72,7 +70,7 @@ public class VWCarNetThingHandler extends BaseThingHandler implements DeviceStat
             }
             String deviceId = config.getDeviceId();
             if (session != null && deviceId != null) {
-                VWCarNetThingJSON thing = session.getVWCarNetThing(deviceId);
+                VWCarNetBaseVehicle thing = session.getVWCarNetThing(deviceId);
                 update(thing);
             }
         } else {
@@ -113,7 +111,7 @@ public class VWCarNetThingHandler extends BaseThingHandler implements DeviceStat
     public void initialize() {
         logger.debug("initialize on thing: {}", thing);
         // Do not go online
-        config = getConfigAs(VWCarNetThingConfiguration.class);
+        config = getConfigAs(VehicleConfiguration.class);
         if (config.getDeviceId() == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "VWCarNet device is missing deviceId");
@@ -122,6 +120,7 @@ public class VWCarNetThingHandler extends BaseThingHandler implements DeviceStat
         if (bridge != null) {
             this.bridgeStatusChanged(bridge.getStatusInfo());
         }
+
     }
 
     @Override
@@ -160,35 +159,31 @@ public class VWCarNetThingHandler extends BaseThingHandler implements DeviceStat
     }
 
     @Override
-    public void onDeviceStateChanged(@Nullable VWCarNetThingJSON thing) {
-        logger.trace("onDeviceStateChanged on thing: {}", thing);
-        if (thing != null) {
-            String deviceId = thing.getDeviceId();
-            // Make sure device id is normalized, i.e. replace all non character/digits with empty string
-            deviceId.replaceAll("[^a-zA-Z0-9]+", "");
-            if (config.getDeviceId().equalsIgnoreCase((deviceId))) {
-                update(thing);
+    public void onDeviceStateChanged(@Nullable VWCarNetBaseVehicle vehicle) {
+        logger.trace("onDeviceStateChanged on vehicle: {}", vehicle);
+        if (vehicle != null) {
+            if (vehicle instanceof VWCarNetVehicle) {
+                VWCarNetVehicle theVehicle = (VWCarNetVehicle) vehicle;
+                if (config.vin.equals((theVehicle.getCompleteVehicleJson().getVin()))) {
+                    update(theVehicle);
+                }
+            } else {
+                logger.debug("Update failed, unknown vehicle type.");
             }
         }
     }
 
-    public synchronized void update(@Nullable VWCarNetThingJSON thing) {
-        ChannelUID cuid = new ChannelUID(getThing().getUID(), CHANNEL_INSTALLATION_ID);
-        BigDecimal siteId = thing.getSiteId();
-        if (siteId != null) {
-            updateState(cuid, new DecimalType(siteId.longValue()));
-        }
-        cuid = new ChannelUID(getThing().getUID(), CHANNEL_INSTALLATION_NAME);
-        updateState(cuid, new StringType(thing.getSiteName()));
+    public synchronized void update(@Nullable VWCarNetBaseVehicle thing) {
+        logger.debug("Update on base class. {}", thing);
     }
 
     @Override
-    public void onDeviceRemoved(@Nullable VWCarNetThingJSON thing) {
+    public void onDeviceRemoved(@Nullable VWCarNetBaseVehicle thing) {
         logger.trace("onDeviceRemoved on thing: {}", thing);
     }
 
     @Override
-    public void onDeviceAdded(@Nullable VWCarNetThingJSON thing) {
+    public void onDeviceAdded(@Nullable VWCarNetBaseVehicle thing) {
         logger.trace("onDeviceAdded on thing: {}", thing);
     }
 }

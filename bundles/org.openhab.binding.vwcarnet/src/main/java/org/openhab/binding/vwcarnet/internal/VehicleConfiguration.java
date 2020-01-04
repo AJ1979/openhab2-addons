@@ -14,22 +14,25 @@ package org.openhab.binding.vwcarnet.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.vwcarnet.internal.handler.VWCarNetThingHandler;
+import org.openhab.binding.vwcarnet.internal.handler.VWCarNetHandler;
 
 /**
- * Configuration class for {@link VWCarNetThingHandler}.
+ * Configuration class for {@link VWCarNetHandler}.
  *
  *
  * @author Jan Gustafsson - Initial contribution
  */
 @NonNullByDefault
-public class VWCarNetThingConfiguration {
+public class VehicleConfiguration {
     public static final String DEVICE_ID_LABEL = "deviceId";
 
     private @Nullable String deviceId;
+    public @Nullable String vin;
+    public @Nullable Integer refresh;
 
     public @Nullable String getDeviceId() {
         // Make sure device id is normalized, i.e. replace all non character/digits with empty string
         return deviceId.replaceAll("[^a-zA-Z0-9]+", "");
     }
+
 }

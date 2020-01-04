@@ -30,11 +30,11 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.openhab.binding.vwcarnet.internal.model.VWCarNetBaseVehicle;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLockJSON;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLockJSON.DoorLockVolumeSettings;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON.Doorlock;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetThingJSON;
 
 /**
  * Handler for the Smart Lock Device thing type that VWCarNet provides.
@@ -43,7 +43,7 @@ import org.openhab.binding.vwcarnet.internal.model.VWCarNetThingJSON;
  *
  */
 @NonNullByDefault
-public class VWCarNetSmartLockThingHandler extends VWCarNetThingHandler {
+public class VWCarNetSmartLockThingHandler extends VWCarNetHandler {
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.singleton(THING_TYPE_SMARTLOCK);
 
@@ -241,7 +241,7 @@ public class VWCarNetSmartLockThingHandler extends VWCarNetThingHandler {
     }
 
     @Override
-    public synchronized void update(@Nullable VWCarNetThingJSON thing) {
+    public synchronized void update(@Nullable VWCarNetBaseVehicle thing) {
         logger.debug("update on thing: {}", thing);
         updateStatus(ThingStatus.ONLINE);
         if (getThing().getThingTypeUID().equals(THING_TYPE_SMARTLOCK)) {

@@ -22,7 +22,7 @@ import org.eclipse.jdt.annotation.Nullable;
  *
  */
 @NonNullByDefault
-public class VWCarNetAlarmJSON extends VWCarNetBaseThingJSON {
+public class VWCarNetAlarmJSON extends VWCarNetBaseVehicle {
 
     private @Nullable String date;
     private @Nullable String notAllowedReason;

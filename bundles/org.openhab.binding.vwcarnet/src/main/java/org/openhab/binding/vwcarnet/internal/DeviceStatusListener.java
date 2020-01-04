@@ -13,7 +13,7 @@
 package org.openhab.binding.vwcarnet.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetThingJSON;
+import org.openhab.binding.vwcarnet.internal.model.VWCarNetBaseVehicle;
 
 /**
  * The {@link DeviceStatusListener} is notified when a device status has changed
@@ -31,7 +31,7 @@ public interface DeviceStatusListener {
      * @param thing
      *            The thing that was changed.
      */
-    void onDeviceStateChanged(VWCarNetThingJSON thing);
+    void onDeviceStateChanged(VWCarNetBaseVehicle thing);
 
     /**
      * This method us called whenever a device is removed.
@@ -39,7 +39,7 @@ public interface DeviceStatusListener {
      * @param thing
      *            The thing that is removed
      */
-    void onDeviceRemoved(VWCarNetThingJSON thing);
+    void onDeviceRemoved(VWCarNetBaseVehicle thing);
 
     /**
      * This method us called whenever a device is added.
@@ -47,6 +47,6 @@ public interface DeviceStatusListener {
      * @param thing
      *            The thing which is added.
      */
-    void onDeviceAdded(VWCarNetThingJSON thing);
+    void onDeviceAdded(VWCarNetBaseVehicle thing);
 
 }

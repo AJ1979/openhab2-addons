@@ -30,7 +30,7 @@ import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON.ArmState;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetThingJSON;
+import org.openhab.binding.vwcarnet.internal.model.VWCarNetBaseVehicle;
 
 /**
  * Handler for the Alarm Device thing type that VWCarNet provides.
@@ -39,7 +39,7 @@ import org.openhab.binding.vwcarnet.internal.model.VWCarNetThingJSON;
  *
  */
 @NonNullByDefault
-public class VWCarNetAlarmThingHandler extends VWCarNetThingHandler {
+public class VWCarNetAlarmThingHandler extends VWCarNetHandler {
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.singleton(THING_TYPE_ALARM);
 
@@ -113,8 +113,7 @@ public class VWCarNetAlarmThingHandler extends VWCarNetThingHandler {
         }
     }
 
-    @Override
-    public synchronized void update(@Nullable VWCarNetThingJSON thing) {
+    public synchronized void update(@Nullable VWCarNetBaseVehicle thing) {
         logger.debug("update on thing: {}", thing);
         updateStatus(ThingStatus.ONLINE);
         if (getThing().getThingTypeUID().equals(THING_TYPE_ALARM)) {

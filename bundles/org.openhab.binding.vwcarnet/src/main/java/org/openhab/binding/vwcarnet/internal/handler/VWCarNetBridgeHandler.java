@@ -12,10 +12,8 @@
  */
 package org.openhab.binding.vwcarnet.internal.handler;
 
-import static org.openhab.binding.vwcarnet.internal.VWCarNetBindingConstants.*;
+import static org.openhab.binding.vwcarnet.internal.VWCarNetBindingConstants.CHANNEL_STATUS;
 
-import java.util.Collections;
-import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +28,6 @@ import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
-import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
@@ -63,8 +60,6 @@ public class VWCarNetBridgeHandler extends BaseBridgeHandler {
         super.updateConfiguration(configuration);
         initialize();
     }
-
-    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.singleton(THING_TYPE_BRIDGE);
 
     private final Logger logger = LoggerFactory.getLogger(VWCarNetBridgeHandler.class);
     private final ReentrantLock immediateRefreshJobLock = new ReentrantLock();
@@ -108,7 +103,6 @@ public class VWCarNetBridgeHandler extends BaseBridgeHandler {
     public void initialize() {
         logger.debug("Initializing Verisure Binding");
         VWCarNetBridgeConfiguration config = getConfigAs(VWCarNetBridgeConfiguration.class);
-        this.refresh = config.refresh;
         this.pinCode = config.pin;
         if (config.username == null || config.password == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
@@ -158,7 +152,7 @@ public class VWCarNetBridgeHandler extends BaseBridgeHandler {
     }
 
     private void refreshAndUpdateStatus() {
-        logger.debug("VerisureBridgeHandler - Polling thread is up'n running!");
+        logger.debug("VWCarNetBridgeHandler - Polling thread is up'n running!");
         try {
             if (session != null) {
                 boolean success = session.refresh();

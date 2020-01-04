@@ -29,7 +29,7 @@ import com.google.gson.annotations.SerializedName;
  *
  */
 @NonNullByDefault
-public class VWCarNetSmartLocksJSON extends VWCarNetBaseThingJSON {
+public class VWCarNetSmartLocksJSON extends VWCarNetBaseVehicle {
 
     private @Nullable Data data;
     private @Nullable VWCarNetSmartLockJSON smartLockJSON;

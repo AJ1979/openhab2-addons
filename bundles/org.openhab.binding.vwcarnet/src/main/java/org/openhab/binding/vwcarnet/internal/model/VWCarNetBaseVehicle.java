@@ -24,7 +24,7 @@ import org.eclipse.jdt.annotation.Nullable;
  *
  */
 @NonNullByDefault
-public class VWCarNetBaseThingJSON implements VWCarNetThingJSON {
+public class VWCarNetBaseVehicle {
 
     protected String deviceId = "";
     protected @Nullable String name;
@@ -33,7 +33,7 @@ public class VWCarNetBaseThingJSON implements VWCarNetThingJSON {
     protected @Nullable String siteName;
     protected @Nullable BigDecimal siteId;
 
-    public VWCarNetBaseThingJSON() {
+    public VWCarNetBaseVehicle() {
         super();
     }
 
@@ -72,7 +72,6 @@ public class VWCarNetBaseThingJSON implements VWCarNetThingJSON {
     /**
      * @return the deviceId
      */
-    @Override
     public String getDeviceId() {
         return deviceId;
     }
@@ -80,7 +79,6 @@ public class VWCarNetBaseThingJSON implements VWCarNetThingJSON {
     /**
      * @param deviceId the deviceId to set
      */
-    @Override
     public void setDeviceId(@Nullable String deviceId) {
         // Make sure device id is normalized, i.e. replace all non character/digits with empty string
         this.deviceId = deviceId.replaceAll("[^a-zA-Z0-9]+", "");
@@ -89,7 +87,6 @@ public class VWCarNetBaseThingJSON implements VWCarNetThingJSON {
     /**
      * @return the location
      */
-    @Override
     public @Nullable String getLocation() {
         return location;
     }
@@ -101,22 +98,18 @@ public class VWCarNetBaseThingJSON implements VWCarNetThingJSON {
         this.location = location;
     }
 
-    @Override
     public @Nullable String getSiteName() {
         return siteName;
     }
 
-    @Override
     public void setSiteName(@Nullable String siteName) {
         this.siteName = siteName;
     }
 
-    @Override
     public @Nullable BigDecimal getSiteId() {
         return siteId;
     }
 
-    @Override
     public void setSiteId(@Nullable BigDecimal siteId) {
         this.siteId = siteId;
     }
@@ -145,11 +138,11 @@ public class VWCarNetBaseThingJSON implements VWCarNetThingJSON {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof VWCarNetBaseThingJSON)) {
+        if (!(obj instanceof VWCarNetBaseVehicle)) {
             return false;
         }
 
-        VWCarNetBaseThingJSON other = (VWCarNetBaseThingJSON) obj;
+        VWCarNetBaseVehicle other = (VWCarNetBaseVehicle) obj;
         if (deviceId == null) {
             if (other.deviceId != null) {
                 return false;

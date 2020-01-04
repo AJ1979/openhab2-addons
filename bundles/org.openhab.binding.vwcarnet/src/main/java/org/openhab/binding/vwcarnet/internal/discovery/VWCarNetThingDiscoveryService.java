@@ -23,18 +23,12 @@ import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
 import org.eclipse.smarthome.config.discovery.DiscoveryResult;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.core.thing.ThingUID;
-import org.openhab.binding.vwcarnet.internal.VWCarNetHandlerFactory;
 import org.openhab.binding.vwcarnet.internal.VWCarNetSession;
-import org.openhab.binding.vwcarnet.internal.VWCarNetThingConfiguration;
 import org.openhab.binding.vwcarnet.internal.handler.VWCarNetBridgeHandler;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetBroadbandConnectionsJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetClimatesJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetDoorWindowsJSON;
+import org.openhab.binding.vwcarnet.internal.model.VWCarNetBaseVehicle;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartPlugsJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetThingJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetUserPresencesJSON;
+import org.openhab.binding.vwcarnet.internal.model.VWCarNetVehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +47,7 @@ public class VWCarNetThingDiscoveryService extends AbstractDiscoveryService {
     private @Nullable VWCarNetBridgeHandler vwcarnetBridgeHandler;
 
     public VWCarNetThingDiscoveryService(VWCarNetBridgeHandler bridgeHandler) throws IllegalArgumentException {
-        super(VWCarNetHandlerFactory.SUPPORTED_THING_TYPES, SEARCH_TIME_SECONDS);
+        super(SUPPORTED_THING_TYPES_UIDS, SEARCH_TIME_SECONDS);
 
         this.vwcarnetBridgeHandler = bridgeHandler;
 
@@ -67,9 +61,9 @@ public class VWCarNetThingDiscoveryService extends AbstractDiscoveryService {
         if (vwcarnetBridgeHandler != null) {
             VWCarNetSession session = vwcarnetBridgeHandler.getSession();
             if (session != null) {
-                HashMap<String, VWCarNetThingJSON> vwcarnetThings = session.getVWCarNetThings();
-                for (Map.Entry<String, VWCarNetThingJSON> entry : vwcarnetThings.entrySet()) {
-                    VWCarNetThingJSON thing = entry.getValue();
+                HashMap<String, VWCarNetBaseVehicle> vwcarnetThings = session.getVWCarNetThings();
+                for (Map.Entry<String, VWCarNetBaseVehicle> entry : vwcarnetThings.entrySet()) {
+                    VWCarNetBaseVehicle thing = entry.getValue();
                     if (thing != null) {
                         logger.info("Thing: {}", thing);
                         onThingAddedInternal(thing);
@@ -79,33 +73,28 @@ public class VWCarNetThingDiscoveryService extends AbstractDiscoveryService {
         }
     }
 
-    private void onThingAddedInternal(VWCarNetThingJSON thing) {
+    private void onThingAddedInternal(VWCarNetBaseVehicle thing) {
         logger.debug("VWCarNetThingDiscoveryService:OnThingAddedInternal");
-        ThingUID thingUID = getThingUID(thing);
-        String deviceId = thing.getDeviceId();
-        if (thingUID != null && deviceId != null) {
-            if (vwcarnetBridgeHandler != null) {
-                ThingUID bridgeUID = vwcarnetBridgeHandler.getThing().getUID();
-                String label = "Device Id: " + deviceId;
-                if (thing.getLocation() != null) {
-                    label += ", Location: " + thing.getLocation();
-                }
-                if (thing.getSiteName() != null) {
-                    label += ", Site name: " + thing.getSiteName();
-                }
-                DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withBridge(bridgeUID)
-                        .withLabel(label).withProperty(VWCarNetThingConfiguration.DEVICE_ID_LABEL, deviceId).build();
-                logger.debug("thinguid: {}, bridge {}, label {}", thingUID.toString(), bridgeUID, thing.getDeviceId());
-                thingDiscovered(discoveryResult);
-            }
-        } else {
-            logger.debug("Discovered unsupported thing of type '{}' with deviceId {}", thing.getClass(),
+        if (thing instanceof VWCarNetVehicle) {
+            VWCarNetVehicle theVehicle = (VWCarNetVehicle) thing;
+            String vin = theVehicle.getCompleteVehicleJson().getVin();
+            ThingUID thingUID = new ThingUID(VEHICLE_THING_TYPE, vin);
+            ThingUID bridgeUID = vwcarnetBridgeHandler.getThing().getUID();
+            String label = theVehicle.getCompleteVehicleJson().getName();
+
+            DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withBridge(bridgeUID)
+                    .withLabel(label).withProperty(VIN, vin).withRepresentationProperty(vin).build();
+            logger.debug("Discovered thing: thinguid: {}, bridge {}, label {}", thingUID.toString(), bridgeUID,
                     thing.getDeviceId());
+            thingDiscovered(discoveryResult);
+
+        } else {
+            logger.debug("Discovered unsupported thing of type '{}'", thing.getClass());
         }
 
     }
 
-    private @Nullable ThingUID getThingUID(VWCarNetThingJSON thing) {
+    private @Nullable ThingUID getThingUID(VWCarNetBaseVehicle thing) {
         ThingUID thingUID = null;
         if (vwcarnetBridgeHandler != null) {
             ThingUID bridgeUID = vwcarnetBridgeHandler.getThing().getUID();
@@ -117,28 +106,6 @@ public class VWCarNetThingDiscoveryService extends AbstractDiscoveryService {
                     thingUID = new ThingUID(THING_TYPE_ALARM, bridgeUID, deviceId);
                 } else if (thing instanceof VWCarNetSmartLocksJSON) {
                     thingUID = new ThingUID(THING_TYPE_SMARTLOCK, bridgeUID, deviceId);
-                } else if (thing instanceof VWCarNetUserPresencesJSON) {
-                    thingUID = new ThingUID(THING_TYPE_USERPRESENCE, bridgeUID, deviceId);
-                } else if (thing instanceof VWCarNetDoorWindowsJSON) {
-                    thingUID = new ThingUID(THING_TYPE_DOORWINDOW, bridgeUID, deviceId);
-                } else if (thing instanceof VWCarNetSmartPlugsJSON) {
-                    thingUID = new ThingUID(THING_TYPE_SMARTPLUG, bridgeUID, deviceId);
-                } else if (thing instanceof VWCarNetClimatesJSON) {
-                    String type = ((VWCarNetClimatesJSON) thing).getData().getInstallation().getClimates().get(0)
-                            .getDevice().getGui().getLabel();
-                    if ("SMOKE".equals(type)) {
-                        thingUID = new ThingUID(THING_TYPE_SMOKEDETECTOR, bridgeUID, deviceId);
-                    } else if ("WATER".equals(type)) {
-                        thingUID = new ThingUID(THING_TYPE_WATERDETECTOR, bridgeUID, deviceId);
-                    } else if ("HOMEPAD".equals(type)) {
-                        thingUID = new ThingUID(THING_TYPE_NIGHT_CONTROL, bridgeUID, deviceId);
-                    } else if ("SIREN".equals(type)) {
-                        thingUID = new ThingUID(THING_TYPE_SIREN, bridgeUID, deviceId);
-                    } else {
-                        logger.warn("Unknown climate device {}.", type);
-                    }
-                } else if (thing instanceof VWCarNetBroadbandConnectionsJSON) {
-                    thingUID = new ThingUID(THING_TYPE_BROADBAND_CONNECTION, bridgeUID, deviceId);
                 } else {
                     logger.warn("Unsupported JSON! thing {}", thing.toString());
                 }
