@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -69,7 +69,9 @@ public class VWCarNetHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         logger.debug("createHandler this: {}", thing);
         final ThingHandler thingHandler;
-        if (VWCarNetBindingConstants.SUPPORTED_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
+        ThingTypeUID thingTypeUID = thing.getThingTypeUID();
+
+        if (VWCarNetBindingConstants.BRIDGE_THING_TYPE.equals(thing.getThingTypeUID())) {
             logger.debug("Create VWCarNetBridgeHandler");
             thingHandler = new VWCarNetBridgeHandler((Bridge) thing, httpClient);
             registerObjectDiscoveryService((VWCarNetBridgeHandler) thingHandler);
@@ -79,7 +81,7 @@ public class VWCarNetHandlerFactory extends BaseThingHandlerFactory {
         } else if (VWCarNetSmartLockThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
             logger.debug("Create VWCarNetSmartLockThingHandler {}", thing.getThingTypeUID());
             thingHandler = new VWCarNetSmartLockThingHandler(thing);
-        } else if (VWCarNetBindingConstants.SUPPORTED_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
+        } else if (VWCarNetBindingConstants.VEHICLE_THING_TYPE.equals(thing.getThingTypeUID())) {
             logger.debug("Create VehicleHandler {}", thing.getThingTypeUID());
             thingHandler = new VehicleHandler(thing);
         } else {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -104,6 +104,7 @@ public class VWCarNetBridgeHandler extends BaseBridgeHandler {
         logger.debug("Initializing Verisure Binding");
         VWCarNetBridgeConfiguration config = getConfigAs(VWCarNetBridgeConfiguration.class);
         this.pinCode = config.pin;
+        this.refresh = config.refresh;
         if (config.username == null || config.password == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "Configuration of username and password is mandatory");

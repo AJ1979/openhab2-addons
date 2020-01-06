@@ -16,7 +16,9 @@
             <channel-group typeId="doors" id="doors" />
             <channel-group typeId="windows" id="windows" />
             <channel-group typeId="odometer" id="odometer" />
-            <channel-group typeId="tank" id="tank" />
+            <channel-group typeId="fuel" id="fuel" />
+            <channel-group typeId="cng" id="cng" />
+            <channel-group typeId="electric" id="electric" />
             <channel-group typeId="position" id="position" />
             <channel-group typeId="other" id="other" />
             <channel-group typeId="lasttrip" id="lasttrip" />
@@ -34,12 +36,6 @@
                 <label>Vehicle Identification Number</label>
                 <description>VIN of the vehicle associated with this Thing</description>
             </parameter>
-
-            <parameter name="refresh" type="integer" min="5" required="false">
-                <label>Refresh Interval</label>
-                <description>Specifies the refresh interval in minutes.</description>
-                <default>5</default>
-            </parameter>
         </config-description>
     </thing-type>
     
@@ -50,7 +46,6 @@
             <channel id="engineRunning" typeId="engineRunning" />
             <channel id="remoteHeater" typeId="remoteHeater" />
             <channel id="washerFluidLevel" typeId="washerFluidLevel" />
-            <channel id="serviceWarningStatus" typeId="serviceWarningStatus" />
         </channels>
     </channel-group-type>
 
@@ -94,42 +89,43 @@
     <channel-group-type id="doors">
         <label>Doors Opening Status</label>
         <channels>
-            <channel id="tailgate" typeId="door">
-                <label>Tailgate</label>
+            <channel id="trunk" typeId="door">
+                <label>Trunk</label>
             </channel>
-            <channel id="rearRight" typeId="door">
-                <label>Rear Right</label>
+            <channel id="rightBack" typeId="door">
+                <label>Right Back</label>
             </channel>
-            <channel id="rearLeft" typeId="door">
-                <label>Rear Left</label>
+            <channel id="leftBack" typeId="door">
+                <label>Left Back</label>
             </channel>
-            <channel id="frontRight" typeId="door">
-                <label>Front Right</label>
+            <channel id="rightFront" typeId="door">
+                <label>Right Front</label>
             </channel>
-            <channel id="frontLeft" typeId="door">
-                <label>Front Left</label>
+            <channel id="leftFront" typeId="door">
+                <label>Left Front</label>
             </channel>
             <channel id="hood" typeId="door">
                 <label>Hood</label>
             </channel>
-            <channel id="carLocked" typeId="carLocked" />
+            <channel id="doorsLocked" typeId="doorsLocked" />
+            <channel id="trunkLocked" typeId="trunkLocked" />
         </channels>
     </channel-group-type>
 
     <channel-group-type id="windows">
         <label>Windows Opening Status</label>
         <channels>
-            <channel id="rearRightWnd" typeId="window">
-                <label>Rear Right</label>
+            <channel id="rightBackWnd" typeId="window">
+                <label>Right Back</label>
             </channel>
-            <channel id="rearLeftWnd" typeId="window">
-                <label>Rear Left</label>
+            <channel id="leftBackWnd" typeId="window">
+                <label>Left Back</label>
             </channel>
-            <channel id="frontRightWnd" typeId="window">
-                <label>Front Right</label>
+            <channel id="rightFrontWnd" typeId="window">
+                <label>Right Front</label>
             </channel>
-            <channel id="frontLeftWnd" typeId="window">
-                <label>Front Left</label>
+            <channel id="leftFrontWnd" typeId="window">
+                <label>Left Front</label>
             </channel>
         </channels>
     </channel-group-type>
@@ -147,19 +143,40 @@
         </channels>
     </channel-group-type>
 
-    <channel-group-type id="tank">
-        <label>Tank Info</label>
+    <channel-group-type id="fuel">
+        <label>Fuel Info</label>
         <channels>
-            <channel id="fuelAmount" typeId="fuelQuantity">
-                <label>Fuel Amount</label>
-                <description>Indicates the quantity of fuel available in the tank</description>
-            </channel>
             <channel id="fuelLevel" typeId="fuelLevel" />
             <channel id="fuelConsumption" typeId="fuelConsumption" />
             <channel id="fuelAlert" typeId="fuelAlert" />
-            <channel id="distanceToEmpty" typeId="odometer">
+            <channel id="fuelRange" typeId="odometer">
                 <label>Distance Left</label>
                 <description>Distance left with given quantity of fuel</description>
+            </channel>
+        </channels>
+    </channel-group-type>
+    
+    <channel-group-type id="cng">
+        <label>Compressed Natural Gas Info</label>
+        <channels>
+            <channel id="cngLevel" typeId="cngLevel" />
+            <channel id="cngConsumption" typeId="cngConsumption" />
+            <channel id="cngAlert" typeId="fuelAlert" />
+            <channel id="cngRange" typeId="odometer">
+                <label>Distance Left</label>
+                <description>Distance left with given quantity of CNG</description>
+            </channel>
+        </channels>
+    </channel-group-type>
+    
+    <channel-group-type id="electric">
+        <label>Electric Info</label>
+        <channels>
+            <channel id="batteryLevel" typeId="batteryLevel" />
+            <channel id="batteryAlert" typeId="batteryAlert" />
+            <channel id="batteryRange" typeId="odometer">
+                <label>Distance Left</label>
+                <description>Distance left with given battery level</description>
             </channel>
         </channels>
     </channel-group-type>
@@ -192,6 +209,8 @@
             <channel id="imageURL" typeId="imageURL" />
             <channel id="engineTypeCombustian" typeId="engineTypeCombustian" />
             <channel id="engineTypeElectric" typeId="engineTypeElectric" />
+            <channel id="serviceInspectionStatus" typeId="serviceInspectionStatus" />
+            <channel id="oilInspectionStatus" typeId="oilInspectionStatus" />
         </channels>
     </channel-group-type>
 
@@ -238,9 +257,30 @@
 
     <channel-type id="fuelConsumption" advanced="true">
         <item-type>Number</item-type>
-        <label>Average Consumption</label>
+        <label>Average Fuel Consumption</label>
         <description>Indicates the average fuel consumption in L/100km</description>
         <state pattern="%.1f L/100km" readOnly="true"></state>
+    </channel-type>
+    
+    <channel-type id="cngLevel">
+        <item-type>Number:Dimensionless</item-type>
+        <label>CNG Level</label>
+        <description>Indicates the level of Compreesed Natural Gas in the tank</description>
+        <state pattern="%d %unit%" readOnly="true"></state>
+    </channel-type>
+    
+    <channel-type id="cngConsumption" advanced="true">
+        <item-type>Number</item-type>
+        <label>Average CNG Consumption</label>
+        <description>Indicates the average Compressed Natural Gas consumption in L/100km</description>
+        <state pattern="%.1f L/100km" readOnly="true"></state>
+    </channel-type>
+    
+    <channel-type id="batteryLevel">
+        <item-type>Number:Dimensionless</item-type>
+        <label>Battery Level</label>
+        <description>Indicates the battery level</description>
+        <state pattern="%d %unit%" readOnly="true"></state>
     </channel-type>
 
     <channel-type id="location">
@@ -276,10 +316,16 @@
         <description>Starts the vehicle engine</description>
     </channel-type>
 
-    <channel-type id="carLocked">
+    <channel-type id="doorsLocked">
         <item-type>Switch</item-type>
-        <label>Locked</label>
-        <description>Car locking status</description>
+        <label>Doors Locked</label>
+        <description>Door locking status</description>
+    </channel-type>
+    
+    <channel-type id="trunkLocked">
+        <item-type>Switch</item-type>
+        <label>Trunk Locked</label>
+        <description>Trunk locking status</description>
     </channel-type>
 
     <channel-type id="engineRunning">
@@ -307,10 +353,17 @@
         <state readOnly="true"></state>
     </channel-type>
 
-    <channel-type id="serviceWarningStatus">
+    <channel-type id="serviceInspectionStatus">
         <item-type>String</item-type>
-        <label>Service Warning</label>
-        <description>Is car service needed ?</description>
+        <label>Service Inspection</label>
+        <description>Service Inspection Status.</description>
+        <state readOnly="true"></state>
+    </channel-type>
+    
+    <channel-type id="oilInspectionStatus">
+        <item-type>String</item-type>
+        <label>Oil Inspection</label>
+        <description>Oil Inspection Status.</description>
         <state readOnly="true"></state>
     </channel-type>
 
@@ -321,7 +374,14 @@
         <state readOnly="true" />
     </channel-type>
     
-        <channel-type id="name">
+    <channel-type id="batteryAlert">
+        <item-type>Switch</item-type>
+        <label>Battery Alarm</label>
+        <description>set to 'ON' when the battery level is low</description>
+        <state readOnly="true" />
+    </channel-type>
+    
+    <channel-type id="name">
         <item-type>String</item-type>
         <label>Vehicle name</label>
         <description>Name of vehicle in VW portal.</description>

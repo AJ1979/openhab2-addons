@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -18,22 +18,23 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * A base JSON thing for other Verisure things to inherit.
+ * A base Vehicle.
  *
- * @author Jarle Hjortland - Initial contribution
+ * @author Jan Gustafsson - Initial contribution
  *
  */
 @NonNullByDefault
-public class VWCarNetBaseVehicle {
+public class BaseVehicle {
+    public static final int UNDEFINED = -1;
 
     protected String deviceId = "";
     protected @Nullable String name;
-    protected @Nullable String location;
+    protected @Nullable String homeLocation;
     protected @Nullable String status;
     protected @Nullable String siteName;
     protected @Nullable BigDecimal siteId;
 
-    public VWCarNetBaseVehicle() {
+    public BaseVehicle() {
         super();
     }
 
@@ -85,17 +86,17 @@ public class VWCarNetBaseVehicle {
     }
 
     /**
-     * @return the location
+     * @return the homeLocation
      */
     public @Nullable String getLocation() {
-        return location;
+        return homeLocation;
     }
 
     /**
-     * @param location the location to set
+     * @param homeLocation the homeLocation to set
      */
     public void setLocation(@Nullable String location) {
-        this.location = location;
+        this.homeLocation = location;
     }
 
     public @Nullable String getSiteName() {
@@ -120,7 +121,7 @@ public class VWCarNetBaseVehicle {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((deviceId == null) ? 0 : deviceId.hashCode());
-        result = prime * result + ((location == null) ? 0 : location.hashCode());
+        result = prime * result + ((homeLocation == null) ? 0 : homeLocation.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((status == null) ? 0 : status.hashCode());
         result = prime * result + ((siteName == null) ? 0 : siteName.hashCode());
@@ -138,11 +139,11 @@ public class VWCarNetBaseVehicle {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof VWCarNetBaseVehicle)) {
+        if (!(obj instanceof BaseVehicle)) {
             return false;
         }
 
-        VWCarNetBaseVehicle other = (VWCarNetBaseVehicle) obj;
+        BaseVehicle other = (BaseVehicle) obj;
         if (deviceId == null) {
             if (other.deviceId != null) {
                 return false;
@@ -159,11 +160,11 @@ public class VWCarNetBaseVehicle {
             return false;
         }
 
-        if (location == null) {
-            if (other.location != null) {
+        if (homeLocation == null) {
+            if (other.homeLocation != null) {
                 return false;
             }
-        } else if (location != null && !location.equals(other.location)) {
+        } else if (homeLocation != null && !homeLocation.equals(other.homeLocation)) {
             return false;
         }
 
@@ -208,9 +209,9 @@ public class VWCarNetBaseVehicle {
             builder.append(", deviceId=");
             builder.append(deviceId);
         }
-        if (location != null) {
-            builder.append(", location=");
-            builder.append(location);
+        if (homeLocation != null) {
+            builder.append(", homeLocation=");
+            builder.append(homeLocation);
         }
         if (status != null) {
             builder.append(", status=");

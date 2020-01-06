@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -26,9 +26,9 @@ import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.vwcarnet.internal.VWCarNetSession;
 import org.openhab.binding.vwcarnet.internal.handler.VWCarNetBridgeHandler;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetBaseVehicle;
+import org.openhab.binding.vwcarnet.internal.model.BaseVehicle;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetVehicle;
+import org.openhab.binding.vwcarnet.internal.model.Vehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,9 +61,9 @@ public class VWCarNetThingDiscoveryService extends AbstractDiscoveryService {
         if (vwcarnetBridgeHandler != null) {
             VWCarNetSession session = vwcarnetBridgeHandler.getSession();
             if (session != null) {
-                HashMap<String, VWCarNetBaseVehicle> vwcarnetThings = session.getVWCarNetThings();
-                for (Map.Entry<String, VWCarNetBaseVehicle> entry : vwcarnetThings.entrySet()) {
-                    VWCarNetBaseVehicle thing = entry.getValue();
+                HashMap<String, BaseVehicle> vwcarnetThings = session.getVWCarNetThings();
+                for (Map.Entry<String, BaseVehicle> entry : vwcarnetThings.entrySet()) {
+                    BaseVehicle thing = entry.getValue();
                     if (thing != null) {
                         logger.info("Thing: {}", thing);
                         onThingAddedInternal(thing);
@@ -73,20 +73,24 @@ public class VWCarNetThingDiscoveryService extends AbstractDiscoveryService {
         }
     }
 
-    private void onThingAddedInternal(VWCarNetBaseVehicle thing) {
+    private void onThingAddedInternal(BaseVehicle thing) {
         logger.debug("VWCarNetThingDiscoveryService:OnThingAddedInternal");
-        if (thing instanceof VWCarNetVehicle) {
-            VWCarNetVehicle theVehicle = (VWCarNetVehicle) thing;
+        if (thing instanceof Vehicle) {
+            Vehicle theVehicle = (Vehicle) thing;
             String vin = theVehicle.getCompleteVehicleJson().getVin();
-            ThingUID thingUID = new ThingUID(VEHICLE_THING_TYPE, vin);
-            ThingUID bridgeUID = vwcarnetBridgeHandler.getThing().getUID();
-            String label = theVehicle.getCompleteVehicleJson().getName();
+            if (vin != null) {
+                ThingUID thingUID = new ThingUID(VEHICLE_THING_TYPE, vin);
+                ThingUID bridgeUID = vwcarnetBridgeHandler.getThing().getUID();
+                String label = theVehicle.getCompleteVehicleJson().getName();
 
-            DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withBridge(bridgeUID)
-                    .withLabel(label).withProperty(VIN, vin).withRepresentationProperty(vin).build();
-            logger.debug("Discovered thing: thinguid: {}, bridge {}, label {}", thingUID.toString(), bridgeUID,
-                    thing.getDeviceId());
-            thingDiscovered(discoveryResult);
+                DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withLabel(label)
+                        .withBridge(bridgeUID).withProperty(VIN, vin).withRepresentationProperty(vin).build();
+                logger.debug("Discovered thing: thinguid: {}, bridge {}, label {}", thingUID.toString(), bridgeUID,
+                        label);
+                thingDiscovered(discoveryResult);
+            } else {
+                logger.debug("VIN is null for thing '{}'", thing);
+            }
 
         } else {
             logger.debug("Discovered unsupported thing of type '{}'", thing.getClass());
@@ -94,7 +98,7 @@ public class VWCarNetThingDiscoveryService extends AbstractDiscoveryService {
 
     }
 
-    private @Nullable ThingUID getThingUID(VWCarNetBaseVehicle thing) {
+    private @Nullable ThingUID getThingUID(BaseVehicle thing) {
         ThingUID thingUID = null;
         if (vwcarnetBridgeHandler != null) {
             ThingUID bridgeUID = vwcarnetBridgeHandler.getThing().getUID();

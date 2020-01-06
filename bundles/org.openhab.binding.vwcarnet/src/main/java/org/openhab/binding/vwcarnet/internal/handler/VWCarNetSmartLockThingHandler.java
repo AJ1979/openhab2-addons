@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -30,7 +30,7 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetBaseVehicle;
+import org.openhab.binding.vwcarnet.internal.model.BaseVehicle;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLockJSON;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLockJSON.DoorLockVolumeSettings;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON;
@@ -241,7 +241,7 @@ public class VWCarNetSmartLockThingHandler extends VWCarNetHandler {
     }
 
     @Override
-    public synchronized void update(@Nullable VWCarNetBaseVehicle thing) {
+    public synchronized void update(@Nullable BaseVehicle thing) {
         logger.debug("update on thing: {}", thing);
         updateStatus(ThingStatus.ONLINE);
         if (getThing().getThingTypeUID().equals(THING_TYPE_SMARTLOCK)) {

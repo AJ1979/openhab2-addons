@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -28,7 +28,6 @@ public class VehicleConfiguration {
 
     private @Nullable String deviceId;
     public @Nullable String vin;
-    public @Nullable Integer refresh;
 
     public @Nullable String getDeviceId() {
         // Make sure device id is normalized, i.e. replace all non character/digits with empty string

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,11 +43,14 @@ import org.eclipse.jetty.util.Fields;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetBaseVehicle;
+import org.openhab.binding.vwcarnet.internal.model.BaseVehicle;
+import org.openhab.binding.vwcarnet.internal.model.Details;
+import org.openhab.binding.vwcarnet.internal.model.Location;
+import org.openhab.binding.vwcarnet.internal.model.Status;
+import org.openhab.binding.vwcarnet.internal.model.Trips;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLockJSON;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetVehicle;
+import org.openhab.binding.vwcarnet.internal.model.Vehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +70,7 @@ import com.jayway.jsonpath.JsonPath;
 @NonNullByDefault
 public class VWCarNetSession {
 
-    private final HashMap<String, VWCarNetBaseVehicle> vwCarNetThings = new HashMap<String, VWCarNetBaseVehicle>();
+    private final HashMap<String, BaseVehicle> vwCarNetThings = new HashMap<String, BaseVehicle>();
     private final Logger logger = LoggerFactory.getLogger(VWCarNetSession.class);
     private final Gson gson = new GsonBuilder().create();
     private final List<DeviceStatusListener> deviceStatusListeners = new CopyOnWriteArrayList<>();
@@ -146,11 +150,11 @@ public class VWCarNetSession {
     public void dispose() {
     }
 
-    public @Nullable VWCarNetBaseVehicle getVWCarNetThing(String deviceId) {
+    public @Nullable BaseVehicle getVWCarNetThing(String deviceId) {
         return vwCarNetThings.get(deviceId);
     }
 
-    public HashMap<String, VWCarNetBaseVehicle> getVWCarNetThings() {
+    public HashMap<String, BaseVehicle> getVWCarNetThings() {
         return vwCarNetThings;
     }
 
@@ -244,7 +248,8 @@ public class VWCarNetSession {
         String url = authRefUrl + LOGIN_CHECK;
 
         logger.debug("Check for login status, url: {}", url);
-        ContentResponse httpResponse = getVWCarNetAPI(url, Boolean.TRUE);
+        Fields fields = null;
+        ContentResponse httpResponse = httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         if (httpResponse == null) {
             logger.debug("We are not logged in, Exception caught!");
             return false;
@@ -390,6 +395,44 @@ public class VWCarNetSession {
 
             logger.debug("HTTP POST Request {}.", request.toString());
             return request.send();
+        } catch (ExecutionException e) {
+            logger.warn("Caught ExecutionException {}", e);
+        } catch (InterruptedException e) {
+            logger.warn("Caught InterruptedException {}", e);
+        } catch (TimeoutException e) {
+            logger.warn("Caught TimeoutException {}", e);
+        } catch (RuntimeException e) {
+            logger.warn("Caught RuntimeException {}", e);
+        }
+        return null;
+    }
+
+    private @Nullable <T> T postJSONVWCarNetAPI(String url, @Nullable Fields fields, Class<T> jsonClass) {
+        try {
+            logger.debug("postJSONVWCarNetAPI URL: {} Fields: {}", url, fields);
+            Request request = httpClient.newRequest(url).method(HttpMethod.POST);
+
+            request.header("accept", "application/json, text/plain, */*");
+            request.header("content-type", "application/json;charset=UTF-8");
+            request.header("user-agent",
+                    "Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36");
+            request.header("referer", referer);
+            request.header("x-csrf-token", xCsrfToken);
+
+            if (fields != null) {
+                fields.forEach(f -> request.param(f.getName(), f.getValue()));
+            }
+
+            logger.debug("HTTP POST Request {}.", request.toString());
+            ContentResponse httpResponse = request.send();
+            if (httpResponse != null) {
+                String content = httpResponse.getContentAsString();
+                if (isErrorCode(content)) {
+                    logger.warn("Error code on POST: {}", content);
+                    return null;
+                }
+                return gson.fromJson(content, jsonClass);
+            }
         } catch (ExecutionException e) {
             logger.warn("Caught ExecutionException {}", e);
         } catch (InterruptedException e) {
@@ -728,13 +771,45 @@ public class VWCarNetSession {
         url = authRefUrl + "-/mainnavigation/load-car-details/" + myVin;
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
-        VWCarNetVehicle vehicle = gson.fromJson(content, VWCarNetVehicle.class);
+        Vehicle vehicle = gson.fromJson(content, Vehicle.class);
         logger.warn(content);
+
+        url = authRefUrl + VEHICLE_STATUS;
+        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        content = httpResponse.getContentAsString();
+        Status status = gson.fromJson(content, Status.class);
+        logger.warn(content);
+
+        url = authRefUrl + REQUEST_VEHICLE_STATUS_REPORT;
+        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        content = httpResponse.getContentAsString();
+        logger.warn(content);
+
+        url = authRefUrl + VEHICLE_STATUS;
+        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        content = httpResponse.getContentAsString();
+        status = gson.fromJson(content, Status.class);
+        logger.warn(content);
+
+        while (status.getVehicleStatusData().getRequestStatus().equals("REQUEST_IN_PROGRESS")) {
+            try {
+                logger.warn("Time: {}", new Timestamp(System.currentTimeMillis()));
+                Thread.sleep(1000);
+                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                content = httpResponse.getContentAsString();
+                status = gson.fromJson(content, Status.class);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        areWeLoggedOut = false;
 
         return true;
     }
 
-    private void notifyListeners(VWCarNetBaseVehicle thing) {
+    private void notifyListeners(BaseVehicle thing) {
         for (DeviceStatusListener listener : deviceStatusListeners) {
             listener.onDeviceStateChanged(thing);
         }
@@ -742,18 +817,14 @@ public class VWCarNetSession {
 
     private void updateStatus() {
         logger.debug("VWCarNetSession:updateStatus");
-        updateVehicleStatus(VWCarNetVehicle.class);
-        updateAlarmStatus(VWCarNetAlarmsJSON.class);
-        updateSmartLockStatus(VWCarNetSmartLocksJSON.class);
-
+        updateVehicleStatus(Vehicle.class);
     }
 
-    private synchronized void updateVehicleStatus(Class<? extends VWCarNetVehicle> jsonClass) {
+    private synchronized void updateVehicleStatus(Class<? extends Vehicle> jsonClass) {
         Fields fields = null;
         String content = null;
         String url = authRefUrl + "-/mainnavigation/get-fully-loaded-cars";
         ContentResponse httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
-        String myVin = "";
         if (httpResponse != null) {
             content = httpResponse.getContentAsString();
             if (isErrorCode(content)) {
@@ -761,49 +832,81 @@ public class VWCarNetSession {
                 return;
             }
             DocumentContext context = JsonPath.parse(content);
-            String jsonpathVehiclesNotFullyLoadedPath = "$['fullyLoadedVehiclesResponse']['vehiclesNotFullyLoaded'][*]";
+            String jsonpathVehiclesNotFullyLoadedPath = "$['fullyLoadedVehiclesResponse']['completeVehicles'][*]";
             List<Object> vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
 
             context = JsonPath.parse(vehicleList);
             List<Object> vinList = context.read("$[*]['vin']");
-            for (Object vin : vinList) {
-                logger.debug("VIN: {}", vin);
-                myVin = (String) vin;
-                url = authRefUrl + "-/mainnavigation/load-car-details/" + myVin;
+            List<Object> dashboarUrlList = context.read("$[*]['dashboardUrl']");
+
+            for (int i = 0; i < vinList.size(); i++) {
+                String vin = (String) vinList.get(i);
+                String dashboardUrl = (String) dashboarUrlList.get(i);
+
+                // Request a Vehicle Status report to be sent from vehicle
+                url = authRefUrl + REQUEST_VEHICLE_STATUS_REPORT;
                 httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
-                if (httpResponse != null) {
-                    content = httpResponse.getContentAsString();
-                    if (isErrorCode(content)) {
-                        logger.warn("Failed to update vehicle status.");
-                        return;
-                    }
-                    VWCarNetVehicle vehicle = gson.fromJson(content, VWCarNetVehicle.class);
-                    logger.debug("API Response ({})", vehicle);
-                    VWCarNetBaseVehicle oldObj = vwCarNetThings.get(myVin);
+                content = httpResponse.getContentAsString();
+                logger.warn("API Response ({})", content);
+
+                // Query API for vehicle details for this VIN
+                url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS + vin;
+                Vehicle vehicle = postJSONVWCarNetAPI(url, fields, Vehicle.class);
+                logger.warn("API Response ({})", vehicle);
+
+                // Query API for more specific vehicle details
+                url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS_SPECIFIC;
+                Details vehicleDetails = postJSONVWCarNetAPI(url, fields, Details.class);
+                logger.warn("API Response ({})", vehicleDetails);
+
+                // Query API for trip statistics
+                url = SESSION_BASE + dashboardUrl + TRIP_STATISTICS;
+                Trips trips = postJSONVWCarNetAPI(url, fields, Trips.class);
+                logger.trace("API Response ({})", trips);
+
+                // Query API for homeLocation status
+                url = SESSION_BASE + dashboardUrl + VEHICLE_LOCATION;
+                Location location = postJSONVWCarNetAPI(url, fields, Location.class);
+                logger.warn("API Response ({})", location);
+
+                // Query API for vehicle status
+                url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
+                Status vehicleStatus = postJSONVWCarNetAPI(url, fields, Status.class);
+                logger.warn("API Response ({})", vehicleStatus);
+
+                if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
+                        && location != null) {
+                    vehicle.setVehicleDetails(vehicleDetails);
+                    vehicle.setVehicleStatus(vehicleStatus);
+                    vehicle.setTrips(trips);
+                    vehicle.setVehicleLocation(location);
+
+                    BaseVehicle oldObj = vwCarNetThings.get(vin);
                     if (oldObj == null || !oldObj.equals(vehicle)) {
-                        vwCarNetThings.put(myVin, vehicle);
+                        vwCarNetThings.put(vin, vehicle);
                         notifyListeners(vehicle);
                     }
+                } else {
+                    logger.warn("Failed to update vehicle details for VIN: {}", vin);
                 }
             }
         }
-
     }
 
-    private synchronized void updateAlarmStatus(Class<? extends VWCarNetBaseVehicle> jsonClass) {
+    private synchronized void updateAlarmStatus(Class<? extends BaseVehicle> jsonClass) {
         String url = START_GRAPHQL;
 
         String queryQLAlarmStatus = "[{\"operationName\":\"ArmState\",\"variables\":{\"giid\":\"" + ""
                 + "\"},\"query\":\"query ArmState($giid: String!) {\\n  installation(giid: $giid) {\\n    armState {\\n      type\\n      statusType\\n      date\\n      name\\n      changedVia\\n      allowedForFirstLine\\n      allowed\\n      errorCodes {\\n        value\\n        message\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}]";
         logger.debug("Trying to get alarm status with URL {} and data {}", url, queryQLAlarmStatus);
-        VWCarNetBaseVehicle thing = postJSONVWCarNetAPI(url, queryQLAlarmStatus, jsonClass);
+        BaseVehicle thing = postJSONVWCarNetAPI(url, queryQLAlarmStatus, jsonClass);
         logger.debug("REST Response ({})", thing);
 
         if (thing != null) {
             // Set unique deviceID
             String deviceId = "alarm";
             thing.setDeviceId(deviceId);
-            VWCarNetBaseVehicle oldObj = vwCarNetThings.get(thing.getDeviceId());
+            BaseVehicle oldObj = vwCarNetThings.get(thing.getDeviceId());
             if (oldObj == null || !oldObj.equals(thing)) {
                 vwCarNetThings.put(deviceId, thing);
                 notifyListeners(thing);
@@ -814,7 +917,7 @@ public class VWCarNetSession {
 
     }
 
-    private synchronized void updateSmartLockStatus(Class<? extends VWCarNetBaseVehicle> jsonClass) {
+    private synchronized void updateSmartLockStatus(Class<? extends BaseVehicle> jsonClass) {
         String url = START_GRAPHQL;
 
         String queryQLSmartLock = "[{\"operationName\":\"DoorLock\",\"variables\":{\"giid\":\"" + ""
@@ -839,14 +942,14 @@ public class VWCarNetSession {
                 String deviceId = doorLock.getDevice().getDeviceLabel();
                 if (deviceId != null) {
                     slThing.setDeviceId(deviceId);
-                    // Set location
+                    // Set homeLocation
                     slThing.setLocation(doorLock.getDevice().getArea());
                     // Fetch more info from old endpoint
                     VWCarNetSmartLockJSON smartLockThing = getJSONVWCarNetAPI(SMARTLOCK_PATH + slThing.getDeviceId(),
                             VWCarNetSmartLockJSON.class);
                     logger.debug("REST Response ({})", smartLockThing);
                     slThing.setSmartLockJSON(smartLockThing);
-                    VWCarNetBaseVehicle oldObj = vwCarNetThings.get(slThing.getDeviceId());
+                    BaseVehicle oldObj = vwCarNetThings.get(slThing.getDeviceId());
                     if (oldObj == null || !oldObj.equals(slThing)) {
                         vwCarNetThings.put(slThing.getDeviceId(), slThing);
                         notifyListeners(slThing);

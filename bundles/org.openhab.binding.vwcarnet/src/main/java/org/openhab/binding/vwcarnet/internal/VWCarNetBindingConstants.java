@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -34,40 +34,63 @@ public class VWCarNetBindingConstants {
     public static final String VIN = "vin";
 
     // List of Thing Type UIDs
-    public static final ThingTypeUID APIBRIDGE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vwcarnetapi");
+    public static final ThingTypeUID BRIDGE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vwcarnetapi");
     public static final ThingTypeUID VEHICLE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vehicle");
 
     public static final ThingTypeUID THING_TYPE_ALARM = new ThingTypeUID(BINDING_ID, "alarm");
     public static final ThingTypeUID THING_TYPE_SMARTLOCK = new ThingTypeUID(BINDING_ID, "smartLock");
 
-    // List of Channel id's
-    public static final String TAILGATE = "tailgate";
-    public static final String REAR_RIGHT = "rearRight";
-    public static final String REAR_LEFT = "rearLeft";
-    public static final String FRONT_RIGHT = "frontRight";
-    public static final String FRONT_LEFT = "frontLeft";
+    // List of Channel ID's
+    // Doors
+    public static final String TRUNK = "trunk";
+    public static final String RIGHT_BACK = "rightBack";
+    public static final String LEFT_BACK = "leftBack";
+    public static final String RIGHT_FRONT = "rightFront";
+    public static final String LEFT_FRONT = "leftFront";
     public static final String HOOD = "hood";
-    public static final String REAR_RIGHT_WND = "rearRightWnd";
-    public static final String REAR_LEFT_WND = "rearLeftWnd";
-    public static final String FRONT_RIGHT_WND = "frontRightWnd";
-    public static final String FRONT_LEFT_WND = "frontLeftWnd";
+    public static final String DOORS_LOCKED = "doorsLocked";
+    public static final String TRUNK_LOCKED = "trunkLocked";
+
+    // Windows
+    public static final String RIGHT_BACK_WND = "rightBackWnd";
+    public static final String LEFT_BACK_WND = "leftBackWnd";
+    public static final String RIGHT_FRONT_WND = "rightFrontWnd";
+    public static final String LEFT_FRONT_WND = "leftFrontWnd";
+
+    // Odometer
     public static final String ODOMETER = "odometer";
     public static final String TRIPMETER1 = "tripmeter1";
     public static final String TRIPMETER2 = "tripmeter2";
-    public static final String DISTANCE_TO_EMPTY = "distanceToEmpty";
-    public static final String FUEL_AMOUNT = "fuelAmount";
+
+    // Fuel
     public static final String FUEL_LEVEL = "fuelLevel";
     public static final String FUEL_CONSUMPTION = "fuelConsumption";
     public static final String FUEL_ALERT = "fuelAlert";
+    public static final String FUEL_RANGE = "fuelRange";
+
+    // Compressed Natural Gas
+    public static final String CNG_LEVEL = "cngLevel";
+    public static final String CNG_CONSUMPTION = "cngConsumption";
+    public static final String CNG_ALERT = "cngAlert";
+    public static final String CNG_RANGE = "cngRange";
+
+    // Electric
+    public static final String BATTERY_LEVEL = "batteryLevel";
+    public static final String BATTERY_ALERT = "batteryAlert";
+    public static final String BATTERY_RANGE = "batteryRange";
+
+    // Location
     public static final String CALCULATED_LOCATION = "calculatedLocation";
-    public static final String ACTUAL_LOCATION = "location";
+    public static final String ACTUAL_LOCATION = "homeLocation";
     public static final String LOCATION_TIMESTAMP = "locationTimestamp";
     public static final String HEADING = "heading";
-    public static final String CAR_LOCKED = "carLocked";
+
+    // Status
     public static final String ENGINE_RUNNING = "engineRunning";
     public static final String WASHER_FLUID = "washerFluidLevel";
     public static final String SERVICE_WARNING = "serviceWarningStatus";
-    // Last Trip Channel Id's
+
+    // Last Trip
     public static final String LAST_TRIP_GROUP = "lasttrip";
     public static final String TRIP_CONSUMPTION = "tripConsumption";
     public static final String TRIP_DISTANCE = "tripDistance";
@@ -106,16 +129,26 @@ public class VWCarNetBindingConstants {
     public static final String IMAGE_URL = "imageURL";
     public static final String ENGINE_TYPE_COMBUSTIAN = "engineTypeCombustian";
     public static final String ENGINE_TYPE_ELECTRIC = "engineTypeElectic";
+    public static final String SERVICE_INSPECTION = "serviceInspectionStatus";
+    public static final String OIL_INSPECTION = "oilInspectionStatus";
 
     public static final String LOGIN_CHECK = "-/msgc/get-new-messages";
+    public static final String VEHICLE_DETAILS = "/-/mainnavigation/load-car-details/";
+    public static final String VEHICLE_DETAILS_SPECIFIC = "/-/vehicle-info/get-vehicle-details";
+    public static final String REQUEST_VEHICLE_STATUS_REPORT = "/-/vsr/request-vsr";
+    public static final String VEHICLE_STATUS = "/-/vsr/get-vsr";
+    public static final String TRIP_STATISTICS = "/-/rts/get-latest-trip-statistics";
+    public static final String VEHICLE_LOCATION = "/-/cf/get-location";
+    public static final String EMANAGER = "-/emanager/get-emanager";
+    public static final String REQUEST_STATUS = "/-/vsr/get-request-status";
 
     // List of all addressable things in OH = SUPPORTED_DEVICE_THING_TYPES_UIDS + the virtual bridge
-    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream
-            .of(APIBRIDGE_THING_TYPE, VEHICLE_THING_TYPE).collect(Collectors.toSet());
+    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream.of(BRIDGE_THING_TYPE, VEHICLE_THING_TYPE)
+            .collect(Collectors.toSet());
 
     // List of all Channel ids
     public static final String CHANNEL_NUMERIC_STATUS = "numericStatus";
-    public static final String CHANNEL_LOCATION = "location";
+    public static final String CHANNEL_LOCATION = "homeLocation";
     public static final String CHANNEL_STATUS = "status";
     public static final String CHANNEL_CONNECTED = "connected";
     public static final String CHANNEL_STATE = "state";

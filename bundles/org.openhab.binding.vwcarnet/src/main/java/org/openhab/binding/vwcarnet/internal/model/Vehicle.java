@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,13 +13,15 @@
 package org.openhab.binding.vwcarnet.internal.model;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+
+import com.google.gson.annotations.Expose;
 
 /**
  * The Vehicle representation.
@@ -28,27 +30,24 @@ import org.eclipse.jdt.annotation.Nullable;
  *
  */
 @NonNullByDefault
-public class VWCarNetVehicle extends VWCarNetBaseVehicle {
+public class Vehicle extends BaseVehicle {
 
     private @Nullable String errorCode;
     private @Nullable CompleteVehicleJson completeVehicleJson;
+    @Expose(serialize = false, deserialize = false)
+    private @Nullable Details vehicleDetails;
+    @Expose(serialize = false, deserialize = false)
+    private @Nullable Status vehicleStatus;
+    @Expose(serialize = false, deserialize = false)
+    private @Nullable Trips trips;
+    @Expose(serialize = false, deserialize = false)
+    private @Nullable Location vehicleLocation;
 
     /**
      * No args constructor for use in serialization
      *
      */
-    public VWCarNetVehicle() {
-    }
-
-    /**
-     *
-     * @param completeVehicleJson
-     * @param errorCode
-     */
-    public VWCarNetVehicle(String errorCode, CompleteVehicleJson completeVehicleJson) {
-        super();
-        this.errorCode = errorCode;
-        this.completeVehicleJson = completeVehicleJson;
+    public Vehicle() {
     }
 
     public @Nullable String getErrorCode() {
@@ -67,6 +66,38 @@ public class VWCarNetVehicle extends VWCarNetBaseVehicle {
         this.completeVehicleJson = completeVehicleJson;
     }
 
+    public @Nullable Details getVehicleDetails() {
+        return vehicleDetails;
+    }
+
+    public void setVehicleDetails(Details vehicleDetails) {
+        this.vehicleDetails = vehicleDetails;
+    }
+
+    public @Nullable Status getVehicleStatus() {
+        return vehicleStatus;
+    }
+
+    public void setVehicleStatus(Status vehicleStatus) {
+        this.vehicleStatus = vehicleStatus;
+    }
+
+    public @Nullable Trips getTrips() {
+        return trips;
+    }
+
+    public void setTrips(Trips trips) {
+        this.trips = trips;
+    }
+
+    public @Nullable Location getVehicleLocation() {
+        return vehicleLocation;
+    }
+
+    public void setVehicleLocation(Location vehicleLocation) {
+        this.vehicleLocation = vehicleLocation;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this).append("errorCode", errorCode)
@@ -83,17 +114,18 @@ public class VWCarNetVehicle extends VWCarNetBaseVehicle {
         if (other == this) {
             return true;
         }
-        if ((other instanceof VWCarNetVehicle) == false) {
+        if ((other instanceof Vehicle) == false) {
             return false;
         }
-        VWCarNetVehicle rhs = ((VWCarNetVehicle) other);
+        Vehicle rhs = ((Vehicle) other);
         return new EqualsBuilder().append(errorCode, rhs.errorCode).append(completeVehicleJson, rhs.completeVehicleJson)
-                .isEquals();
+                .append(vehicleDetails, rhs.vehicleDetails).append(vehicleStatus, rhs.vehicleStatus)
+                .append(vehicleLocation, rhs.vehicleLocation).isEquals();
     }
 
     public class CompleteVehicleJson {
 
-        private String vin = "";
+        private @Nullable String vin;
         private @Nullable String name;
         private @Nullable Boolean expired;
         private @Nullable String model;
@@ -151,7 +183,7 @@ public class VWCarNetVehicle extends VWCarNetBaseVehicle {
         public CompleteVehicleJson() {
         }
 
-        public @NonNull String getVin() {
+        public @Nullable String getVin() {
             return vin;
         }
 
@@ -763,4 +795,156 @@ public class VWCarNetVehicle extends VWCarNetBaseVehicle {
                     .append(packageType, rhs.packageType).append(expirationDate, rhs.expirationDate).isEquals();
         }
     }
+
+    public class VehicleDetails {
+
+        private @Nullable List<String> lastConnectionTimeStamp;
+        private @Nullable String distanceCovered;
+        private @Nullable String range;
+        private @Nullable String serviceInspectionData;
+        private @Nullable String oilInspectionData;
+        private @Nullable Boolean showOil;
+        private @Nullable Boolean showService;
+        private @Nullable Boolean flightMode;
+        private @Nullable Map<String, Object> additionalProperties;
+
+        /**
+         * No args constructor for use in serialization
+         *
+         */
+        public VehicleDetails() {
+        }
+
+        /**
+         *
+         * @param oilInspectionData
+         * @param distanceCovered
+         * @param range
+         * @param serviceInspectionData
+         * @param lastConnectionTimeStamp
+         * @param showOil
+         * @param flightMode
+         * @param showService
+         */
+        public VehicleDetails(List<String> lastConnectionTimeStamp, String distanceCovered, String range,
+                String serviceInspectionData, String oilInspectionData, Boolean showOil, Boolean showService,
+                Boolean flightMode) {
+            super();
+            this.lastConnectionTimeStamp = lastConnectionTimeStamp;
+            this.distanceCovered = distanceCovered;
+            this.range = range;
+            this.serviceInspectionData = serviceInspectionData;
+            this.oilInspectionData = oilInspectionData;
+            this.showOil = showOil;
+            this.showService = showService;
+            this.flightMode = flightMode;
+        }
+
+        public @Nullable List<String> getLastConnectionTimeStamp() {
+            return lastConnectionTimeStamp;
+        }
+
+        public void setLastConnectionTimeStamp(List<String> lastConnectionTimeStamp) {
+            this.lastConnectionTimeStamp = lastConnectionTimeStamp;
+        }
+
+        public @Nullable String getDistanceCovered() {
+            return distanceCovered;
+        }
+
+        public void setDistanceCovered(String distanceCovered) {
+            this.distanceCovered = distanceCovered;
+        }
+
+        public @Nullable String getRange() {
+            return range;
+        }
+
+        public void setRange(String range) {
+            this.range = range;
+        }
+
+        public @Nullable String getServiceInspectionData() {
+            return serviceInspectionData;
+        }
+
+        public void setServiceInspectionData(String serviceInspectionData) {
+            this.serviceInspectionData = serviceInspectionData;
+        }
+
+        public @Nullable String getOilInspectionData() {
+            return oilInspectionData;
+        }
+
+        public void setOilInspectionData(String oilInspectionData) {
+            this.oilInspectionData = oilInspectionData;
+        }
+
+        public @Nullable Boolean getShowOil() {
+            return showOil;
+        }
+
+        public void setShowOil(Boolean showOil) {
+            this.showOil = showOil;
+        }
+
+        public @Nullable Boolean getShowService() {
+            return showService;
+        }
+
+        public void setShowService(Boolean showService) {
+            this.showService = showService;
+        }
+
+        public @Nullable Boolean getFlightMode() {
+            return flightMode;
+        }
+
+        public void setFlightMode(Boolean flightMode) {
+            this.flightMode = flightMode;
+        }
+
+        public @Nullable Map<String, Object> getAdditionalProperties() {
+            return this.additionalProperties;
+        }
+
+        public void setAdditionalProperty(String name, Object value) {
+            this.additionalProperties.put(name, value);
+        }
+
+        @Override
+        public String toString() {
+            return new ToStringBuilder(this).append("lastConnectionTimeStamp", lastConnectionTimeStamp)
+                    .append("distanceCovered", distanceCovered).append("range", range)
+                    .append("serviceInspectionData", serviceInspectionData)
+                    .append("oilInspectionData", oilInspectionData).append("showOil", showOil)
+                    .append("showService", showService).append("flightMode", flightMode)
+                    .append("additionalProperties", additionalProperties).toString();
+        }
+
+        @Override
+        public int hashCode() {
+            return new HashCodeBuilder().append(oilInspectionData).append(distanceCovered).append(range)
+                    .append(serviceInspectionData).append(lastConnectionTimeStamp).append(additionalProperties)
+                    .append(showOil).append(flightMode).append(showService).toHashCode();
+        }
+
+        @Override
+        public boolean equals(@Nullable Object other) {
+            if (other == this) {
+                return true;
+            }
+            if ((other instanceof VehicleDetails) == false) {
+                return false;
+            }
+            VehicleDetails rhs = ((VehicleDetails) other);
+            return new EqualsBuilder().append(oilInspectionData, rhs.oilInspectionData)
+                    .append(distanceCovered, rhs.distanceCovered).append(range, rhs.range)
+                    .append(serviceInspectionData, rhs.serviceInspectionData)
+                    .append(lastConnectionTimeStamp, rhs.lastConnectionTimeStamp)
+                    .append(additionalProperties, rhs.additionalProperties).append(showOil, rhs.showOil)
+                    .append(flightMode, rhs.flightMode).append(showService, rhs.showService).isEquals();
+        }
+    }
+
 }
