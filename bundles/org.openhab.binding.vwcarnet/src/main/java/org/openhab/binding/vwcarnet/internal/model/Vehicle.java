@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -119,7 +119,7 @@ public class Vehicle extends BaseVehicle {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Vehicle) == false) {
+        if (!(other instanceof Vehicle)) {
             return false;
         }
         Vehicle rhs = ((Vehicle) other);
@@ -128,6 +128,7 @@ public class Vehicle extends BaseVehicle {
                 .append(vehicleLocation, rhs.vehicleLocation).isEquals();
     }
 
+    @NonNullByDefault
     public class CompleteVehicleJson {
 
         private @Nullable String vin;
@@ -644,7 +645,7 @@ public class Vehicle extends BaseVehicle {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof CompleteVehicleJson) == false) {
+            if (!(other instanceof CompleteVehicleJson)) {
                 return false;
             }
             CompleteVehicleJson rhs = ((CompleteVehicleJson) other);
@@ -677,6 +678,7 @@ public class Vehicle extends BaseVehicle {
         }
     }
 
+    @NonNullByDefault
     public class PackageService {
 
         private @Nullable String packageServiceId;
@@ -800,7 +802,7 @@ public class Vehicle extends BaseVehicle {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof PackageService) == false) {
+            if (!(other instanceof PackageService)) {
                 return false;
             }
             PackageService rhs = ((PackageService) other);
@@ -813,6 +815,7 @@ public class Vehicle extends BaseVehicle {
         }
     }
 
+    @NonNullByDefault
     public class VehicleDetails {
 
         private @Nullable List<String> lastConnectionTimeStamp;
@@ -951,7 +954,7 @@ public class Vehicle extends BaseVehicle {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof VehicleDetails) == false) {
+            if (!(other instanceof VehicleDetails)) {
                 return false;
             }
             VehicleDetails rhs = ((VehicleDetails) other);

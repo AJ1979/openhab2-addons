@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -45,7 +45,7 @@ import org.openhab.binding.vwcarnet.internal.model.Location.Position;
 import org.openhab.binding.vwcarnet.internal.model.Status.VehicleStatusData;
 import org.openhab.binding.vwcarnet.internal.model.Trips;
 import org.openhab.binding.vwcarnet.internal.model.Trips.TripStatistic;
-import org.openhab.binding.vwcarnet.internal.model.Trips.TripStatistic_;
+import org.openhab.binding.vwcarnet.internal.model.Trips.TripStatisticDetail;
 import org.openhab.binding.vwcarnet.internal.model.Vehicle;
 import org.openhab.binding.vwcarnet.internal.model.Vehicle.CompleteVehicleJson;
 import org.openhab.binding.vwcarnet.internal.wrapper.VehiclePositionWrapper;
@@ -244,14 +244,13 @@ public class VehicleHandler extends VWCarNetHandler {
     }
 
     public void updateLastTrip(Trips trips) {
-
         List<TripStatistic> tripsStat = trips.getRtsViewModel().getTripStatistics();
         Collections.reverse(tripsStat);
 
         Optional<TripStatistic> lastTrip = tripsStat.stream()
                 .filter(aggregatedStatistics -> aggregatedStatistics != null).findFirst();
         int tripId = lastTrip.get().getAggregatedStatistics().getTripId();
-        Optional<TripStatistic_> lastTripStats = lastTrip.get().getTripStatistics().stream()
+        Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
                 .filter(t -> t.getTripId() == tripId).findFirst();
 
         getThing().getChannels().stream().map(Channel::getUID)
@@ -263,7 +262,7 @@ public class VehicleHandler extends VWCarNetHandler {
 
     }
 
-    public State getTripValue(String channelId, TripStatistic_ trip) {
+    public State getTripValue(String channelId, TripStatisticDetail trip) {
         switch (channelId) {
             case AVERAGE_FUEL_CONSUMPTION:
                 return trip.getAverageFuelConsumption() != BaseVehicle.UNDEFINED

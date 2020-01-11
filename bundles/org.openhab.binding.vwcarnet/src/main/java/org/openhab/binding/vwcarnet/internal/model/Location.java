@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -80,7 +80,7 @@ public class Location {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Location) == false) {
+        if (!(other instanceof Location)) {
             return false;
         }
         Location rhs = ((Location) other);
@@ -88,6 +88,7 @@ public class Location {
                 .append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
+    @NonNullByDefault
     public class Position {
 
         private double lat;
@@ -152,7 +153,7 @@ public class Location {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof Position) == false) {
+            if (!(other instanceof Position)) {
                 return false;
             }
             Position rhs = ((Position) other);

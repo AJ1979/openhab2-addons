@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -28,9 +28,9 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.openhab.binding.vwcarnet.internal.model.BaseVehicle;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON.ArmState;
-import org.openhab.binding.vwcarnet.internal.model.BaseVehicle;
 
 /**
  * Handler for the Alarm Device thing type that VWCarNet provides.

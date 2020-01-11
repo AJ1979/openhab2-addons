@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -102,8 +102,7 @@ public class VWCarNetSession {
         this.password = password;
         this.pinCode = pinCode;
         // Try to login to VWCarNet
-        if (logIn()) {
-        } else {
+        if (!logIn()) {
             logger.warn("Failed to login to VWCarNet!");
         }
     }
@@ -754,7 +753,7 @@ public class VWCarNetSession {
             context = JsonPath.parse(vehicleList);
             List<Object> vinList = context.read("$[*]['vin']");
             for (Object vin : vinList) {
-                System.out.println("VIN:" + (String) vin);
+                logger.warn("VIN: {}", vin);
                 myVin = (String) vin;
             }
         }
@@ -807,8 +806,7 @@ public class VWCarNetSession {
                 content = httpResponse.getContentAsString();
                 status = gson.fromJson(content, Status.class);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                logger.warn("Exception caught: {}", e);
             }
         }
 

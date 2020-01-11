@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -92,7 +92,7 @@ public class Details {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Details) == false) {
+        if (!(other instanceof Details)) {
             return false;
         }
         Details rhs = ((Details) other);
@@ -101,6 +101,7 @@ public class Details {
                 .isEquals();
     }
 
+    @NonNullByDefault
     public class VehicleDetails {
 
         private @Nullable List<String> lastConnectionTimeStamp;
@@ -214,7 +215,7 @@ public class Details {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof VehicleDetails) == false) {
+            if (!(other instanceof VehicleDetails)) {
                 return false;
             }
             VehicleDetails rhs = ((VehicleDetails) other);

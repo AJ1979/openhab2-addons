@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -21,6 +21,8 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.OpenClosedType;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * The Vehicle status representation.
@@ -83,7 +85,7 @@ public class Status {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Status) == false) {
+        if (!(other instanceof Status)) {
             return false;
         }
         Status rhs = ((Status) other);
@@ -92,6 +94,7 @@ public class Status {
                 .isEquals();
     }
 
+    @NonNullByDefault
     public class VehicleStatusData {
 
         private @Nullable Boolean windowStatusSupported;
@@ -342,7 +345,7 @@ public class Status {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof VehicleStatusData) == false) {
+            if (!(other instanceof VehicleStatusData)) {
                 return false;
             }
             VehicleStatusData rhs = ((VehicleStatusData) other);
@@ -361,6 +364,7 @@ public class Status {
         }
     }
 
+    @NonNullByDefault
     public class CarRenderData {
 
         private int parkingLights;
@@ -456,7 +460,7 @@ public class Status {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof CarRenderData) == false) {
+            if (!(other instanceof CarRenderData)) {
                 return false;
             }
             CarRenderData rhs = ((CarRenderData) other);
@@ -466,12 +470,17 @@ public class Status {
         }
     }
 
+    @NonNullByDefault
     public class LockData {
 
-        private int left_front;
-        private int right_front;
-        private int left_back;
-        private int right_back;
+        @SerializedName("leftFront")
+        private int leftFront;
+        @SerializedName("rightFront")
+        private int rightFront;
+        @SerializedName("leftBack")
+        private int leftBack;
+        @SerializedName("rightBack")
+        private int rightBack;
         private int trunk;
         private @Nullable Map<String, Object> additionalProperties;
 
@@ -483,39 +492,39 @@ public class Status {
         }
 
         public OnOffType getDoorsLocked() {
-            return left_front == 2 ? OnOffType.ON : OnOffType.OFF;
+            return leftFront == 2 ? OnOffType.ON : OnOffType.OFF;
         }
 
         public int getLeftFront() {
-            return left_front;
+            return leftFront;
         }
 
         public void setLeftFront(int leftFront) {
-            this.left_front = leftFront;
+            this.leftFront = leftFront;
         }
 
         public int getRightFront() {
-            return right_front;
+            return rightFront;
         }
 
         public void setRightFront(int rightFront) {
-            this.right_front = rightFront;
+            this.rightFront = rightFront;
         }
 
         public int getLeftBack() {
-            return left_back;
+            return leftBack;
         }
 
         public void setLeftBack(int leftBack) {
-            this.left_back = leftBack;
+            this.leftBack = leftBack;
         }
 
         public int getRightBack() {
-            return right_back;
+            return rightBack;
         }
 
         public void setRightBack(int rightBack) {
-            this.right_back = rightBack;
+            this.rightBack = rightBack;
         }
 
         public OnOffType getTrunk() {
@@ -536,14 +545,14 @@ public class Status {
 
         @Override
         public String toString() {
-            return new ToStringBuilder(this).append("left_front", left_front).append("right_front", right_front)
-                    .append("left_back", left_back).append("right_back", right_back).append("trunk", trunk)
+            return new ToStringBuilder(this).append("leftFront", leftFront).append("rightFront", rightFront)
+                    .append("leftBack", leftBack).append("rightBack", rightBack).append("trunk", trunk)
                     .append("additionalProperties", additionalProperties).toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(left_front).append(right_back).append(right_front).append(left_back)
+            return new HashCodeBuilder().append(leftFront).append(rightBack).append(rightFront).append(leftBack)
                     .append(additionalProperties).append(trunk).toHashCode();
         }
 
@@ -552,25 +561,31 @@ public class Status {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof LockData) == false) {
+            if (!(other instanceof LockData)) {
                 return false;
             }
             LockData rhs = ((LockData) other);
-            return new EqualsBuilder().append(left_front, rhs.left_front).append(right_back, rhs.right_back)
-                    .append(right_front, rhs.right_front).append(left_back, rhs.left_back)
+            return new EqualsBuilder().append(leftFront, rhs.leftFront).append(rightBack, rhs.rightBack)
+                    .append(rightFront, rhs.rightFront).append(leftBack, rhs.leftBack)
                     .append(additionalProperties, rhs.additionalProperties).append(trunk, rhs.trunk).isEquals();
         }
 
     }
 
+    @NonNullByDefault
     public class Doors {
 
-        private int left_front;
-        private int right_front;
-        private int left_back;
-        private int right_back;
+        @SerializedName("leftFront")
+        private int leftFront;
+        @SerializedName("rightFront")
+        private int rightFront;
+        @SerializedName("leftBack")
+        private int leftBack;
+        @SerializedName("rightBack")
+        private int rightBack;
         private int trunk;
-        private int number_of_doors;
+        @SerializedName("number_of_doors")
+        private int numberOfDoors;
         private @Nullable Map<String, Object> additionalProperties;
 
         /**
@@ -585,35 +600,35 @@ public class Status {
         }
 
         public OpenClosedType getLeftFront() {
-            return getDoorStatus(left_front);
+            return getDoorStatus(leftFront);
         }
 
         public void setLeftFront(int leftFront) {
-            this.left_front = leftFront;
+            this.leftFront = leftFront;
         }
 
         public OpenClosedType getRightFront() {
-            return getDoorStatus(right_front);
+            return getDoorStatus(rightFront);
         }
 
         public void setRightFront(int rightFront) {
-            this.right_front = rightFront;
+            this.rightFront = rightFront;
         }
 
         public OpenClosedType getLeftBack() {
-            return getDoorStatus(left_back);
+            return getDoorStatus(leftBack);
         }
 
         public void setLeftBack(int leftBack) {
-            this.left_back = leftBack;
+            this.leftBack = leftBack;
         }
 
         public OpenClosedType getRightBack() {
-            return getDoorStatus(right_back);
+            return getDoorStatus(rightBack);
         }
 
         public void setRightBack(int rightBack) {
-            this.right_back = rightBack;
+            this.rightBack = rightBack;
         }
 
         public OpenClosedType getTrunk() {
@@ -625,11 +640,11 @@ public class Status {
         }
 
         public int getNumberOfDoors() {
-            return number_of_doors;
+            return numberOfDoors;
         }
 
         public void setNumberOfDoors(int numberOfDoors) {
-            this.number_of_doors = numberOfDoors;
+            this.numberOfDoors = numberOfDoors;
         }
 
         public @Nullable Map<String, Object> getAdditionalProperties() {
@@ -642,16 +657,16 @@ public class Status {
 
         @Override
         public String toString() {
-            return new ToStringBuilder(this).append("left_front", left_front).append("right_front", right_front)
-                    .append("left_back", left_back).append("right_back", right_back).append("trunk", trunk)
-                    .append("number_of_doors", number_of_doors).append("additionalProperties", additionalProperties)
+            return new ToStringBuilder(this).append("leftFront", leftFront).append("rightFront", rightFront)
+                    .append("leftBack", leftBack).append("rightBack", rightBack).append("trunk", trunk)
+                    .append("numberOfDoors", numberOfDoors).append("additionalProperties", additionalProperties)
                     .toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(left_front).append(right_back).append(right_front)
-                    .append(number_of_doors).append(left_back).append(additionalProperties).append(trunk).toHashCode();
+            return new HashCodeBuilder().append(leftFront).append(rightBack).append(rightFront).append(numberOfDoors)
+                    .append(leftBack).append(additionalProperties).append(trunk).toHashCode();
         }
 
         @Override
@@ -659,23 +674,28 @@ public class Status {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof Doors) == false) {
+            if (!(other instanceof Doors)) {
                 return false;
             }
             Doors rhs = ((Doors) other);
-            return new EqualsBuilder().append(left_front, rhs.left_front).append(right_back, rhs.right_back)
-                    .append(right_front, rhs.right_front).append(number_of_doors, rhs.number_of_doors)
-                    .append(left_back, rhs.left_back).append(additionalProperties, rhs.additionalProperties)
+            return new EqualsBuilder().append(leftFront, rhs.leftFront).append(rightBack, rhs.rightBack)
+                    .append(rightFront, rhs.rightFront).append(numberOfDoors, rhs.numberOfDoors)
+                    .append(leftBack, rhs.leftBack).append(additionalProperties, rhs.additionalProperties)
                     .append(trunk, rhs.trunk).isEquals();
         }
     }
 
+    @NonNullByDefault
     public class Windows {
 
-        private int left_front;
-        private int right_front;
-        private int left_back;
-        private int right_back;
+        @SerializedName("left_front")
+        private int leftFront;
+        @SerializedName("right_front")
+        private int rightFront;
+        @SerializedName("left_back")
+        private int leftBack;
+        @SerializedName("right_back")
+        private int rightBack;
         private @Nullable Map<String, Object> additionalProperties;
 
         /**
@@ -690,35 +710,35 @@ public class Status {
         }
 
         public OpenClosedType getLeftFront() {
-            return getWindowStatus(left_front);
+            return getWindowStatus(leftFront);
         }
 
         public void setLeftFront(int leftFront) {
-            this.left_front = leftFront;
+            this.leftFront = leftFront;
         }
 
         public OpenClosedType getRightFront() {
-            return getWindowStatus(right_front);
+            return getWindowStatus(rightFront);
         }
 
         public void setRightFront(int rightFront) {
-            this.right_front = rightFront;
+            this.rightFront = rightFront;
         }
 
         public OpenClosedType getLeftBack() {
-            return getWindowStatus(left_back);
+            return getWindowStatus(leftBack);
         }
 
         public void setLeftBack(int leftBack) {
-            this.left_back = leftBack;
+            this.leftBack = leftBack;
         }
 
         public OpenClosedType getRightBack() {
-            return getWindowStatus(right_back);
+            return getWindowStatus(rightBack);
         }
 
         public void setRightBack(int rightBack) {
-            this.right_back = rightBack;
+            this.rightBack = rightBack;
         }
 
         public @Nullable Map<String, Object> getAdditionalProperties() {
@@ -731,15 +751,15 @@ public class Status {
 
         @Override
         public String toString() {
-            return new ToStringBuilder(this).append("left_front", left_front).append("right_front", right_front)
-                    .append("left_back", left_back).append("right_back", right_back)
+            return new ToStringBuilder(this).append("leftFront", leftFront).append("rightFront", rightFront)
+                    .append("leftBack", leftBack).append("rightBack", rightBack)
                     .append("additionalProperties", additionalProperties).toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(left_front).append(left_back).append(right_back)
-                    .append(additionalProperties).append(right_front).toHashCode();
+            return new HashCodeBuilder().append(leftFront).append(leftBack).append(rightBack)
+                    .append(additionalProperties).append(rightFront).toHashCode();
         }
 
         @Override
@@ -747,13 +767,13 @@ public class Status {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof Windows) == false) {
+            if (!(other instanceof Windows)) {
                 return false;
             }
             Windows rhs = ((Windows) other);
-            return new EqualsBuilder().append(left_front, rhs.left_front).append(left_back, rhs.left_back)
-                    .append(right_back, rhs.right_back).append(additionalProperties, rhs.additionalProperties)
-                    .append(right_front, rhs.right_front).isEquals();
+            return new EqualsBuilder().append(leftFront, rhs.leftFront).append(leftBack, rhs.leftBack)
+                    .append(rightBack, rhs.rightBack).append(additionalProperties, rhs.additionalProperties)
+                    .append(rightFront, rhs.rightFront).isEquals();
         }
 
     }

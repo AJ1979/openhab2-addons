@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -86,7 +86,7 @@ public class Trips {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Trips) == false) {
+        if (!(other instanceof Trips)) {
             return false;
         }
         Trips rhs = ((Trips) other);
@@ -94,6 +94,7 @@ public class Trips {
                 .append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
+    @NonNullByDefault
     public class RtsViewModel {
 
         private int daysInMonth;
@@ -227,7 +228,7 @@ public class Trips {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof RtsViewModel) == false) {
+            if (!(other instanceof RtsViewModel)) {
                 return false;
             }
             RtsViewModel rhs = ((RtsViewModel) other);
@@ -241,20 +242,21 @@ public class Trips {
         }
     }
 
+    @NonNullByDefault
     public class LongTermData {
 
         private int tripId;
-        private double averageElectricConsumption = BaseVehicle.UNDEFINED;;
-        private double averageFuelConsumption = BaseVehicle.UNDEFINED;;
-        private double averageCngConsumption = BaseVehicle.UNDEFINED;;
-        private double averageSpeed = BaseVehicle.UNDEFINED;;
-        private int tripDuration = BaseVehicle.UNDEFINED;;
-        private double tripLength = BaseVehicle.UNDEFINED;;
+        private double averageElectricConsumption = BaseVehicle.UNDEFINED;
+        private double averageFuelConsumption = BaseVehicle.UNDEFINED;
+        private double averageCngConsumption = BaseVehicle.UNDEFINED;
+        private double averageSpeed = BaseVehicle.UNDEFINED;
+        private int tripDuration = BaseVehicle.UNDEFINED;
+        private double tripLength = BaseVehicle.UNDEFINED;
         private @Nullable String timestamp;
         private @Nullable String tripDurationFormatted;
         private @Nullable Object recuperation;
-        private double averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;;
-        private double totalElectricConsumption = BaseVehicle.UNDEFINED;;
+        private double averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;
+        private double totalElectricConsumption = BaseVehicle.UNDEFINED;
         private @Nullable String longFormattedTimestamp;
         private @Nullable Map<String, Object> additionalProperties;
 
@@ -406,7 +408,7 @@ public class Trips {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof LongTermData) == false) {
+            if (!(other instanceof LongTermData)) {
                 return false;
             }
             LongTermData rhs = ((LongTermData) other);
@@ -423,6 +425,7 @@ public class Trips {
         }
     }
 
+    @NonNullByDefault
     public class AggregatedStatistics {
 
         private int tripId;
@@ -588,7 +591,7 @@ public class Trips {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof AggregatedStatistics) == false) {
+            if (!(other instanceof AggregatedStatistics)) {
                 return false;
             }
             AggregatedStatistics rhs = ((AggregatedStatistics) other);
@@ -605,6 +608,7 @@ public class Trips {
         }
     }
 
+    @NonNullByDefault
     public class ServiceConfiguration {
 
         private boolean electricConsumption;
@@ -729,7 +733,7 @@ public class Trips {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof ServiceConfiguration) == false) {
+            if (!(other instanceof ServiceConfiguration)) {
                 return false;
             }
             ServiceConfiguration rhs = ((ServiceConfiguration) other);
@@ -744,10 +748,11 @@ public class Trips {
         }
     }
 
+    @NonNullByDefault
     public class TripStatistic {
 
         private @Nullable AggregatedStatistics aggregatedStatistics;
-        private @Nullable List<TripStatistic_> tripStatistics;
+        private @Nullable List<TripStatisticDetail> tripStatistics;
         private @Nullable Map<String, Object> additionalProperties;
 
         /**
@@ -765,11 +770,11 @@ public class Trips {
             this.aggregatedStatistics = aggregatedStatistics;
         }
 
-        public @Nullable List<TripStatistic_> getTripStatistics() {
+        public @Nullable List<TripStatisticDetail> getTripStatistics() {
             return tripStatistics;
         }
 
-        public void setTripStatistics(List<TripStatistic_> tripStatistics) {
+        public void setTripStatistics(List<TripStatisticDetail> tripStatistics) {
             this.tripStatistics = tripStatistics;
         }
 
@@ -799,7 +804,7 @@ public class Trips {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof TripStatistic) == false) {
+            if (!(other instanceof TripStatistic)) {
                 return false;
             }
             TripStatistic rhs = ((TripStatistic) other);
@@ -809,7 +814,8 @@ public class Trips {
         }
     }
 
-    public class TripStatistic_ {
+    @NonNullByDefault
+    public class TripStatisticDetail {
 
         private int tripId;
         private double averageElectricConsumption = BaseVehicle.UNDEFINED;
@@ -821,8 +827,8 @@ public class Trips {
         private @Nullable String timestamp;
         private @Nullable String tripDurationFormatted;
         private @Nullable Object recuperation;
-        private int averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;;
-        private int totalElectricConsumption = BaseVehicle.UNDEFINED;;
+        private int averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;
+        private int totalElectricConsumption = BaseVehicle.UNDEFINED;
         private @Nullable String longFormattedTimestamp;
         private @Nullable Map<String, Object> additionalProperties;
 
@@ -830,7 +836,7 @@ public class Trips {
          * No args constructor for use in serialization
          *
          */
-        public TripStatistic_() {
+        public TripStatisticDetail() {
         }
 
         public int getTripId() {
@@ -1002,10 +1008,10 @@ public class Trips {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof TripStatistic_) == false) {
+            if (!(other instanceof TripStatisticDetail)) {
                 return false;
             }
-            TripStatistic_ rhs = ((TripStatistic_) other);
+            TripStatisticDetail rhs = ((TripStatisticDetail) other);
             return new EqualsBuilder().append(averageElectricConsumption, rhs.averageElectricConsumption)
                     .append(tripLength, rhs.tripLength).append(averageFuelConsumption, rhs.averageFuelConsumption)
                     .append(averageAuxiliaryConsumption, rhs.averageAuxiliaryConsumption).append(tripId, rhs.tripId)

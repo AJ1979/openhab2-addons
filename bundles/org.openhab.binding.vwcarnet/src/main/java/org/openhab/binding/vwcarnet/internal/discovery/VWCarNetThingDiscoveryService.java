@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -25,8 +25,8 @@ import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.vwcarnet.internal.VWCarNetSession;
 import org.openhab.binding.vwcarnet.internal.handler.VWCarNetBridgeHandler;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON;
 import org.openhab.binding.vwcarnet.internal.model.BaseVehicle;
+import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON;
 import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON;
 import org.openhab.binding.vwcarnet.internal.model.Vehicle;
 import org.slf4j.Logger;
