@@ -116,8 +116,8 @@ public class VehicleHandler extends VWCarNetHandler {
             case MODEL_YEAR:
                 return new StringType(vehicle.getModelYear());
             case ENROLLMENT_DATE:
-                String localEnrollmentDate = vehicle.getEnrollmentDate();
-                return localEnrollmentDate != null ? new DateTimeType(localEnrollmentDate) : UnDefType.NULL;
+                ZonedDateTime enrollmentStartDate = vehicle.getEnrollmentStartDate();
+                return enrollmentStartDate != null ? new DateTimeType(enrollmentStartDate) : UnDefType.UNDEF;
             case DASHBOARD_URL:
                 return new StringType(vehicle.getDashboardUrl());
             case IMAGE_URL:

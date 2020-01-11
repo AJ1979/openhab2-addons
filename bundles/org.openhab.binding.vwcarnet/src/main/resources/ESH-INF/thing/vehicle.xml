@@ -50,14 +50,17 @@
         <label>Total Trip Data</label>
         <channels>
             <channel id="totalAverageSpeed" typeId="averageSpeed">
-                <label>Consumption</label>
-                <description>Average speed for trip</description>
+                <label>Average Speed</label>
+                <description>Total average speed</description>
             </channel>
             <channel id="totalTripDistance" typeId="odometer">
-                <label>Distance</label>
-                <description>Distance traveled</description>
+                <label>Total Distance</label>
+                <description>Total distance traveled</description>
             </channel>
-            <channel id="totalTripDuration" typeId="tripDuration" />
+            <channel id="totalTripDuration" typeId="tripDuration" >
+                <label>Total Duration</label>
+                <description>Total trip duration</description>
+            </channel>    
         </channels>
     </channel-group-type>
     
@@ -81,7 +84,7 @@
                 <description>Average Auxiliary consumption for trip</description>
             </channel>
             <channel id="averageSpeed" typeId="averageSpeed">
-                <label>Consumption</label>
+                <label>Average Speed</label>
                 <description>Average speed for trip</description>
             </channel>
             <channel id="tripDistance" typeId="odometer">

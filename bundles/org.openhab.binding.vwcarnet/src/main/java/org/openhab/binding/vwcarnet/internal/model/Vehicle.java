@@ -12,7 +12,12 @@
  */
 package org.openhab.binding.vwcarnet.internal.model;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -269,6 +274,18 @@ public class Vehicle extends BaseVehicle {
 
         public void setVehicleBrand(String vehicleBrand) {
             this.vehicleBrand = vehicleBrand;
+        }
+
+        public @Nullable ZonedDateTime getEnrollmentStartDate() {
+            String formattedTime = enrollmentDate;
+            if (formattedTime != null) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.getDefault());
+                LocalDate date = LocalDate.parse(formattedTime, formatter);
+                ZonedDateTime zdt = date.atStartOfDay(ZoneId.systemDefault());
+
+                return zdt;
+            }
+            return null;
         }
 
         public @Nullable String getEnrollmentDate() {
