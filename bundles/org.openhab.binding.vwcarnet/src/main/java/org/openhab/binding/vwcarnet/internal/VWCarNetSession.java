@@ -25,13 +25,11 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
@@ -48,8 +46,6 @@ import org.openhab.binding.vwcarnet.internal.model.Details;
 import org.openhab.binding.vwcarnet.internal.model.Location;
 import org.openhab.binding.vwcarnet.internal.model.Status;
 import org.openhab.binding.vwcarnet.internal.model.Trips;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLockJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON;
 import org.openhab.binding.vwcarnet.internal.model.Vehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,17 +121,6 @@ public class VWCarNetSession {
         }
     }
 
-    public int sendCommand(String url, String data, @Nullable BigDecimal installationId) {
-        logger.debug("Sending command with URL {} and data {}", url, data);
-        configureInstallationInstance(installationId);
-        int httpResultCode = setSessionCookieAuthLogin();
-        if (httpResultCode == HttpStatus.OK_200) {
-            return postVWCarNetAPI(url, data);
-        } else {
-            return httpResultCode;
-        }
-    }
-
     public boolean unregisterDeviceStatusListener(DeviceStatusListener deviceStatusListener) {
         logger.debug("unregisterDeviceStatusListener for listener {}", deviceStatusListener);
         return deviceStatusListeners.remove(deviceStatusListener);
@@ -163,70 +148,6 @@ public class VWCarNetSession {
 
     public @Nullable String getPinCode() {
         return pinCode;
-    }
-
-    public String getApiServerInUse() {
-        return apiServerInUse;
-    }
-
-    public void setApiServerInUse(String apiServerInUse) {
-        this.apiServerInUse = apiServerInUse;
-    }
-
-    public String getNextApiServer() {
-        apiServerInUseIndex++;
-        if (apiServerInUseIndex > (APISERVERLIST.size() - 1)) {
-            apiServerInUseIndex = 0;
-        }
-        return APISERVERLIST.get(apiServerInUseIndex);
-    }
-
-    public void configureInstallationInstance(@Nullable BigDecimal installationId) {
-        logger.debug("Attempting to fetch CSRF and configure installation instance");
-        try {
-            csrf = getCsrfToken(installationId);
-            logger.debug("Got CSRF: {}", csrf);
-            // Set installation
-            String url = SET_INSTALLATION + installationId.toString();
-            logger.debug("Set installation URL: {}", url);
-            httpClient.GET(url);
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
-        }
-    }
-
-    public @Nullable String getCsrfToken(@Nullable BigDecimal installationId) {
-        String subString = null;
-        String source = null;
-        String url = SETTINGS + installationId.toString();
-        logger.debug("Settings URL: {}", url);
-        try {
-            ContentResponse resp = httpClient.GET(url);
-            source = resp.getContentAsString();
-            logger.trace("{} html: {}", url, source);
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
-            return null;
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
-            return null;
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
-            return null;
-        }
-
-        try {
-            int labelIndex = source.indexOf("_csrf\" value=");
-            subString = source.substring(labelIndex + 14, labelIndex + 78);
-            logger.debug("csrf-token: {}", subString);
-        } catch (IndexOutOfBoundsException e) {
-            logger.debug("Exception caught when parsing csrf {}", e);
-        }
-        return subString;
     }
 
     public @Nullable String getPinCode(@Nullable BigDecimal installationId) {
@@ -318,27 +239,6 @@ public class VWCarNetSession {
             logger.warn("Caught RuntimeException {}", e);
         } catch (MalformedURLException e) {
             logger.warn("Caught MalformedURLException {}", e);
-        }
-        return null;
-    }
-
-    private @Nullable <T> T getJSONVWCarNetAPI(String url, Class<T> jsonClass) {
-        T result = null;
-        logger.debug("HTTP GET: {}", BASEURL + url);
-        try {
-            ContentResponse httpResult = httpClient.GET(BASEURL + url + "?_=" + System.currentTimeMillis());
-            logger.debug("HTTP Response ({}) Body:{}", httpResult.getStatus(),
-                    httpResult.getContentAsString().replaceAll("\n+", "\n"));
-            if (httpResult.getStatus() == HttpStatus.OK_200) {
-                result = gson.fromJson(httpResult.getContentAsString(), jsonClass);
-            }
-            return result;
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {} for URL string {}", e, url);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {} for URL string {}", e, url);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {} for URL string {}", e, url);
         }
         return null;
     }
@@ -442,95 +342,6 @@ public class VWCarNetSession {
             logger.warn("Caught RuntimeException {}", e);
         }
         return null;
-    }
-
-    private @Nullable <T> T postJSONVWCarNetAPI(String url, String data, Class<T> jsonClass) {
-        for (int cnt = 0; cnt < APISERVERLIST.size(); cnt++) {
-            ContentResponse response = null; // postVWCarNetAPI(apiServerInUse + url, data, Boolean.TRUE);
-            if (response != null) {
-                logger.debug("HTTP Response ({})", response.getStatus());
-                if (response.getStatus() == HttpStatus.OK_200) {
-                    String content = response.getContentAsString();
-                    if (content.contains("\"message\":\"Request Failed") && content.contains("503")) {
-                        // Maybe VWCarNet has switched PAI server in use
-                        setApiServerInUse(getNextApiServer());
-                    } else {
-                        String contentChomped = StringUtils.chomp(content);
-                        logger.trace("Response body: {}", content);
-                        return gson.fromJson(contentChomped, jsonClass);
-                    }
-                } else {
-                    logger.debug("Failed to send POST, Http status code: {}", response.getStatus());
-                }
-            }
-        }
-        return null;
-    }
-
-    private int postVWCarNetAPI(String urlString, String data) {
-        String url;
-        if (urlString.contains("https://mypages")) {
-            url = urlString;
-        } else {
-            url = apiServerInUse + urlString;
-        }
-
-        for (int cnt = 0; cnt < APISERVERLIST.size(); cnt++) {
-            ContentResponse response = null;// postVWCarNetAPI(url, data, Boolean.FALSE);
-            if (response != null) {
-                logger.debug("HTTP Response ({})", response.getStatus());
-                if (response.getStatus() == HttpStatus.OK_200) {
-                    String content = response.getContentAsString();
-                    if (content.contains("\"message\":\"Request Failed. Code 503 from")) {
-                        if (url.contains("https://mypages")) {
-                            // Not an API URL
-                            return HttpStatus.SERVICE_UNAVAILABLE_503;
-                        } else {
-                            // Maybe VWCarNet has switched API server in use
-                            setApiServerInUse(getNextApiServer());
-                            url = apiServerInUse + urlString;
-                        }
-                    } else {
-                        logger.trace("Response body: {}", content);
-                        return response.getStatus();
-                    }
-                } else {
-                    logger.debug("Failed to send POST, Http status code: {}", response.getStatus());
-                }
-            }
-        }
-        return 999;
-    }
-
-    private int setSessionCookieAuthLogin() {
-        // URL to set status which will give us 2 cookies with username and password used for the session
-        String url = STATUS;
-
-        try {
-            ContentResponse response = httpClient.GET(url);
-            logger.trace("HTTP Response ({}) Body:{}", response.getStatus(),
-                    response.getContentAsString().replaceAll("\n+", "\n"));
-            CookieStore c = httpClient.getCookieStore();
-            List<HttpCookie> cookies = c.get(URI.create("http://verisure.com"));
-            Iterator<HttpCookie> cookiesIterator = cookies.iterator();
-            while (cookiesIterator.hasNext()) {
-                HttpCookie theCookie = cookiesIterator.next();
-                logger.debug("Response Cookie: name: {}, value: {} ", theCookie.getName(), theCookie.getValue());
-                if (theCookie.getName().equals(passwordName)) {
-                    password = theCookie.getValue();
-                    logger.debug("Fetching vid {} from cookie", password);
-                }
-            }
-        } catch (ExecutionException e) {
-            logger.warn("ExecutionException: {}", e);
-        } catch (InterruptedException e) {
-            logger.warn("InterruptedException: {}", e);
-        } catch (TimeoutException e) {
-            logger.warn("TimeoutException: {}", e);
-        }
-
-        url = AUTH_LOGIN;
-        return postVWCarNetAPI(url, "empty");
     }
 
     private synchronized boolean logIn() {
@@ -896,74 +707,6 @@ public class VWCarNetSession {
                     logger.warn("Failed to update vehicle details for VIN: {}", vin);
                 }
             }
-        }
-    }
-
-    private synchronized void updateAlarmStatus(Class<? extends BaseVehicle> jsonClass) {
-        String url = START_GRAPHQL;
-
-        String queryQLAlarmStatus = "[{\"operationName\":\"ArmState\",\"variables\":{\"giid\":\"" + ""
-                + "\"},\"query\":\"query ArmState($giid: String!) {\\n  installation(giid: $giid) {\\n    armState {\\n      type\\n      statusType\\n      date\\n      name\\n      changedVia\\n      allowedForFirstLine\\n      allowed\\n      errorCodes {\\n        value\\n        message\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}]";
-        logger.debug("Trying to get alarm status with URL {} and data {}", url, queryQLAlarmStatus);
-        BaseVehicle thing = postJSONVWCarNetAPI(url, queryQLAlarmStatus, jsonClass);
-        logger.debug("REST Response ({})", thing);
-
-        if (thing != null) {
-            // Set unique deviceID
-            String deviceId = "alarm";
-            thing.setDeviceId(deviceId);
-            BaseVehicle oldObj = vwCarNetThings.get(thing.getDeviceId());
-            if (oldObj == null || !oldObj.equals(thing)) {
-                vwCarNetThings.put(deviceId, thing);
-                notifyListeners(thing);
-            }
-        } else {
-            logger.warn("Failed to update alarm status!");
-        }
-
-    }
-
-    private synchronized void updateSmartLockStatus(Class<? extends BaseVehicle> jsonClass) {
-        String url = START_GRAPHQL;
-
-        String queryQLSmartLock = "[{\"operationName\":\"DoorLock\",\"variables\":{\"giid\":\"" + ""
-                + "\"},\"query\":\"query DoorLock($giid: String!) {\\n  installation(giid: $giid) {\\n    doorlocks {\\n      device {\\n        deviceLabel\\n        area\\n        __typename\\n      }\\n      currentLockState\\n      eventTime\\n      secureModeActive\\n      motorJam\\n      userString\\n      method\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}]\n"
-                + "";
-        logger.debug("Trying to get smart lock status with URL {} and data {}", url, queryQLSmartLock);
-        VWCarNetSmartLocksJSON thing = (VWCarNetSmartLocksJSON) postJSONVWCarNetAPI(url, queryQLSmartLock, jsonClass);
-        logger.debug("REST Response ({})", thing);
-
-        if (thing != null && thing.getData() != null) {
-            List<VWCarNetSmartLocksJSON.Doorlock> doorLockList = thing.getData().getInstallation().getDoorlocks();
-            for (VWCarNetSmartLocksJSON.Doorlock doorLock : doorLockList) {
-                VWCarNetSmartLocksJSON slThing = new VWCarNetSmartLocksJSON();
-                VWCarNetSmartLocksJSON.Installation inst = new VWCarNetSmartLocksJSON.Installation();
-                List<VWCarNetSmartLocksJSON.Doorlock> list = new ArrayList<VWCarNetSmartLocksJSON.Doorlock>();
-                list.add(doorLock);
-                inst.setDoorlocks(list);
-                VWCarNetSmartLocksJSON.Data data = new VWCarNetSmartLocksJSON.Data();
-                data.setInstallation(inst);
-                slThing.setData(data);
-                // Set unique deviceID
-                String deviceId = doorLock.getDevice().getDeviceLabel();
-                if (deviceId != null) {
-                    slThing.setDeviceId(deviceId);
-                    // Set homeLocation
-                    slThing.setLocation(doorLock.getDevice().getArea());
-                    // Fetch more info from old endpoint
-                    VWCarNetSmartLockJSON smartLockThing = getJSONVWCarNetAPI(SMARTLOCK_PATH + slThing.getDeviceId(),
-                            VWCarNetSmartLockJSON.class);
-                    logger.debug("REST Response ({})", smartLockThing);
-                    slThing.setSmartLockJSON(smartLockThing);
-                    BaseVehicle oldObj = vwCarNetThings.get(slThing.getDeviceId());
-                    if (oldObj == null || !oldObj.equals(slThing)) {
-                        vwCarNetThings.put(slThing.getDeviceId(), slThing);
-                        notifyListeners(slThing);
-                    }
-                }
-            }
-        } else {
-            logger.warn("Failed to update SmartLockStatus thing: {}, thing.getData: {}", thing, thing.getData());
         }
     }
 }

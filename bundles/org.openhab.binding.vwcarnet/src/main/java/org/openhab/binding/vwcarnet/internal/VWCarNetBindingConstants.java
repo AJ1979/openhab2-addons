@@ -121,6 +121,10 @@ public class VWCarNetBindingConstants {
     public static final String SERVICE_INSPECTION = "serviceInspectionStatus";
     public static final String OIL_INSPECTION = "oilInspectionStatus";
 
+    // Status
+    public static final String CHANNEL_STATUS = "status";
+
+    // API URLs
     public static final String LOGIN_CHECK = "-/msgc/get-new-messages";
     public static final String VEHICLE_DETAILS = "/-/mainnavigation/load-car-details/";
     public static final String VEHICLE_DETAILS_SPECIFIC = "/-/vehicle-info/get-vehicle-details";
@@ -135,67 +139,12 @@ public class VWCarNetBindingConstants {
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream.of(BRIDGE_THING_TYPE, VEHICLE_THING_TYPE)
             .collect(Collectors.toSet());
 
-    // List of all Channel ids
-    public static final String CHANNEL_NUMERIC_STATUS = "numericStatus";
-    public static final String CHANNEL_LOCATION = "homeLocation";
-    public static final String CHANNEL_STATUS = "status";
-    public static final String CHANNEL_CONNECTED = "connected";
-    public static final String CHANNEL_STATE = "state";
-    public static final String CHANNEL_LABEL = "label";
-    public static final String CHANNEL_USER_NAME = "userName";
-    public static final String CHANNEL_WEBACCOUNT = "webAccount";
-    public static final String CHANNEL_USER_LOCATION_STATUS = "userLocationStatus";
-    public static final String CHANNEL_USER_DEVICE_NAME = "userDeviceName";
-    public static final String CHANNEL_SMARTLOCK_VOLUME = "smartLockVolume";
-    public static final String CHANNEL_SMARTLOCK_VOICE_LEVEL = "smartLockVoiceLevel";
-    public static final String CHANNEL_AUTO_RELOCK = "autoRelock";
-    public static final String CHANNEL_SMARTPLUG_STATUS = "smartPlugStatus";
-    public static final String CHANNEL_ALARM_STATUS = "alarmStatus";
-    public static final String CHANNEL_SMARTLOCK_STATUS = "smartLockStatus";
-    public static final String CHANNEL_CHANGED_BY_USER = "changedByUser";
-    public static final String CHANNEL_CHANGED_VIA = "changedVia";
-    public static final String CHANNEL_TIMESTAMP = "timestamp";
-    public static final String CHANNEL_HAZARDOUS = "hazardous";
-    public static final String CHANNEL_MOTOR_JAM = "motorJam";
-
     // REST URI constants
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
-    public static final String BASEURL = "https://mypages.verisure.com";
-    public static final String LOGON_SUF = BASEURL + "/j_spring_security_check?locale=en_GB";
     public static final String SESSION_BASE = "https://www.portal.volkswagen-we.com/";
     public static final String SESSION_HEADERS = "'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json;charset=UTF-8', 'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36'";
     public static final String AUTH_BASE = "https://identity.vwgroup.io";
     public static final String AUTH_HEADERS = "'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3', 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36'";
 
-    public static final String ALARM_COMMAND = BASEURL + "/remotecontrol/armstatechange.cmd";
-    public static final String SMARTLOCK_LOCK_COMMAND = BASEURL + "/remotecontrol/lockunlock.cmd";
-    public static final String SMARTLOCK_SET_COMMAND = BASEURL + "/overview/setdoorlock.cmd";
-    public static final String SMARTLOCK_AUTORELOCK_COMMAND = BASEURL + "/settings/setautorelock.cmd";
-    public static final String SMARTLOCK_VOLUME_COMMAND = BASEURL + "/settings/setvolume.cmd";
-
-    public static final String SMARTPLUG_COMMAND = BASEURL + "/settings/smartplug/onoffplug.cmd";
-    public static final String START_REDIRECT = "/uk/start.html";
-    public static final String START_SUF = BASEURL + START_REDIRECT;
-
-    // GraphQL constants
-    public static final String STATUS = BASEURL + "/uk/status";
-    public static final String SETTINGS = BASEURL + "/uk/settings.html?giid=";
-    public static final String SET_INSTALLATION = BASEURL + "/setinstallation?giid=";
-    public static final String BASEURL_API = "https://m-api02.verisure.com";
-    public static final String START_GRAPHQL = "/graphql";
-    public static final String AUTH_TOKEN = "/auth/token";
-    public static final String AUTH_LOGIN = "/auth/login";
-
-    public static final String ALARMSTATUS_PATH = "/remotecontrol";
-    public static final String SMARTLOCK_PATH = "/overview/doorlock/";
-    public static final String DOORWINDOW_PATH = "/settings/doorwindow";
-    public static final String USERTRACKING_PATH = "/overview/usertrackingcontacts";
-    public static final String CLIMATEDEVICE_PATH = "/overview/climatedevice";
-    public static final String SMARTPLUG_PATH = "/settings/smartplug";
-    public static final String ETHERNETSTATUS_PATH = "/overview/ethernetstatus";
-    public static final String VACATIONMODE_PATH = "/overview/vacationmode";
-    public static final String TEMPERATURE_CONTROL_PATH = "/overview/temperaturecontrol";
-    public static final String MOUSEDETECTION_PATH = "/overview/mousedetection";
-    public static final String CAMERA_PATH = "/overview/camera";
 }

@@ -88,11 +88,17 @@ public class VehicleHandler extends VWCarNetHandler {
         Trips trips = vehicleJSON.getTrips();
         Location vehicleLocation = vehicleJSON.getVehicleLocation();
 
+        // for (int i = 0; i < getThing().getChannels().size(); i++) {
+        // logger.warn("Channel Group: {}", getThing().getChannels().get(i).getUID().getGroupId().toString());
+        // logger.warn("Channel: {}", getThing().getChannels().get(i).getChannelTypeUID().getAsString());
+        // logger.warn("Channel isLinked: {}", isLinked(getThing().getChannels().get(i).getUID()));
+        //
+        // }
+
         if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
                 && vehicleLocation != null) {
             getThing().getChannels().stream().map(Channel::getUID)
-                    .filter(channelUID -> isLinked(channelUID) && !LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
-                    .forEach(channelUID -> {
+                    .filter(channelUID -> !LAST_TRIP_GROUP.equals(channelUID.getGroupId())).forEach(channelUID -> {
                         State state = getValue(channelUID.getIdWithoutGroup(), vehicle, vehicleDetails, vehicleStatus,
                                 trips, vehicleLocation);
                         updateState(channelUID, state);
@@ -253,9 +259,12 @@ public class VehicleHandler extends VWCarNetHandler {
         Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
                 .filter(t -> t.getTripId() == tripId).findFirst();
 
+        // for (int i = 0; i < getThing().getChannels().size(); i++) {
+        // logger.warn("Channel: {}", getThing().getChannels().get(i).getChannelTypeUID().getAsString());
+        // }
+
         getThing().getChannels().stream().map(Channel::getUID)
-                .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
-                .forEach(channelUID -> {
+                .filter(channelUID -> LAST_TRIP_GROUP.equals(channelUID.getGroupId())).forEach(channelUID -> {
                     State state = getTripValue(channelUID.getIdWithoutGroup(), lastTripStats.get());
                     updateState(channelUID, state);
                 });

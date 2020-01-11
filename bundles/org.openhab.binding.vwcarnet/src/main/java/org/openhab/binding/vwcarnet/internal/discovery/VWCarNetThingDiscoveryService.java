@@ -26,8 +26,6 @@ import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.vwcarnet.internal.VWCarNetSession;
 import org.openhab.binding.vwcarnet.internal.handler.VWCarNetBridgeHandler;
 import org.openhab.binding.vwcarnet.internal.model.BaseVehicle;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetAlarmsJSON;
-import org.openhab.binding.vwcarnet.internal.model.VWCarNetSmartLocksJSON;
 import org.openhab.binding.vwcarnet.internal.model.Vehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,25 +94,5 @@ public class VWCarNetThingDiscoveryService extends AbstractDiscoveryService {
             logger.debug("Discovered unsupported thing of type '{}'", thing.getClass());
         }
 
-    }
-
-    private @Nullable ThingUID getThingUID(BaseVehicle thing) {
-        ThingUID thingUID = null;
-        if (vwcarnetBridgeHandler != null) {
-            ThingUID bridgeUID = vwcarnetBridgeHandler.getThing().getUID();
-            String deviceId = thing.getDeviceId();
-            if (deviceId != null) {
-                // Make sure device id is normalized, i.e. replace all non character/digits with empty string
-                deviceId.replaceAll("[^a-zA-Z0-9]+", "");
-                if (thing instanceof VWCarNetAlarmsJSON) {
-                    thingUID = new ThingUID(THING_TYPE_ALARM, bridgeUID, deviceId);
-                } else if (thing instanceof VWCarNetSmartLocksJSON) {
-                    thingUID = new ThingUID(THING_TYPE_SMARTLOCK, bridgeUID, deviceId);
-                } else {
-                    logger.warn("Unsupported JSON! thing {}", thing.toString());
-                }
-            }
-        }
-        return thingUID;
     }
 }

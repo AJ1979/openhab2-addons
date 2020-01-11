@@ -12,14 +12,8 @@
  */
 package org.openhab.binding.vwcarnet.internal.handler;
 
-import static org.openhab.binding.vwcarnet.internal.VWCarNetBindingConstants.CHANNEL_TIMESTAMP;
-
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.library.types.DateTimeType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -86,24 +80,6 @@ public class VWCarNetHandler extends BaseThingHandler implements DeviceStatusLis
             if (vbh != null) {
                 vbh.scheduleImmediateRefresh(refreshDelay);
             }
-        }
-    }
-
-    protected void updateTimeStamp(@Nullable String lastUpdatedTimeStamp) {
-        if (lastUpdatedTimeStamp != null) {
-            try {
-                logger.debug("Parsing date {}", lastUpdatedTimeStamp);
-                ZonedDateTime zdt = ZonedDateTime.parse(lastUpdatedTimeStamp);
-                ZonedDateTime zdtLocal = zdt.withZoneSameInstant(ZoneId.systemDefault());
-
-                logger.trace("Parsing datetime successful. Using date. {}", new DateTimeType(zdtLocal));
-                ChannelUID cuid = new ChannelUID(getThing().getUID(), CHANNEL_TIMESTAMP);
-                updateState(cuid, new DateTimeType(zdtLocal));
-            } catch (IllegalArgumentException e) {
-                logger.warn("Parsing date failed: {}.", e);
-            }
-        } else {
-            logger.debug("Timestamp is null!");
         }
     }
 

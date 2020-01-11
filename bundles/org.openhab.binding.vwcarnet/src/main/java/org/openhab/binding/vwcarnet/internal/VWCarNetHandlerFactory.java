@@ -30,9 +30,7 @@ import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.eclipse.smarthome.io.net.http.HttpClientFactory;
 import org.openhab.binding.vwcarnet.internal.discovery.VWCarNetThingDiscoveryService;
-import org.openhab.binding.vwcarnet.internal.handler.VWCarNetAlarmThingHandler;
 import org.openhab.binding.vwcarnet.internal.handler.VWCarNetBridgeHandler;
-import org.openhab.binding.vwcarnet.internal.handler.VWCarNetSmartLockThingHandler;
 import org.openhab.binding.vwcarnet.internal.handler.VehicleHandler;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Component;
@@ -75,12 +73,6 @@ public class VWCarNetHandlerFactory extends BaseThingHandlerFactory {
             logger.debug("Create VWCarNetBridgeHandler");
             thingHandler = new VWCarNetBridgeHandler((Bridge) thing, httpClient);
             registerObjectDiscoveryService((VWCarNetBridgeHandler) thingHandler);
-        } else if (VWCarNetAlarmThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("Create VWCarNetAlarmThingHandler {}", thing.getThingTypeUID());
-            thingHandler = new VWCarNetAlarmThingHandler(thing);
-        } else if (VWCarNetSmartLockThingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("Create VWCarNetSmartLockThingHandler {}", thing.getThingTypeUID());
-            thingHandler = new VWCarNetSmartLockThingHandler(thing);
         } else if (VWCarNetBindingConstants.VEHICLE_THING_TYPE.equals(thing.getThingTypeUID())) {
             logger.debug("Create VehicleHandler {}", thing.getThingTypeUID());
             thingHandler = new VehicleHandler(thing);
