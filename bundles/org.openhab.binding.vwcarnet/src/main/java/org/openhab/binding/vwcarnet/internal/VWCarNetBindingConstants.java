@@ -57,11 +57,6 @@ public class VWCarNetBindingConstants {
     public static final String RIGHT_FRONT_WND = "rightFrontWnd";
     public static final String LEFT_FRONT_WND = "leftFrontWnd";
 
-    // Odometer
-    public static final String ODOMETER = "odometer";
-    public static final String TRIPMETER1 = "tripmeter1";
-    public static final String TRIPMETER2 = "tripmeter2";
-
     // Fuel
     public static final String FUEL_LEVEL = "fuelLevel";
     public static final String FUEL_CONSUMPTION = "fuelConsumption";
@@ -76,35 +71,29 @@ public class VWCarNetBindingConstants {
 
     // Electric
     public static final String BATTERY_LEVEL = "batteryLevel";
+    public static final String ELECTRIC_CONSUMPTION = "electricConsumption";
     public static final String BATTERY_ALERT = "batteryAlert";
     public static final String BATTERY_RANGE = "batteryRange";
 
     // Location
-    public static final String CALCULATED_LOCATION = "calculatedLocation";
-    public static final String ACTUAL_LOCATION = "homeLocation";
-    public static final String LOCATION_TIMESTAMP = "locationTimestamp";
-    public static final String HEADING = "heading";
+    public static final String ACTUAL_LOCATION = "location";
 
-    // Status
-    public static final String ENGINE_RUNNING = "engineRunning";
-    public static final String WASHER_FLUID = "washerFluidLevel";
-    public static final String SERVICE_WARNING = "serviceWarningStatus";
+    // Odometer
+    public static final String TOTAL_AVERAGE_SPEED = "totalAverageSpeed";
+    public static final String TOTAL_TRIP_DISTANCE = "totalTripDistance";
+    public static final String TOTAL_TRIP_DURATION = "totalTripDuration";
 
     // Last Trip
     public static final String LAST_TRIP_GROUP = "lasttrip";
-    public static final String TRIP_CONSUMPTION = "tripConsumption";
+    public static final String AVERAGE_FUEL_CONSUMPTION = "averageFuelConsumption";
+    public static final String AVERAGE_CNG_CONSUMPTION = "averageCngConsumption";
+    public static final String AVERAGE_ELECTRIC_CONSUMPTION = "averageElectricConsumption";
+    public static final String AVERAGE_AUXILIARY_CONSUMPTION = "averageAuxiliaryConsumption";
+    public static final String AVERAGE_SPEED = "averageSpeed";
     public static final String TRIP_DISTANCE = "tripDistance";
     public static final String TRIP_DURATION = "tripDuration";
     public static final String TRIP_START_TIME = "tripStartTime";
     public static final String TRIP_END_TIME = "tripEndTime";
-    public static final String TRIP_START_ODOMETER = "tripStartOdometer";
-    public static final String TRIP_STOP_ODOMETER = "tripStopOdometer";
-    public static final String TRIP_START_POSITION = "startPosition";
-    public static final String TRIP_END_POSITION = "endPosition";
-
-    // Optional Channels depends upon vehicle version
-    public static final String CAR_LOCATOR = "carLocator";
-    public static final String JOURNAL_LOG = "journalLog";
 
     // Vehicle properties
     public static final String ENGINE_START = "engineStart";

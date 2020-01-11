@@ -12,7 +12,12 @@
  */
 package org.openhab.binding.vwcarnet.internal.model;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -239,17 +244,17 @@ public class Trips {
     public class LongTermData {
 
         private int tripId;
-        private @Nullable Object averageElectricConsumption;
-        private double averageFuelConsumption;
-        private @Nullable Object averageCngConsumption;
-        private double averageSpeed;
-        private int tripDuration;
-        private double tripLength;
+        private double averageElectricConsumption = BaseVehicle.UNDEFINED;;
+        private double averageFuelConsumption = BaseVehicle.UNDEFINED;;
+        private double averageCngConsumption = BaseVehicle.UNDEFINED;;
+        private double averageSpeed = BaseVehicle.UNDEFINED;;
+        private int tripDuration = BaseVehicle.UNDEFINED;;
+        private double tripLength = BaseVehicle.UNDEFINED;;
         private @Nullable String timestamp;
         private @Nullable String tripDurationFormatted;
         private @Nullable Object recuperation;
-        private @Nullable Object averageAuxiliaryConsumption;
-        private @Nullable Object totalElectricConsumption;
+        private double averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;;
+        private double totalElectricConsumption = BaseVehicle.UNDEFINED;;
         private @Nullable String longFormattedTimestamp;
         private @Nullable Map<String, Object> additionalProperties;
 
@@ -268,11 +273,11 @@ public class Trips {
             this.tripId = tripId;
         }
 
-        public @Nullable Object getAverageElectricConsumption() {
+        public double getAverageElectricConsumption() {
             return averageElectricConsumption;
         }
 
-        public void setAverageElectricConsumption(Object averageElectricConsumption) {
+        public void setAverageElectricConsumption(double averageElectricConsumption) {
             this.averageElectricConsumption = averageElectricConsumption;
         }
 
@@ -284,11 +289,11 @@ public class Trips {
             this.averageFuelConsumption = averageFuelConsumption;
         }
 
-        public @Nullable Object getAverageCngConsumption() {
+        public double getAverageCngConsumption() {
             return averageCngConsumption;
         }
 
-        public void setAverageCngConsumption(Object averageCngConsumption) {
+        public void setAverageCngConsumption(double averageCngConsumption) {
             this.averageCngConsumption = averageCngConsumption;
         }
 
@@ -340,19 +345,19 @@ public class Trips {
             this.recuperation = recuperation;
         }
 
-        public @Nullable Object getAverageAuxiliaryConsumption() {
+        public double getAverageAuxiliaryConsumption() {
             return averageAuxiliaryConsumption;
         }
 
-        public void setAverageAuxiliaryConsumption(Object averageAuxiliaryConsumption) {
+        public void setAverageAuxiliaryConsumption(double averageAuxiliaryConsumption) {
             this.averageAuxiliaryConsumption = averageAuxiliaryConsumption;
         }
 
-        public @Nullable Object getTotalElectricConsumption() {
+        public double getTotalElectricConsumption() {
             return totalElectricConsumption;
         }
 
-        public void setTotalElectricConsumption(Object totalElectricConsumption) {
+        public void setTotalElectricConsumption(double totalElectricConsumption) {
             this.totalElectricConsumption = totalElectricConsumption;
         }
 
@@ -421,17 +426,17 @@ public class Trips {
     public class AggregatedStatistics {
 
         private int tripId;
-        private @Nullable Object averageElectricConsumption;
+        private double averageElectricConsumption;
         private double averageFuelConsumption;
-        private @Nullable Object averageCngConsumption;
+        private double averageCngConsumption;
         private double averageSpeed;
         private int tripDuration;
         private double tripLength;
         private @Nullable String timestamp;
         private @Nullable String tripDurationFormatted;
         private @Nullable Object recuperation;
-        private @Nullable Object averageAuxiliaryConsumption;
-        private @Nullable Object totalElectricConsumption;
+        private double averageAuxiliaryConsumption;
+        private double totalElectricConsumption;
         private @Nullable Object longFormattedTimestamp;
         private @Nullable Map<String, Object> additionalProperties;
 
@@ -450,11 +455,11 @@ public class Trips {
             this.tripId = tripId;
         }
 
-        public @Nullable Object getAverageElectricConsumption() {
+        public double getAverageElectricConsumption() {
             return averageElectricConsumption;
         }
 
-        public void setAverageElectricConsumption(Object averageElectricConsumption) {
+        public void setAverageElectricConsumption(double averageElectricConsumption) {
             this.averageElectricConsumption = averageElectricConsumption;
         }
 
@@ -466,11 +471,11 @@ public class Trips {
             this.averageFuelConsumption = averageFuelConsumption;
         }
 
-        public @Nullable Object getAverageCngConsumption() {
+        public double getAverageCngConsumption() {
             return averageCngConsumption;
         }
 
-        public void setAverageCngConsumption(Object averageCngConsumption) {
+        public void setAverageCngConsumption(double averageCngConsumption) {
             this.averageCngConsumption = averageCngConsumption;
         }
 
@@ -522,19 +527,19 @@ public class Trips {
             this.recuperation = recuperation;
         }
 
-        public @Nullable Object getAverageAuxiliaryConsumption() {
+        public double getAverageAuxiliaryConsumption() {
             return averageAuxiliaryConsumption;
         }
 
-        public void setAverageAuxiliaryConsumption(Object averageAuxiliaryConsumption) {
+        public void setAverageAuxiliaryConsumption(double averageAuxiliaryConsumption) {
             this.averageAuxiliaryConsumption = averageAuxiliaryConsumption;
         }
 
-        public @Nullable Object getTotalElectricConsumption() {
+        public double getTotalElectricConsumption() {
             return totalElectricConsumption;
         }
 
-        public void setTotalElectricConsumption(Object totalElectricConsumption) {
+        public void setTotalElectricConsumption(double totalElectricConsumption) {
             this.totalElectricConsumption = totalElectricConsumption;
         }
 
@@ -816,8 +821,8 @@ public class Trips {
         private @Nullable String timestamp;
         private @Nullable String tripDurationFormatted;
         private @Nullable Object recuperation;
-        private @Nullable Object averageAuxiliaryConsumption;
-        private @Nullable Object totalElectricConsumption;
+        private int averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;;
+        private int totalElectricConsumption = BaseVehicle.UNDEFINED;;
         private @Nullable String longFormattedTimestamp;
         private @Nullable Map<String, Object> additionalProperties;
 
@@ -908,19 +913,19 @@ public class Trips {
             this.recuperation = recuperation;
         }
 
-        public @Nullable Object getAverageAuxiliaryConsumption() {
+        public int getAverageAuxiliaryConsumption() {
             return averageAuxiliaryConsumption;
         }
 
-        public void setAverageAuxiliaryConsumption(Object averageAuxiliaryConsumption) {
+        public void setAverageAuxiliaryConsumption(int averageAuxiliaryConsumption) {
             this.averageAuxiliaryConsumption = averageAuxiliaryConsumption;
         }
 
-        public @Nullable Object getTotalElectricConsumption() {
+        public int getTotalElectricConsumption() {
             return totalElectricConsumption;
         }
 
-        public void setTotalElectricConsumption(Object totalElectricConsumption) {
+        public void setTotalElectricConsumption(int totalElectricConsumption) {
             this.totalElectricConsumption = totalElectricConsumption;
         }
 
@@ -930,6 +935,34 @@ public class Trips {
 
         public void setLongFormattedTimestamp(String longFormattedTimestamp) {
             this.longFormattedTimestamp = longFormattedTimestamp;
+        }
+
+        public @Nullable ZonedDateTime getStartTimestamp() {
+            String formattedTime = longFormattedTimestamp;
+            if (formattedTime != null) {
+                String[] splitStrings = formattedTime.split(",");
+                String dateString = splitStrings[1].trim() + ", " + splitStrings[2].trim();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d.MM.yyyy, HH:mm", Locale.getDefault());
+                LocalDateTime dateTime = LocalDateTime.parse(dateString, formatter);
+                ZonedDateTime zdt = dateTime.atZone(ZoneId.systemDefault());
+
+                return zdt.minusMinutes(tripDuration);
+            }
+            return null;
+        }
+
+        public @Nullable ZonedDateTime getEndTimestamp() {
+            String formattedTime = longFormattedTimestamp;
+            if (formattedTime != null) {
+                String[] splitStrings = formattedTime.split(",");
+                String dateString = splitStrings[1].trim() + ", " + splitStrings[2].trim();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d.MM.yyyy, HH:mm", Locale.getDefault());
+                LocalDateTime dateTime = LocalDateTime.parse(dateString, formatter);
+                ZonedDateTime zdt = dateTime.atZone(ZoneId.systemDefault());
+
+                return zdt;
+            }
+            return null;
         }
 
         public @Nullable Map<String, Object> getAdditionalProperties() {

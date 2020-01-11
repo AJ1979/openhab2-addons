@@ -13,16 +13,16 @@
 		<description>A VW Vehicle.</description>
 		
 		<channel-groups>
-            <channel-group typeId="doors" id="doors" />
-            <channel-group typeId="windows" id="windows" />
-            <channel-group typeId="odometer" id="odometer" />
-            <channel-group typeId="fuel" id="fuel" />
+		    <channel-group typeId="details" id="details" />
+		    <channel-group typeId="odometer" id="odometer" />
+		    <channel-group typeId="fuel" id="fuel" />
             <channel-group typeId="cng" id="cng" />
             <channel-group typeId="electric" id="electric" />
+            <channel-group typeId="doors" id="doors" />
+            <channel-group typeId="windows" id="windows" />
             <channel-group typeId="position" id="position" />
-            <channel-group typeId="other" id="other" />
             <channel-group typeId="lasttrip" id="lasttrip" />
-            <channel-group typeId="details" id="details" />
+            <channel-group typeId="other" id="other" />
         </channel-groups>
         
         <properties>
@@ -39,22 +39,50 @@
         </config-description>
     </thing-type>
     
-    
     <channel-group-type id="other">
         <label>Other</label>
         <channels>
-            <channel id="engineRunning" typeId="engineRunning" />
             <channel id="remoteHeater" typeId="remoteHeater" />
-            <channel id="washerFluidLevel" typeId="washerFluidLevel" />
         </channels>
     </channel-group-type>
 
-    <channel-group-type id="lasttrip">
-        <label>Last Trip</label>
+    <channel-group-type id="odometer">
+        <label>Total Trip Data</label>
         <channels>
-            <channel id="tripConsumption" typeId="fuelQuantity">
+            <channel id="totalAverageSpeed" typeId="averageSpeed">
                 <label>Consumption</label>
-                <description>Indicates the quantity of fuel consumed by the trip</description>
+                <description>Average speed for trip</description>
+            </channel>
+            <channel id="totalTripDistance" typeId="odometer">
+                <label>Distance</label>
+                <description>Distance traveled</description>
+            </channel>
+            <channel id="totalTripDuration" typeId="tripDuration" />
+        </channels>
+    </channel-group-type>
+    
+    <channel-group-type id="lasttrip">
+        <label>Last Trip Data</label>
+        <channels>
+            <channel id="averageFuelConsumption" typeId="fuelConsumption">
+                <label>Fuel Consumption</label>
+                <description>Average fuel consumption for trip</description>
+            </channel>
+            <channel id="averageCngConsumption" typeId="cngConsumption">
+                <label>CNG Consumption</label>
+                <description>Average Compressed Natural Gas consumption for trip</description>
+            </channel>
+            <channel id="averageElectricConsumption" typeId="electricConsumption">
+                <label>Electric Consumption</label>
+                <description>Average Electric consumption for trip</description>
+            </channel>
+            <channel id="averageAuxiliaryConsumption" typeId="auxiliaryConsumption">
+                <label>Auxiliary Consumption</label>
+                <description>Average Auxiliary consumption for trip</description>
+            </channel>
+            <channel id="averageSpeed" typeId="averageSpeed">
+                <label>Consumption</label>
+                <description>Average speed for trip</description>
             </channel>
             <channel id="tripDistance" typeId="odometer">
                 <label>Distance</label>
@@ -69,20 +97,6 @@
                 <description>Trip end time</description>
             </channel>
             <channel id="tripDuration" typeId="tripDuration" />
-            <channel id="tripStartOdometer" typeId="odometer">
-                <label>Start Odometer</label>
-            </channel>
-            <channel id="tripStopOdometer" typeId="odometer">
-                <label>Stop Odometer</label>
-            </channel>
-            <channel id="startPosition" typeId="location">
-                <label>From</label>
-                <description>Starting location of the car</description>
-            </channel>
-            <channel id="endPosition" typeId="location">
-                <label>To</label>
-                <description>Stopping location of the car</description>
-            </channel>
         </channels>
     </channel-group-type>
 
@@ -130,19 +144,6 @@
         </channels>
     </channel-group-type>
 
-    <channel-group-type id="odometer">
-        <label>Trip Meters</label>
-        <channels>
-            <channel id="odometer" typeId="odometer" />
-            <channel id="tripmeter1" typeId="odometer">
-                <label>Tripmeter 1</label>
-            </channel>
-            <channel id="tripmeter2" typeId="odometer">
-                <label>Tripmeter 2</label>
-            </channel>
-        </channels>
-    </channel-group-type>
-
     <channel-group-type id="fuel">
         <label>Fuel Info</label>
         <channels>
@@ -173,6 +174,7 @@
         <label>Electric Info</label>
         <channels>
             <channel id="batteryLevel" typeId="batteryLevel" />
+            <channel id="electricConsumption" typeId="electricConsumption" />
             <channel id="batteryAlert" typeId="batteryAlert" />
             <channel id="batteryRange" typeId="odometer">
                 <label>Distance Left</label>
@@ -187,12 +189,6 @@
             <channel id="location" typeId="location">
                 <label>Location</label>
                 <description>The position of the vehicle</description>
-            </channel>
-            <channel id="calculatedLocation" typeId="calculatedLocation" />
-            <channel id="heading" typeId="heading" />
-            <channel id="locationTimestamp" typeId="timestamp">
-                <label>Location Timestamp</label>
-                <description>Timestamp of location value update</description>
             </channel>
         </channels>
     </channel-group-type>
@@ -282,24 +278,32 @@
         <description>Indicates the battery level</description>
         <state pattern="%d %unit%" readOnly="true"></state>
     </channel-type>
+    
+    <channel-type id="electricConsumption" advanced="true">
+        <item-type>Number</item-type>
+        <label>Average Electric Consumption</label>
+        <description>Indicates the average Electric consumption in A/100km</description>
+        <state pattern="%.1f A/100km" readOnly="true"></state>
+    </channel-type>
+    
+    <channel-type id="auxiliaryConsumption" advanced="true">
+        <item-type>Number</item-type>
+        <label>Average Auxiliary Consumption</label>
+        <description>Indicates the average Auxiliary consumption in L</description>
+        <state pattern="%.1f L" readOnly="true"></state>
+    </channel-type>
+    
+    <channel-type id="averageSpeed" advanced="true">
+        <item-type>Number</item-type>
+        <label>Average Speed</label>
+        <description>Indicates the average speed in km/h</description>
+        <state pattern="%.1f km/h" readOnly="true"></state>
+    </channel-type>
 
     <channel-type id="location">
         <item-type>Location</item-type>
         <label>Location</label>
         <category>Location</category>
-        <state readOnly="true"></state>
-    </channel-type>
-
-    <channel-type id="calculatedLocation" advanced="true">
-        <item-type>Switch</item-type>
-        <label>Calculated Location</label>
-        <description>Indicates if the location is actual or calculated</description>
-        <state readOnly="true"></state>
-    </channel-type>
-
-    <channel-type id="heading" advanced="true">
-        <item-type>Switch</item-type>
-        <label>Heading</label>
         <state readOnly="true"></state>
     </channel-type>
 

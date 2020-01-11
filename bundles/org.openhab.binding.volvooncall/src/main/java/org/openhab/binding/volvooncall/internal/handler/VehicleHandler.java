@@ -233,12 +233,9 @@ public class VehicleHandler extends BaseThingHandler {
     public State getTripValue(String channelId, TripDetail tripDetails) {
         switch (channelId) {
             case TRIP_CONSUMPTION:
-                if (tripDetails.fuelConsumption != null) {
-                    return new QuantityType<Volume>(tripDetails.fuelConsumption.floatValue() / 100,
-                            SmartHomeUnits.LITRE);
-                } else {
-                    return UnDefType.UNDEF;
-                }
+                return tripDetails.fuelConsumption != null
+                        ? new QuantityType<Volume>(tripDetails.fuelConsumption.floatValue() / 100, SmartHomeUnits.LITRE)
+                        : UnDefType.UNDEF;
             case TRIP_DISTANCE:
                 return new QuantityType<Length>((double) tripDetails.distance / 1000, KILO(SIUnits.METRE));
             case TRIP_START_TIME:
@@ -256,7 +253,6 @@ public class VehicleHandler extends BaseThingHandler {
             case TRIP_END_POSITION:
                 return tripDetails.getEndPosition();
         }
-
         return UnDefType.NULL;
     }
 

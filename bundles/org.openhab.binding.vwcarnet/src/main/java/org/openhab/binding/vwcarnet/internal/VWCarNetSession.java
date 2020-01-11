@@ -740,6 +740,7 @@ public class VWCarNetSession {
 
         fields = null;
         String content = null;
+        logger.warn("get-fully-loaded-cars");
         url = authRefUrl + "-/mainnavigation/get-fully-loaded-cars";
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         String myVin = "";
@@ -758,40 +759,47 @@ public class VWCarNetSession {
             }
         }
 
+        logger.warn("get-status");
         url = authRefUrl + "-/rah/get-status";
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         logger.warn(content);
 
+        logger.warn("get-vehicle-details");
         url = authRefUrl + "-/vehicle-info/get-vehicle-details";
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         logger.warn(content);
 
+        logger.warn("load-car-details");
         url = authRefUrl + "-/mainnavigation/load-car-details/" + myVin;
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         Vehicle vehicle = gson.fromJson(content, Vehicle.class);
         logger.warn(content);
 
+        logger.warn(VEHICLE_STATUS);
         url = authRefUrl + VEHICLE_STATUS;
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         Status status = gson.fromJson(content, Status.class);
         logger.warn(content);
 
+        logger.warn(REQUEST_VEHICLE_STATUS_REPORT);
         url = authRefUrl + REQUEST_VEHICLE_STATUS_REPORT;
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         logger.warn(content);
 
+        logger.warn(VEHICLE_STATUS);
         url = authRefUrl + VEHICLE_STATUS;
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         status = gson.fromJson(content, Status.class);
         logger.warn(content);
 
-        while (status.getVehicleStatusData().getRequestStatus().equals("REQUEST_IN_PROGRESS")) {
+        while (status.getVehicleStatusData().getRequestStatus() != null
+                && status.getVehicleStatusData().getRequestStatus().equals("REQUEST_IN_PROGRESS")) {
             try {
                 logger.warn("Time: {}", new Timestamp(System.currentTimeMillis()));
                 Thread.sleep(1000);
