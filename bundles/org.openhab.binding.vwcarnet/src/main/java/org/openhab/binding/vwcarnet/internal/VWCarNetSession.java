@@ -14,16 +14,13 @@ package org.openhab.binding.vwcarnet.internal;
 
 import static org.openhab.binding.vwcarnet.internal.VWCarNetBindingConstants.*;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.CookieStore;
 import java.net.HttpCookie;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -35,6 +32,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.Fields;
@@ -70,22 +68,17 @@ public class VWCarNetSession {
     private final Logger logger = LoggerFactory.getLogger(VWCarNetSession.class);
     private final Gson gson = new GsonBuilder().create();
     private final List<DeviceStatusListener> deviceStatusListeners = new CopyOnWriteArrayList<>();
-    private static final List<String> APISERVERLIST = new ArrayList<>(
-            Arrays.asList("https://m-api01.verisure.com", "https://m-api02.verisure.com"));
-    private int apiServerInUseIndex = 0;
-    private String apiServerInUse = APISERVERLIST.get(apiServerInUseIndex);
     private boolean areWeLoggedOut = true;
-    private String authstring = "";
 
     private @Nullable String csrf;
     private @Nullable String xCsrfToken;
     private @Nullable String referer;
     private @Nullable String authRefUrl;
     private @Nullable String guestLanguageId;
+
     private @Nullable String pinCode;
     private HttpClient httpClient;
     private @Nullable String userName = "";
-    private String passwordName = "vid";
     private @Nullable String password = "";
 
     public VWCarNetSession(HttpClient httpClient) {
@@ -134,8 +127,8 @@ public class VWCarNetSession {
     public void dispose() {
     }
 
-    public @Nullable BaseVehicle getVWCarNetThing(String deviceId) {
-        return vwCarNetThings.get(deviceId);
+    public @Nullable BaseVehicle getVWCarNetThing(String vin) {
+        return vwCarNetThings.get(vin);
     }
 
     public HashMap<String, BaseVehicle> getVWCarNetThings() {
@@ -154,7 +147,17 @@ public class VWCarNetSession {
         return pinCode;
     }
 
-    private boolean isErrorCode(String jsonContent) {
+    public @Nullable ContentResponse sendCommand(String url, String data) {
+        logger.debug("Sending command: {}", url);
+        return postJSONVWCarNetAPI(url, data, referer, xCsrfToken);
+    }
+
+    public @Nullable ContentResponse sendCommand(String url, @Nullable Fields fields) {
+        logger.debug("Sending command: {}", url);
+        return postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+    }
+
+    public boolean isErrorCode(String jsonContent) {
         String errorCode = JsonPath.read(jsonContent, "$.errorCode");
         logger.debug("ErrorCode: {}", errorCode);
         if (errorCode.equals("0")) {
@@ -169,7 +172,7 @@ public class VWCarNetSession {
 
         logger.debug("Check for login status, url: {}", url);
         Fields fields = null;
-        ContentResponse httpResponse = httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        ContentResponse httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         if (httpResponse == null) {
             logger.debug("We are not logged in, Exception caught!");
             return false;
@@ -209,12 +212,6 @@ public class VWCarNetSession {
     private @Nullable ContentResponse getVWCarNetAPI(String url, Boolean headers) {
         try {
             logger.debug("getVWCarNetAPI URL: {} headers: {}", url, headers);
-            URL urlEncoded = new URL(url);
-            /*
-             * String correctEncodedURL = urlEncoded.getProtocol() + urlEncoded.getUserInfo() + urlEncoded.getHost()
-             * + urlEncoded.getPort() + urlEncoded.getPath() + URLEncoder.encode(urlEncoded.getQuery(), "UTF-8")
-             * + urlEncoded.getRef();
-             */
             String correctEncodedURL = url.replace(" ", "%20");
             logger.warn("Encoded URL: {}", correctEncodedURL);
 
@@ -237,8 +234,6 @@ public class VWCarNetSession {
             logger.warn("Caught TimeoutException {}", e);
         } catch (RuntimeException e) {
             logger.warn("Caught RuntimeException {}", e);
-        } catch (MalformedURLException e) {
-            logger.warn("Caught MalformedURLException {}", e);
         }
         return null;
     }
@@ -302,6 +297,39 @@ public class VWCarNetSession {
             logger.warn("Caught TimeoutException {}", e);
         } catch (RuntimeException e) {
             logger.warn("Caught RuntimeException {}", e);
+        }
+        return null;
+    }
+
+    private @Nullable ContentResponse postJSONVWCarNetAPI(String url, String data, @Nullable String referer,
+            @Nullable String xCsrf) {
+        try {
+            logger.debug("postJSONVWCarNetAPI URL: {} Data: {} Referer: {} XCSRF:{}", url, data, referer, xCsrf);
+            Request request = httpClient.newRequest(url).method(HttpMethod.POST);
+
+            request.header("accept", "application/json, text/plain, */*");
+            request.header("content-type", "application/json;charset=UTF-8");
+            request.header("user-agent",
+                    "Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36");
+            request.header("referer", referer);
+            request.header("x-csrf-token", xCsrf);
+
+            if (!data.equals("empty")) {
+                request.content(new BytesContentProvider(data.getBytes("UTF-8")),
+                        "application/x-www-form-urlencoded; charset=UTF-8");
+            }
+            logger.debug("HTTP POST Request {}.", request.toString());
+            return request.send();
+        } catch (ExecutionException e) {
+            logger.warn("Caught ExecutionException {}", e);
+        } catch (InterruptedException e) {
+            logger.warn("Caught InterruptedException {}", e);
+        } catch (TimeoutException e) {
+            logger.warn("Caught TimeoutException {}", e);
+        } catch (RuntimeException e) {
+            logger.warn("Caught RuntimeException {}", e);
+        } catch (UnsupportedEncodingException e) {
+            logger.warn("Caught UnsupportedEncodingException {}", e);
         }
         return null;
     }
@@ -595,11 +623,11 @@ public class VWCarNetSession {
         Status status = gson.fromJson(content, Status.class);
         logger.warn(content);
 
-        logger.warn(REQUEST_VEHICLE_STATUS_REPORT);
+        // Request a Vehicle Status report to be sent from vehicle
         url = authRefUrl + REQUEST_VEHICLE_STATUS_REPORT;
         httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
-        logger.warn(content);
+        logger.warn("API Response ({})", content);
 
         logger.warn(VEHICLE_STATUS);
         url = authRefUrl + VEHICLE_STATUS;
@@ -607,15 +635,24 @@ public class VWCarNetSession {
         content = httpResponse.getContentAsString();
         status = gson.fromJson(content, Status.class);
         logger.warn(content);
+        String requestStatus = status.getVehicleStatusData().getRequestStatus();
 
-        while (status.getVehicleStatusData().getRequestStatus() != null
-                && status.getVehicleStatusData().getRequestStatus().equals("REQUEST_IN_PROGRESS")) {
+        long start = System.currentTimeMillis();
+        while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
             try {
-                logger.warn("Time: {}", new Timestamp(System.currentTimeMillis()));
-                Thread.sleep(1000);
-                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
-                content = httpResponse.getContentAsString();
-                status = gson.fromJson(content, Status.class);
+                long currentTime = System.currentTimeMillis();
+                logger.warn("Time: {}", new Timestamp(currentTime));
+                long elapsedTime = currentTime - start;
+                if (elapsedTime > MAX_WAIT_MILLIS) {
+                    logger.warn("Wait timeout, request status: {}", status.getVehicleStatusData().getRequestStatus());
+                    break;
+                } else {
+                    Thread.sleep(SLEEP_TIME_MILLIS);
+                    httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                    content = httpResponse.getContentAsString();
+                    status = gson.fromJson(content, Status.class);
+                    requestStatus = status.getVehicleStatusData().getRequestStatus();
+                }
             } catch (InterruptedException e) {
                 logger.warn("Exception caught: {}", e);
             }
@@ -660,12 +697,78 @@ public class VWCarNetSession {
                 String vin = (String) vinList.get(i);
                 String dashboardUrl = (String) dashboarUrlList.get(i);
 
+                long start = System.currentTimeMillis();
+                url = SESSION_BASE + dashboardUrl + REQUEST_STATUS;
+                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                content = httpResponse.getContentAsString();
+                logger.warn("Request status: {}", content);
+                if (!isErrorCode(content)) {
+                    String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
+                    while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
+                        try {
+                            long currentTime = System.currentTimeMillis();
+                            logger.warn("Time: {}", new Timestamp(currentTime));
+                            long elapsedTime = currentTime - start;
+                            if (elapsedTime > MAX_WAIT_MILLIS) {
+                                logger.warn("Wait timeout, request status: {}", requestStatus);
+                                break;
+                            } else {
+                                Thread.sleep(SLEEP_TIME_MILLIS);
+                                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                                content = httpResponse.getContentAsString();
+                                logger.warn("Content: {}", content);
+                                requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
+                            }
+                        } catch (InterruptedException e) {
+                            logger.warn("Exception caught: {}", e);
+                        }
+                    }
+                    if (requestStatus != null) {
+                        logger.warn("Request status: {}", requestStatus);
+                    }
+                } else {
+                    logger.warn("Error code: {}", content);
+                }
+
                 // Request a Vehicle Status report to be sent from vehicle
-                url = authRefUrl + REQUEST_VEHICLE_STATUS_REPORT;
+                url = SESSION_BASE + dashboardUrl + REQUEST_VEHICLE_STATUS_REPORT;
                 httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
                 content = httpResponse.getContentAsString();
                 logger.warn("API Response ({})", content);
 
+                logger.warn(VEHICLE_STATUS);
+                url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
+                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                content = httpResponse.getContentAsString();
+                Status status = gson.fromJson(content, Status.class);
+                logger.warn(content);
+                String requestStatus = status.getVehicleStatusData().getRequestStatus();
+
+                start = System.currentTimeMillis();
+                while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
+                    try {
+                        long currentTime = System.currentTimeMillis();
+                        logger.warn("Time: {}", new Timestamp(currentTime));
+                        long elapsedTime = currentTime - start;
+                        if (elapsedTime > MAX_WAIT_MILLIS) {
+                            logger.warn("Wait timeout, request status: {}",
+                                    status.getVehicleStatusData().getRequestStatus());
+                            break;
+                        } else {
+                            Thread.sleep(SLEEP_TIME_MILLIS);
+                            httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                            content = httpResponse.getContentAsString();
+                            status = gson.fromJson(content, Status.class);
+                            requestStatus = status.getVehicleStatusData().getRequestStatus();
+                        }
+                    } catch (InterruptedException e) {
+                        logger.warn("Exception caught: {}", e);
+                    }
+                }
+
+                if (requestStatus != null) {
+                    logger.warn("Request status: {}", requestStatus);
+                }
                 // Query API for vehicle details for this VIN
                 url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS + vin;
                 Vehicle vehicle = postJSONVWCarNetAPI(url, fields, Vehicle.class);

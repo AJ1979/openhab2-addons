@@ -473,13 +473,13 @@ public class Status {
     @NonNullByDefault
     public class LockData {
 
-        @SerializedName("leftFront")
+        @SerializedName("left_front")
         private int leftFront;
-        @SerializedName("rightFront")
+        @SerializedName("right_front")
         private int rightFront;
-        @SerializedName("leftBack")
+        @SerializedName("left_back")
         private int leftBack;
-        @SerializedName("rightBack")
+        @SerializedName("right_back")
         private int rightBack;
         private int trunk;
         private @Nullable Map<String, Object> additionalProperties;
@@ -575,13 +575,13 @@ public class Status {
     @NonNullByDefault
     public class Doors {
 
-        @SerializedName("leftFront")
+        @SerializedName("left_front")
         private int leftFront;
-        @SerializedName("rightFront")
+        @SerializedName("right_front")
         private int rightFront;
-        @SerializedName("leftBack")
+        @SerializedName("left_back")
         private int leftBack;
-        @SerializedName("rightBack")
+        @SerializedName("right_back")
         private int rightBack;
         private int trunk;
         @SerializedName("number_of_doors")

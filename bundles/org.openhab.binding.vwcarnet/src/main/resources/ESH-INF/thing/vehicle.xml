@@ -50,7 +50,7 @@
 		<label>Total Trip Data</label>
 		<channels>
 			<channel id="totalAverageSpeed" typeId="averageSpeed">
-				<label>Average Speed</label>
+				<label>Total Average Speed</label>
 				<description>Total average speed</description>
 			</channel>
 			<channel id="totalTripDistance" typeId="odometer">
@@ -83,7 +83,7 @@
 				<label>Auxiliary Consumption</label>
 				<description>Average Auxiliary consumption for trip</description>
 			</channel>
-			<channel id="averageSpeed" typeId="averageSpeed">
+			<channel id="tripAverageSpeed" typeId="averageSpeed">
 				<label>Average Speed</label>
 				<description>Average speed for trip</description>
 			</channel>
@@ -431,7 +431,7 @@
 	</channel-type>
 
 	<channel-type id="imageURL">
-		<item-type>String</item-type>
+		<item-type>Image</item-type>
 		<label>Vehicle image URL</label>
 		<description>Vehicle image URL in VW portal.</description>
 		<state readOnly="true"></state>

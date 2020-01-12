@@ -1,81 +1,69 @@
-# Verisure Binding
+# VW Car Net Binding
 
-This is an OpenHAB binding for Versiure Alarm system, by Securitas Direct.
+This is an OpenHAB binding for VW We Connect Portal.
 
-This binding uses the rest API behind the Verisure My Pages: 
-https://mypages.verisure.com/login.html.
+This binding uses the rest API behind the VW We Connect Portal: 
+https://www.portal.volkswagen-we.com
 
-Be aware that Verisure don't approve if you update to often, I have gotten no complaints running with a 10 minutes update interval, but officially you should use 30 minutes.
 
 ## Supported Things
 
 This binding supports the following thing types:
 
-- Bridge
-- Alarm
-- Smoke Detector (climate) 
-- Water Detector (climate)
-- Siren (climate)
-- Night Control
-- Yaleman SmartLock
-- SmartPlug
-- Door/Window Status
-- User Presence Status
-- Broadband Connection Status
+- Bridge - VW Car Net API 
+- Vehicle - Any VW vehicle reachable via the VW We Connect Portal.
 
 
 ## Binding Configuration
 
-You will have to configure the bridge with username and password, these must be the same credentials as used when logging into https://mypages.verisure.com. 
-You must also configure your pin-code(s) to be able to lock/unlock the SmartLock(s) and arm/unarm the Alarm(s). 
-**NOTE:** To be able to have full control over all SmartLock functionality, the user has to have Administrator rights.
+You will have to configure the bridge with username and password, these must be the same credentials as used when logging into https://www.portal.volkswagen-we.com. 
+You must also configure your pin-code(s) to be able to lock/unlock and use the start/stop the heater. 
 
 ## Discovery
 
-After the configuration of the Verisure Bridge all of the available Sensors, Alarms, SmartPlugs, SmartLocks and Climate devices will be discovered and placed as things in the inbox.
+After the configuration of the VW Car Net Bridge all of the available vehicles will be discovered and placed as things in the inbox.
 
 ## Thing Configuration
 
-Only the bridge require manual configuration. The devices and sensors can be added by hand, or you can let the discovery mechanism automatically find all of your Verisure things.
+Only the bridge require manual configuration. Vehicles can be added by hand, or you can let the discovery mechanism automatically find all of your vehicles.
 
 ## Supported Things and Channels 
 
-### Verisure Bridge 
+### VW Car Net Bridge 
 
 #### Configuration Options
 
 *   username - The username used to connect to http://mypage.verisure.com
-    * The user has to have Administrator rights to have full SmartLock functionality
 
 *   password - The password used to connect to http://mypage.verisure.com
 
 *   refresh - Specifies the refresh interval in seconds
 
-*   pin - The username's pin code to arm/disarm alarm and lock/unlock door. In the case of more than one installation and different pin-codes, use a comma separated string where pin-code matches order of installations. The installation order can be found using DEBUG log settings.
-    * Two installations where the first listed installation uses a 6 digit pin-code and second listed installation uses a 4 digit pin-code: 123456,1234
+*   pin - The username's pin code to lock/unlock doors and start/stop the heater
 
 
 #### Channels
 
-([bridge]) supports the following channel:
+([vwcarnetapi]) supports the following channel:
 
 | Channel Type ID | Item Type | Description                                                                                     |
 |-----------------|-----------|-------------------------------------------------------------------------------------------------|
 | status          | String    | This channel can be used to trigger an instant refresh by sending a RefreshType.REFRESH command.|
 
 
-### Verisure Alarm
+### VW Vehicle
 
 #### Configuration Options
 
-*   deviceId - Device Id
-    *   Since Alarm lacks a Verisure ID, the following naming convention is used for alarm on installation ID 123456789: 'alarm123456789'. Installation ID can be found using DEBUG log settings
+*   VIN - Vehicle Identification Number
+    
 
-#### Channels
+#### Channels Groups and channels
 
-([alarm]) supports the following channels:
+([vehicle]) supports the following channel groups and channels:
 
-| Channel Type ID | Item Type | Description                                                                               |
+
+| Channel Type ID | Item Type | Description                                                                           |
 |-----------------|-----------|-------------------------------------------------------------------------------------------|
 | changedByUser   | String    | This channel reports the user that last changed the state of the alarm.           |
 | changedVia      | String    | This channel reports the method used to change the status.                       |
@@ -95,6 +83,8 @@ Only the bridge require manual configuration. The devices and sensors can be add
 
 ([smartLock]) supports the following channels:
 
+| Channel Group ID|||
+| other |||
 | Channel Type ID        | Item Type | Description                                                                                              |
 |------------------------|-----------|----------------------------------------------------------------------------------------------------------|
 | changedByUser          | String    | This channel reports the user that last changed the state of the alarm.                             |

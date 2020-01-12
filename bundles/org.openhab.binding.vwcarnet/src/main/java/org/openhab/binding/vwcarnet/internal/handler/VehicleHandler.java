@@ -16,6 +16,7 @@ import static org.eclipse.smarthome.core.library.unit.MetricPrefix.KILO;
 import static org.openhab.binding.vwcarnet.internal.VWCarNetBindingConstants.*;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,18 +27,30 @@ import javax.measure.quantity.Time;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.util.Fields;
 import org.eclipse.smarthome.core.library.types.DateTimeType;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
+import org.eclipse.smarthome.core.library.types.RawType;
 import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.library.unit.SIUnits;
 import org.eclipse.smarthome.core.library.unit.SmartHomeUnits;
+import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Channel;
+import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingStatusDetail;
+import org.eclipse.smarthome.core.thing.binding.BridgeHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandlerService;
+import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.core.types.UnDefType;
+import org.eclipse.smarthome.io.net.http.HttpUtil;
+import org.openhab.binding.vwcarnet.internal.action.VWCarNetActions;
 import org.openhab.binding.vwcarnet.internal.model.BaseVehicle;
 import org.openhab.binding.vwcarnet.internal.model.Details.VehicleDetails;
 import org.openhab.binding.vwcarnet.internal.model.Location;
@@ -49,6 +62,8 @@ import org.openhab.binding.vwcarnet.internal.model.Trips.TripStatisticDetail;
 import org.openhab.binding.vwcarnet.internal.model.Vehicle;
 import org.openhab.binding.vwcarnet.internal.model.Vehicle.CompleteVehicleJson;
 import org.openhab.binding.vwcarnet.internal.wrapper.VehiclePositionWrapper;
+
+import com.jayway.jsonpath.JsonPath;
 
 //import com.google.common.collect.Sets;
 
@@ -63,6 +78,25 @@ public class VehicleHandler extends VWCarNetHandler {
 
     public VehicleHandler(Thing thing) {
         super(thing);
+    }
+
+    @Override
+    public void handleCommand(ChannelUID channelUID, Command command) {
+        String channelID = channelUID.getIdWithoutGroup();
+        if (command instanceof OnOffType) {
+            OnOffType onOffCommand = (OnOffType) command;
+            if (REMOTE_HEATER.equals(channelID)) {
+                actionHeater(onOffCommand == OnOffType.ON);
+            } else if (PRECLIMATIZATION.equals(channelID)) {
+                actionPreclimatization(onOffCommand == OnOffType.ON);
+            } else if (DOORS_LOCKED.equals(channelID)) {
+                if (onOffCommand == OnOffType.ON) {
+                    actionLock();
+                } else {
+                    actionUnlock();
+                }
+            }
+        }
     }
 
     @Override
@@ -88,17 +122,11 @@ public class VehicleHandler extends VWCarNetHandler {
         Trips trips = vehicleJSON.getTrips();
         Location vehicleLocation = vehicleJSON.getVehicleLocation();
 
-        // for (int i = 0; i < getThing().getChannels().size(); i++) {
-        // logger.warn("Channel Group: {}", getThing().getChannels().get(i).getUID().getGroupId().toString());
-        // logger.warn("Channel: {}", getThing().getChannels().get(i).getChannelTypeUID().getAsString());
-        // logger.warn("Channel isLinked: {}", isLinked(getThing().getChannels().get(i).getUID()));
-        //
-        // }
-
         if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
                 && vehicleLocation != null) {
             getThing().getChannels().stream().map(Channel::getUID)
-                    .filter(channelUID -> !LAST_TRIP_GROUP.equals(channelUID.getGroupId())).forEach(channelUID -> {
+                    .filter(channelUID -> isLinked(channelUID) && !LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
+                    .forEach(channelUID -> {
                         State state = getValue(channelUID.getIdWithoutGroup(), vehicle, vehicleDetails, vehicleStatus,
                                 trips, vehicleLocation);
                         updateState(channelUID, state);
@@ -127,7 +155,8 @@ public class VehicleHandler extends VWCarNetHandler {
             case DASHBOARD_URL:
                 return new StringType(vehicle.getDashboardUrl());
             case IMAGE_URL:
-                return new StringType(vehicle.getImageUrl());
+                RawType image = HttpUtil.downloadImage(vehicle.getImageUrl());
+                return image != null ? image : UnDefType.UNDEF;
             case ENGINE_TYPE_COMBUSTIAN:
                 return vehicle.getEngineTypeCombustian() ? OnOffType.ON : OnOffType.OFF;
             case ENGINE_TYPE_ELECTRIC:
@@ -259,12 +288,9 @@ public class VehicleHandler extends VWCarNetHandler {
         Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
                 .filter(t -> t.getTripId() == tripId).findFirst();
 
-        // for (int i = 0; i < getThing().getChannels().size(); i++) {
-        // logger.warn("Channel: {}", getThing().getChannels().get(i).getChannelTypeUID().getAsString());
-        // }
-
         getThing().getChannels().stream().map(Channel::getUID)
-                .filter(channelUID -> LAST_TRIP_GROUP.equals(channelUID.getGroupId())).forEach(channelUID -> {
+                .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
+                .forEach(channelUID -> {
                     State state = getTripValue(channelUID.getIdWithoutGroup(), lastTripStats.get());
                     updateState(channelUID, state);
                 });
@@ -289,7 +315,7 @@ public class VehicleHandler extends VWCarNetHandler {
                 return trip.getAverageAuxiliaryConsumption() != BaseVehicle.UNDEFINED
                         ? new DecimalType(trip.getAverageAuxiliaryConsumption())
                         : UnDefType.UNDEF;
-            case AVERAGE_SPEED:
+            case TRIP_AVERAGE_SPEED:
                 return trip.getAverageSpeed() != BaseVehicle.UNDEFINED
                         ? new QuantityType<Speed>(trip.getAverageSpeed(), SIUnits.KILOMETRE_PER_HOUR)
                         : UnDefType.UNDEF;
@@ -310,6 +336,152 @@ public class VehicleHandler extends VWCarNetHandler {
         }
 
         return UnDefType.NULL;
+    }
+
+    public void actionHonkBlink(Boolean honk, Boolean blink) {
+        VWCarNetBridgeHandler bridgeHandler = getBridgeHandler();
+        if (bridgeHandler != null) {
+
+        }
+    }
+
+    private boolean sendCommand(String vin, String action, String url, String requestStatusUrl, String data) {
+        ContentResponse httpResponse = session.sendCommand(url, data);
+        if (httpResponse.getStatus() == HttpStatus.OK_200) {
+            logger.warn(" VIN: {} JSON response: {}", vin, httpResponse.getContentAsString());
+            if (!session.isErrorCode(httpResponse.getContentAsString())) {
+                logger.warn(action + " command successfully sent to vehicle!");
+            } else {
+                logger.warn("Failed to {} the vehicle {} JSON response: {}", action, vin,
+                        httpResponse.getContentAsString());
+                return false;
+            }
+        } else {
+            logger.warn("Failed to {} the vehicle {} HTTP response: {}", action, vin, httpResponse.getStatus());
+            return false;
+        }
+
+        try {
+            Thread.sleep(5 * SLEEP_TIME_MILLIS);
+        } catch (InterruptedException e) {
+            logger.warn("InterruptedException caught: {}", e);
+        }
+
+        Fields fields = null;
+        httpResponse = session.sendCommand(requestStatusUrl, fields);
+        String content = httpResponse.getContentAsString();
+        logger.warn("Content: {}", content);
+        if (!session.isErrorCode(content)) {
+            String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
+            if (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
+                logger.warn("{} command has status {} ", action, requestStatus);
+            } else {
+                logger.warn("Failed to request status for vehicle {}! Request status: {}", vin, requestStatus);
+                return false;
+            }
+        } else {
+            logger.warn("Failed to request status for vehicle {}! HTTP response: {} Response: {}", vin,
+                    httpResponse.getStatus(), content);
+            return false;
+        }
+        return true;
+    }
+
+    private void actionUnlockLock(String action, OnOffType controlState) {
+        VWCarNetBridgeHandler bridgeHandler = getBridgeHandler();
+        if (bridgeHandler != null) {
+            String vin = config.vin;
+            if (session != null && vin != null) {
+                Vehicle vehicle = (Vehicle) session.getVWCarNetThing(vin);
+                if (vehicle.getVehicleStatus().getVehicleStatusData().getLockData().getDoorsLocked() != controlState) {
+                    String data = "{\"spin\":\"" + bridgeHandler.getPinCode() + "\"}";
+                    String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + LOCKUNLOCK
+                            + action;
+                    String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                            + REQUEST_STATUS;
+                    if (sendCommand(vin, action, url, requestStatusUrl, data)) {
+                        scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                    } else {
+                        logger.warn("The vehicle {} failed to handle action {}", vin, action);
+                    }
+                } else {
+                    logger.info("The vehicle {} is already {}ed", config.vin, action);
+                }
+            } else {
+                logger.warn("Session or vin is null vin: {} action: {}", vin, action);
+            }
+        } else {
+            logger.warn("Bridgehandler is null, vin: {}, action: {}", config.vin, action);
+        }
+    }
+
+    public void actionUnlock() {
+        actionUnlockLock(UNLOCK, OnOffType.OFF);
+    }
+
+    public void actionLock() {
+        actionUnlockLock(LOCK, OnOffType.ON);
+    }
+
+    private void actionHeater(String action, Boolean start) {
+        VWCarNetBridgeHandler bridgeHandler = getBridgeHandler();
+        if (bridgeHandler != null) {
+            String vin = config.vin;
+            if (session != null && vin != null) {
+                Vehicle vehicle = (Vehicle) session.getVWCarNetThing(vin);
+                if (action.contains(REMOTE_HEATER)) {
+                    String command = start ? START_HEATER : STOP_HEATER;
+                    String data;
+                    if (command.equals(START_HEATER)) {
+                        data = "{\"startMode\":\"HEATING\", \"spin\":\"" + bridgeHandler.getPinCode() + "\"}";
+                    } else {
+                        data = "empty";
+                    }
+                    String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + STARTSTOP_HEATER
+                            + command;
+                    String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                            + REQUEST_STATUS;
+                    if (sendCommand(vin, action, url, requestStatusUrl, data)) {
+                        scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                    } else {
+                        logger.warn("The vehicle {} failed to handle action {} {}", config.vin, action, start);
+                    }
+
+                } else if (action.contains(PRECLIMATIZATION)) {
+                    String command = start ? "start" : "stop";
+                    logger.warn("Action Preclimatixation not yet implemented!");
+                }
+            } else {
+                logger.warn("Session or vin is null vin: {} action: {}", vin, action);
+            }
+        } else {
+            logger.warn("Bridgehandler is null, vin: {}, action: {} {}", config.vin, action, start);
+        }
+    }
+
+    public void actionHeater(Boolean start) {
+        actionHeater(REMOTE_HEATER, start);
+    }
+
+    public void actionPreclimatization(Boolean start) {
+        actionHeater(PRECLIMATIZATION, start);
+    }
+
+    private @Nullable VWCarNetBridgeHandler getBridgeHandler() {
+        Bridge bridge = getBridge();
+        if (bridge != null) {
+            BridgeHandler handler = bridge.getHandler();
+            if (handler != null) {
+                return (VWCarNetBridgeHandler) handler;
+            }
+        }
+        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED);
+        return null;
+    }
+
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return Collections.singletonList(VWCarNetActions.class);
     }
 
 }

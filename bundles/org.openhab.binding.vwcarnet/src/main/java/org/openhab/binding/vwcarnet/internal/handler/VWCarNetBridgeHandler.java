@@ -152,15 +152,21 @@ public class VWCarNetBridgeHandler extends BaseBridgeHandler {
         }
     }
 
+    public @Nullable String getPinCode() {
+        return pinCode;
+    }
+
     private void refreshAndUpdateStatus() {
-        logger.debug("VWCarNetBridgeHandler - Polling thread is up'n running!");
+        logger.warn("VWCarNetBridgeHandler - Refresh thread is up'n running!");
         try {
             if (session != null) {
                 boolean success = session.refresh();
                 if (success) {
                     updateStatus(ThingStatus.ONLINE);
+                    logger.warn("Refresh success!");
                 } else {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+                    logger.warn("Refresh failed!");
                 }
             }
         } catch (Exception e) {
@@ -205,12 +211,12 @@ public class VWCarNetBridgeHandler extends BaseBridgeHandler {
     }
 
     private void startAutomaticRefresh() {
-        logger.debug("Start automatic refresh {}", refreshJob);
+        logger.warn("Start automatic refresh {}", refreshJob);
         if (refreshJob == null || refreshJob.isCancelled()) {
             try {
                 refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,
                         TimeUnit.SECONDS);
-                logger.debug("Scheduling at fixed delay refreshjob {}", refreshJob);
+                logger.warn("Scheduling at fixed delay refreshjob {}", refreshJob);
             } catch (IllegalArgumentException e) {
                 logger.warn("Refresh time value is invalid! Please change the refresh time configuration!", e);
             } catch (RejectedExecutionException e) {
