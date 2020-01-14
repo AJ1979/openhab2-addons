@@ -41,6 +41,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.openhab.binding.vwweconnect.internal.model.BaseVehicle;
 import org.openhab.binding.vwweconnect.internal.model.Details;
+import org.openhab.binding.vwweconnect.internal.model.HeaterStatus;
 import org.openhab.binding.vwweconnect.internal.model.Location;
 import org.openhab.binding.vwweconnect.internal.model.Status;
 import org.openhab.binding.vwweconnect.internal.model.Trips;
@@ -56,7 +57,7 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
 /**
- * This class performs the communication with VWCarNet My Pages.
+ * This class performs the communication with VW WeConnect Portal API.
  *
  * @author Jan Gustafsson - Initial contribution
  *
@@ -64,7 +65,7 @@ import com.jayway.jsonpath.JsonPath;
 @NonNullByDefault
 public class VWWeConnectSession {
 
-    private final HashMap<String, BaseVehicle> vwCarNetThings = new HashMap<String, BaseVehicle>();
+    private final HashMap<String, BaseVehicle> vwWeConnectThings = new HashMap<String, BaseVehicle>();
     private final Logger logger = LoggerFactory.getLogger(VWWeConnectSession.class);
     private final Gson gson = new GsonBuilder().create();
     private final List<DeviceStatusListener> deviceStatusListeners = new CopyOnWriteArrayList<>();
@@ -90,9 +91,9 @@ public class VWWeConnectSession {
         this.userName = userName;
         this.password = password;
         this.pinCode = pinCode;
-        // Try to login to VWCarNet
+        // Try to login to VW We Connect Portal
         if (!logIn()) {
-            logger.warn("Failed to login to VWCarNet!");
+            logger.warn("Failed to login to VWWeConnect!");
         }
     }
 
@@ -127,12 +128,12 @@ public class VWWeConnectSession {
     public void dispose() {
     }
 
-    public @Nullable BaseVehicle getVWCarNetThing(String vin) {
-        return vwCarNetThings.get(vin);
+    public @Nullable BaseVehicle getVWWeConnectThing(String vin) {
+        return vwWeConnectThings.get(vin);
     }
 
     public HashMap<String, BaseVehicle> getVWWeConnectThings() {
-        return vwCarNetThings;
+        return vwWeConnectThings;
     }
 
     public @Nullable String getCsrf() {
@@ -149,12 +150,12 @@ public class VWWeConnectSession {
 
     public @Nullable ContentResponse sendCommand(String url, String data) {
         logger.debug("Sending command: {}", url);
-        return postJSONVWCarNetAPI(url, data, referer, xCsrfToken);
+        return postJSONVWWeConnectAPI(url, data, referer, xCsrfToken);
     }
 
     public @Nullable ContentResponse sendCommand(String url, @Nullable Fields fields) {
         logger.debug("Sending command: {}", url);
-        return postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        return postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
     }
 
     public boolean isErrorCode(String jsonContent) {
@@ -172,7 +173,7 @@ public class VWWeConnectSession {
 
         logger.debug("Check for login status, url: {}", url);
         Fields fields = null;
-        ContentResponse httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        ContentResponse httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         if (httpResponse == null) {
             logger.debug("We are not logged in, Exception caught!");
             return false;
@@ -190,8 +191,8 @@ public class VWWeConnectSession {
         return false;
     }
 
-    private @Nullable ContentResponse getVWCarNetAPI(String url) {
-        logger.debug("HTTP GET: {}", url);
+    private @Nullable ContentResponse getVWWeConnectAPI(String url) {
+        logger.debug("getVWWeConnectAPI: {}", url);
         ContentResponse httpResult = null;
 
         try {
@@ -209,11 +210,11 @@ public class VWWeConnectSession {
         return httpResult;
     }
 
-    private @Nullable ContentResponse getVWCarNetAPI(String url, Boolean headers) {
+    private @Nullable ContentResponse getVWWeConnectAPI(String url, Boolean headers) {
         try {
-            logger.debug("getVWCarNetAPI URL: {} headers: {}", url, headers);
+            logger.debug("getVWWeConnectAPI URL: {} headers: {}", url, headers);
             String correctEncodedURL = url.replace(" ", "%20");
-            logger.warn("Encoded URL: {}", correctEncodedURL);
+            logger.debug("Encoded URL: {}", correctEncodedURL);
 
             httpClient.setFollowRedirects(false);
             Request request = httpClient.newRequest(correctEncodedURL).method(HttpMethod.GET);
@@ -224,7 +225,7 @@ public class VWWeConnectSession {
                 request.header("user-agent",
                         "Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36");
             }
-            logger.warn("HTTP GET Request {}.", request);
+            logger.debug("HTTP GET Request {}.", request);
             return request.send();
         } catch (ExecutionException e) {
             logger.warn("Caught ExecutionException {}", e);
@@ -238,10 +239,10 @@ public class VWWeConnectSession {
         return null;
     }
 
-    private @Nullable ContentResponse postVWCarNetAPI(String url, @Nullable Fields fields, @Nullable String referer,
+    private @Nullable ContentResponse postVWWeConnectAPI(String url, @Nullable Fields fields, @Nullable String referer,
             String csrf) {
         try {
-            logger.debug("postVWCarNetAPI URL: {} Fields: {} Referer: {} CSRF:{}", url, fields, referer, csrf);
+            logger.debug("postVWWeConnectAPI URL: {} Fields: {} Referer: {} CSRF:{}", url, fields, referer, csrf);
             Request request = httpClient.newRequest(url).method(HttpMethod.POST);
 
             request.header("accept",
@@ -270,10 +271,10 @@ public class VWWeConnectSession {
         return null;
     }
 
-    private @Nullable ContentResponse postJSONVWCarNetAPI(String url, @Nullable Fields fields, @Nullable String referer,
-            @Nullable String xCsrf) {
+    private @Nullable ContentResponse postJSONVWWeConnectAPI(String url, @Nullable Fields fields,
+            @Nullable String referer, @Nullable String xCsrf) {
         try {
-            logger.debug("postJSONVWCarNetAPI URL: {} Fields: {} Referer: {} XCSRF:{}", url, fields, referer, xCsrf);
+            logger.debug("postJSONVWWeConnectAPI URL: {} Fields: {} Referer: {} XCSRF:{}", url, fields, referer, xCsrf);
             Request request = httpClient.newRequest(url).method(HttpMethod.POST);
 
             request.header("accept", "application/json, text/plain, */*");
@@ -301,10 +302,10 @@ public class VWWeConnectSession {
         return null;
     }
 
-    private @Nullable ContentResponse postJSONVWCarNetAPI(String url, String data, @Nullable String referer,
+    private @Nullable ContentResponse postJSONVWWeConnectAPI(String url, String data, @Nullable String referer,
             @Nullable String xCsrf) {
         try {
-            logger.debug("postJSONVWCarNetAPI URL: {} Data: {} Referer: {} XCSRF:{}", url, data, referer, xCsrf);
+            logger.debug("postJSONVWWeConnectAPI URL: {} Data: {} Referer: {} XCSRF:{}", url, data, referer, xCsrf);
             Request request = httpClient.newRequest(url).method(HttpMethod.POST);
 
             request.header("accept", "application/json, text/plain, */*");
@@ -334,9 +335,9 @@ public class VWWeConnectSession {
         return null;
     }
 
-    private @Nullable <T> T postJSONVWCarNetAPI(String url, @Nullable Fields fields, Class<T> jsonClass) {
+    private @Nullable <T> T postJSONVWWeConnectAPI(String url, @Nullable Fields fields, Class<T> jsonClass) {
         try {
-            logger.debug("postJSONVWCarNetAPI URL: {} Fields: {}", url, fields);
+            logger.debug("postJSONVWWeConnectAPI URL: {} Fields: {}", url, fields);
             Request request = httpClient.newRequest(url).method(HttpMethod.POST);
 
             request.header("accept", "application/json, text/plain, */*");
@@ -377,7 +378,7 @@ public class VWWeConnectSession {
         // Request landing page and get CSRF:
         String url = SESSION_BASE + "/portal/en_GB/web/guest/home";
         logger.debug("Login URL: {}", url);
-        ContentResponse httpResponse = getVWCarNetAPI(url);
+        ContentResponse httpResponse = getVWWeConnectAPI(url);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -391,12 +392,12 @@ public class VWWeConnectSession {
 
         // Request login page and get login URL
         url = SESSION_BASE + "portal/web/guest/home/-/csrftokenhandling/get-login-url";
-        httpResponse = postVWCarNetAPI(url, null, "portal", csrf);
+        httpResponse = postVWWeConnectAPI(url, null, "portal", csrf);
         String json = httpResponse.getContentAsString();
         JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
         url = jsonObject.get("loginURL").getAsJsonObject().get("path").getAsString();
 
-        httpResponse = getVWCarNetAPI(url, Boolean.TRUE);
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -406,7 +407,7 @@ public class VWWeConnectSession {
         }
 
         url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWCarNetAPI(url, Boolean.TRUE);
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -435,7 +436,7 @@ public class VWWeConnectSession {
         fields.put("hmac", loginHmac);
         fields.put("_csrf", loginCsrf);
 
-        httpResponse = postVWCarNetAPI(url, fields, previousUrl, csrf);
+        httpResponse = postVWWeConnectAPI(url, fields, previousUrl, csrf);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -446,7 +447,7 @@ public class VWWeConnectSession {
 
         url = httpResponse.getHeaders().get("Location");
         url = AUTH_BASE + url;
-        httpResponse = getVWCarNetAPI(url, Boolean.TRUE);
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -473,7 +474,7 @@ public class VWWeConnectSession {
         fields.put("hmac", authHmac);
         fields.put("_csrf", authCsrf);
 
-        httpResponse = postVWCarNetAPI(url, fields, previousUrl, csrf);
+        httpResponse = postVWWeConnectAPI(url, fields, previousUrl, csrf);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -483,7 +484,7 @@ public class VWWeConnectSession {
         }
 
         url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWCarNetAPI(url, Boolean.TRUE);
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -493,7 +494,7 @@ public class VWWeConnectSession {
         }
 
         url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWCarNetAPI(url, Boolean.TRUE);
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -503,7 +504,7 @@ public class VWWeConnectSession {
         }
 
         url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWCarNetAPI(url, Boolean.TRUE);
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -541,7 +542,7 @@ public class VWWeConnectSession {
         url = SESSION_BASE + path + "?p_auth=" + state
                 + "&p_p_id=33_WAR_cored5portlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=1&_33_WAR_cored5portlet_javax.portlet.action=getLoginStatus";
 
-        httpResponse = postVWCarNetAPI(url, fields, previousUrl, csrf);
+        httpResponse = postVWWeConnectAPI(url, fields, previousUrl, csrf);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -551,7 +552,7 @@ public class VWWeConnectSession {
         }
 
         url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWCarNetAPI(url, Boolean.TRUE);
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -578,13 +579,13 @@ public class VWWeConnectSession {
 
         fields = null;
         String content = null;
-        logger.warn("get-fully-loaded-cars");
+        logger.debug("get-fully-loaded-cars");
         url = authRefUrl + "-/mainnavigation/get-fully-loaded-cars";
-        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         String myVin = "";
         if (httpResponse != null) {
             content = httpResponse.getContentAsString();
-            logger.warn(content);
+            logger.debug(content);
             DocumentContext context = JsonPath.parse(content);
             String jsonpathVehiclesNotFullyLoadedPath = "$['fullyLoadedVehiclesResponse']['vehiclesNotFullyLoaded'][*]";
             List<Object> vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
@@ -592,63 +593,63 @@ public class VWWeConnectSession {
             context = JsonPath.parse(vehicleList);
             List<Object> vinList = context.read("$[*]['vin']");
             for (Object vin : vinList) {
-                logger.warn("VIN: {}", vin);
+                logger.debug("VIN: {}", vin);
                 myVin = (String) vin;
             }
         }
 
-        logger.warn("get-status");
+        logger.debug("get-status");
         url = authRefUrl + "-/rah/get-status";
-        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
-        logger.warn(content);
+        logger.debug(content);
 
-        logger.warn("get-vehicle-details");
+        logger.debug("get-vehicle-details");
         url = authRefUrl + "-/vehicle-info/get-vehicle-details";
-        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
-        logger.warn(content);
+        logger.debug(content);
 
-        logger.warn("load-car-details");
+        logger.debug("load-car-details");
         url = authRefUrl + "-/mainnavigation/load-car-details/" + myVin;
-        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         Vehicle vehicle = gson.fromJson(content, Vehicle.class);
-        logger.warn(content);
+        logger.debug(content);
 
-        logger.warn(VEHICLE_STATUS);
+        logger.debug(VEHICLE_STATUS);
         url = authRefUrl + VEHICLE_STATUS;
-        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         Status status = gson.fromJson(content, Status.class);
-        logger.warn(content);
+        logger.debug(content);
 
         // Request a Vehicle Status report to be sent from vehicle
         url = authRefUrl + REQUEST_VEHICLE_STATUS_REPORT;
-        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
-        logger.warn("API Response ({})", content);
+        logger.debug("API Response ({})", content);
 
-        logger.warn(VEHICLE_STATUS);
+        logger.debug(VEHICLE_STATUS);
         url = authRefUrl + VEHICLE_STATUS;
-        httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         content = httpResponse.getContentAsString();
         status = gson.fromJson(content, Status.class);
-        logger.warn(content);
+        logger.debug(content);
         String requestStatus = status.getVehicleStatusData().getRequestStatus();
 
         long start = System.currentTimeMillis();
         while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
             try {
                 long currentTime = System.currentTimeMillis();
-                logger.warn("Time: {}", new Timestamp(currentTime));
+                logger.debug("Time: {}", new Timestamp(currentTime));
                 long elapsedTime = currentTime - start;
                 if (elapsedTime > MAX_WAIT_MILLIS) {
-                    logger.warn("Wait timeout, request status: {}", status.getVehicleStatusData().getRequestStatus());
+                    logger.debug("Wait timeout, request status: {}", status.getVehicleStatusData().getRequestStatus());
                     break;
                 } else {
                     Thread.sleep(SLEEP_TIME_MILLIS);
-                    httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                    httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                     content = httpResponse.getContentAsString();
                     status = gson.fromJson(content, Status.class);
                     requestStatus = status.getVehicleStatusData().getRequestStatus();
@@ -678,7 +679,7 @@ public class VWWeConnectSession {
         Fields fields = null;
         String content = null;
         String url = authRefUrl + "-/mainnavigation/get-fully-loaded-cars";
-        ContentResponse httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+        ContentResponse httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         if (httpResponse != null) {
             content = httpResponse.getContentAsString();
             if (isErrorCode(content)) {
@@ -691,32 +692,34 @@ public class VWWeConnectSession {
 
             context = JsonPath.parse(vehicleList);
             List<Object> vinList = context.read("$[*]['vin']");
-            List<Object> dashboarUrlList = context.read("$[*]['dashboardUrl']");
+            List<Object> dashboardUrlList = context.read("$[*]['dashboardUrl']");
 
+            // Loop trough all found vehicles
             for (int i = 0; i < vinList.size(); i++) {
                 String vin = (String) vinList.get(i);
-                String dashboardUrl = (String) dashboarUrlList.get(i);
+                String dashboardUrl = (String) dashboardUrlList.get(i);
 
+                // Check for outstanding pending request
                 long start = System.currentTimeMillis();
                 url = SESSION_BASE + dashboardUrl + REQUEST_STATUS;
-                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                 content = httpResponse.getContentAsString();
-                logger.warn("Request status: {}", content);
+                logger.debug("Request status: {}", content);
                 if (!isErrorCode(content)) {
                     String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
                     while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
                         try {
                             long currentTime = System.currentTimeMillis();
-                            logger.warn("Time: {}", new Timestamp(currentTime));
+                            logger.debug("Time: {}", new Timestamp(currentTime));
                             long elapsedTime = currentTime - start;
                             if (elapsedTime > MAX_WAIT_MILLIS) {
-                                logger.warn("Wait timeout, request status: {}", requestStatus);
+                                logger.debug("Wait timeout, request status: {}", requestStatus);
                                 break;
                             } else {
                                 Thread.sleep(SLEEP_TIME_MILLIS);
-                                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                                 content = httpResponse.getContentAsString();
-                                logger.warn("Content: {}", content);
+                                logger.debug("Content: {}", content);
                                 requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
                             }
                         } catch (InterruptedException e) {
@@ -732,31 +735,32 @@ public class VWWeConnectSession {
 
                 // Request a Vehicle Status report to be sent from vehicle
                 url = SESSION_BASE + dashboardUrl + REQUEST_VEHICLE_STATUS_REPORT;
-                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                 content = httpResponse.getContentAsString();
-                logger.warn("API Response ({})", content);
+                logger.debug("API Response ({})", content);
 
-                logger.warn(VEHICLE_STATUS);
+                logger.debug(VEHICLE_STATUS);
                 url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
-                httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                 content = httpResponse.getContentAsString();
                 Status status = gson.fromJson(content, Status.class);
-                logger.warn(content);
+                logger.debug(content);
                 String requestStatus = status.getVehicleStatusData().getRequestStatus();
 
+                // Check for progess of Vehicle report
                 start = System.currentTimeMillis();
                 while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
                     try {
                         long currentTime = System.currentTimeMillis();
-                        logger.warn("Time: {}", new Timestamp(currentTime));
+                        logger.debug("Time: {}", new Timestamp(currentTime));
                         long elapsedTime = currentTime - start;
                         if (elapsedTime > MAX_WAIT_MILLIS) {
-                            logger.warn("Wait timeout, request status: {}",
+                            logger.debug("Wait timeout, request status: {}",
                                     status.getVehicleStatusData().getRequestStatus());
                             break;
                         } else {
                             Thread.sleep(SLEEP_TIME_MILLIS);
-                            httpResponse = postJSONVWCarNetAPI(url, fields, referer, xCsrfToken);
+                            httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                             content = httpResponse.getContentAsString();
                             status = gson.fromJson(content, Status.class);
                             requestStatus = status.getVehicleStatusData().getRequestStatus();
@@ -767,43 +771,49 @@ public class VWWeConnectSession {
                 }
 
                 if (requestStatus != null) {
-                    logger.warn("Request status: {}", requestStatus);
+                    logger.debug("Request status: {}", requestStatus);
                 }
                 // Query API for vehicle details for this VIN
                 url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS + vin;
-                Vehicle vehicle = postJSONVWCarNetAPI(url, fields, Vehicle.class);
-                logger.warn("API Response ({})", vehicle);
+                Vehicle vehicle = postJSONVWWeConnectAPI(url, fields, Vehicle.class);
+                logger.debug("API Response ({})", vehicle);
 
                 // Query API for more specific vehicle details
                 url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS_SPECIFIC;
-                Details vehicleDetails = postJSONVWCarNetAPI(url, fields, Details.class);
-                logger.warn("API Response ({})", vehicleDetails);
+                Details vehicleDetails = postJSONVWWeConnectAPI(url, fields, Details.class);
+                logger.debug("API Response ({})", vehicleDetails);
 
                 // Query API for trip statistics
                 url = SESSION_BASE + dashboardUrl + TRIP_STATISTICS;
-                Trips trips = postJSONVWCarNetAPI(url, fields, Trips.class);
+                Trips trips = postJSONVWWeConnectAPI(url, fields, Trips.class);
                 logger.trace("API Response ({})", trips);
 
                 // Query API for homeLocation status
                 url = SESSION_BASE + dashboardUrl + VEHICLE_LOCATION;
-                Location location = postJSONVWCarNetAPI(url, fields, Location.class);
-                logger.warn("API Response ({})", location);
+                Location location = postJSONVWWeConnectAPI(url, fields, Location.class);
+                logger.debug("API Response ({})", location);
 
                 // Query API for vehicle status
                 url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
-                Status vehicleStatus = postJSONVWCarNetAPI(url, fields, Status.class);
-                logger.warn("API Response ({})", vehicleStatus);
+                Status vehicleStatus = postJSONVWWeConnectAPI(url, fields, Status.class);
+                logger.debug("API Response ({})", vehicleStatus);
+
+                // Query API for vehicle heating status
+                url = SESSION_BASE + dashboardUrl + GET_HEATER_STATUS;
+                HeaterStatus vehicleHeaterStatus = postJSONVWWeConnectAPI(url, fields, HeaterStatus.class);
+                logger.debug("API Response ({})", vehicleHeaterStatus);
 
                 if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
-                        && location != null) {
+                        && location != null && vehicleHeaterStatus != null) {
                     vehicle.setVehicleDetails(vehicleDetails);
                     vehicle.setVehicleStatus(vehicleStatus);
                     vehicle.setTrips(trips);
                     vehicle.setVehicleLocation(location);
+                    vehicle.setHeaterStatus(vehicleHeaterStatus);
 
-                    BaseVehicle oldObj = vwCarNetThings.get(vin);
+                    BaseVehicle oldObj = vwWeConnectThings.get(vin);
                     if (oldObj == null || !oldObj.equals(vehicle)) {
-                        vwCarNetThings.put(vin, vehicle);
+                        vwWeConnectThings.put(vin, vehicle);
                         notifyListeners(vehicle);
                     }
                 } else {

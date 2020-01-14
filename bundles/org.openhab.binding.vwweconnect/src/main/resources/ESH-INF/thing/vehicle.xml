@@ -43,6 +43,8 @@
 		<label>Other</label>
 		<channels>
 			<channel id="remoteHeater" typeId="remoteHeater" />
+			<channel id="temperature" typeId="temperature"/>
+			<channel id="remainingTime" typeId="remainingTime" />
 		</channels>
 	</channel-group-type>
 
@@ -450,6 +452,13 @@
 		<description>Indicates if the engine type is electric.</description>
 		<state readOnly="true"></state>
 	</channel-type>
+	
+	<channel-type id="remainingTime">
+        <item-type>Number:Time</item-type>
+        <label>Remaining Heater Time</label>
+        <description>Remaining Heater Time</description>
+        <state pattern="%d %unit%" readOnly="true"></state>
+    </channel-type>
 
 	<channel-type id="temperature">
 		<item-type>Number:Temperature</item-type>

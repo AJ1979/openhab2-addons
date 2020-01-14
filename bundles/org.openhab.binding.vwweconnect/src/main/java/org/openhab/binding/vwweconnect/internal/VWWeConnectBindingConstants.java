@@ -37,9 +37,6 @@ public class VWWeConnectBindingConstants {
     public static final ThingTypeUID BRIDGE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vwweconnectapi");
     public static final ThingTypeUID VEHICLE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vehicle");
 
-    public static final ThingTypeUID THING_TYPE_ALARM = new ThingTypeUID(BINDING_ID, "alarm");
-    public static final ThingTypeUID THING_TYPE_SMARTLOCK = new ThingTypeUID(BINDING_ID, "smartLock");
-
     // List of Channel ID's
     // Doors
     public static final String TRUNK = "trunk";
@@ -100,7 +97,12 @@ public class VWWeConnectBindingConstants {
     // public static final String BLINK = "blink";
     // public static final String HONK_BLINK = "honkAndBlink";
     // public static final String HONK_AND_OR_BLINK = "honkAndOrBlink";
+
+    // Other
     public static final String REMOTE_HEATER = "remoteHeater";
+    public static final String REMAINING_TIME = "remainingTime";
+    public static final String TEMPERATURE = "temperature";
+    public static final String HEATING = "HEATING";
     public static final String PRECLIMATIZATION = "preclimatization";
     public static final String LAST_TRIP_ID = "lastTripId";
 
@@ -130,6 +132,7 @@ public class VWWeConnectBindingConstants {
     public static final String VEHICLE_LOCATION = "/-/cf/get-location";
     public static final String EMANAGER = "-/emanager/get-emanager";
     public static final String REQUEST_STATUS = "/-/vsr/get-request-status";
+    public static final String GET_HEATER_STATUS = "/-/rah/get-status";
     public static final String LOCK = "lock";
     public static final String UNLOCK = "unlock";
     public static final String LOCKUNLOCK = "/-/vsr/remote-";

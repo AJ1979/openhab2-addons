@@ -47,6 +47,8 @@ public class Vehicle extends BaseVehicle {
     private @Nullable Trips trips;
     @Expose(serialize = false, deserialize = false)
     private @Nullable Location vehicleLocation;
+    @Expose(serialize = false, deserialize = false)
+    private @Nullable HeaterStatus heaterStatus;
 
     /**
      * No args constructor for use in serialization
@@ -85,6 +87,14 @@ public class Vehicle extends BaseVehicle {
 
     public void setVehicleStatus(Status vehicleStatus) {
         this.vehicleStatus = vehicleStatus;
+    }
+
+    public @Nullable HeaterStatus getHeaterStatus() {
+        return heaterStatus;
+    }
+
+    public void setHeaterStatus(HeaterStatus heaterStatus) {
+        this.heaterStatus = heaterStatus;
     }
 
     public @Nullable Trips getTrips() {

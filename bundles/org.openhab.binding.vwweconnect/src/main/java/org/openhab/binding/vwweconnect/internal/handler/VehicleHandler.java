@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import javax.measure.quantity.Length;
 import javax.measure.quantity.Speed;
+import javax.measure.quantity.Temperature;
 import javax.measure.quantity.Time;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -52,20 +53,19 @@ import org.eclipse.smarthome.core.types.UnDefType;
 import org.eclipse.smarthome.io.net.http.HttpUtil;
 import org.openhab.binding.vwweconnect.internal.action.VWWeConnectActions;
 import org.openhab.binding.vwweconnect.internal.model.BaseVehicle;
-import org.openhab.binding.vwweconnect.internal.model.Location;
-import org.openhab.binding.vwweconnect.internal.model.Trips;
-import org.openhab.binding.vwweconnect.internal.model.Vehicle;
 import org.openhab.binding.vwweconnect.internal.model.Details.VehicleDetails;
+import org.openhab.binding.vwweconnect.internal.model.HeaterStatus;
+import org.openhab.binding.vwweconnect.internal.model.Location;
 import org.openhab.binding.vwweconnect.internal.model.Location.Position;
 import org.openhab.binding.vwweconnect.internal.model.Status.VehicleStatusData;
+import org.openhab.binding.vwweconnect.internal.model.Trips;
 import org.openhab.binding.vwweconnect.internal.model.Trips.TripStatistic;
 import org.openhab.binding.vwweconnect.internal.model.Trips.TripStatisticDetail;
+import org.openhab.binding.vwweconnect.internal.model.Vehicle;
 import org.openhab.binding.vwweconnect.internal.model.Vehicle.CompleteVehicleJson;
 import org.openhab.binding.vwweconnect.internal.wrapper.VehiclePositionWrapper;
 
 import com.jayway.jsonpath.JsonPath;
-
-//import com.google.common.collect.Sets;
 
 /**
  * Handler for the Smart Lock Device thing type that VWCarNet provides.
@@ -121,25 +121,26 @@ public class VehicleHandler extends VWWeConnectHandler {
         VehicleStatusData vehicleStatus = vehicleJSON.getVehicleStatus().getVehicleStatusData();
         Trips trips = vehicleJSON.getTrips();
         Location vehicleLocation = vehicleJSON.getVehicleLocation();
+        HeaterStatus vehicleHeaterStatus = vehicleJSON.getHeaterStatus();
 
         if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
-                && vehicleLocation != null) {
+                && vehicleLocation != null && vehicleHeaterStatus != null) {
             getThing().getChannels().stream().map(Channel::getUID)
                     .filter(channelUID -> isLinked(channelUID) && !LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
                     .forEach(channelUID -> {
                         State state = getValue(channelUID.getIdWithoutGroup(), vehicle, vehicleDetails, vehicleStatus,
-                                trips, vehicleLocation);
+                                trips, vehicleLocation, vehicleHeaterStatus);
                         updateState(channelUID, state);
                     });
             updateLastTrip(trips);
         } else {
-            logger.warn("Update vehicle status failed vehicle: {}, details: {}, status: {}", vehicle, vehicleDetails,
-                    vehicleStatus);
+            logger.warn("Update vehicle status failed vehicle: {}, details: {}, status: {}, heater status {}", vehicle,
+                    vehicleDetails, vehicleStatus, vehicleHeaterStatus);
         }
     }
 
     public State getValue(String channelId, CompleteVehicleJson vehicle, VehicleDetails vehicleDetails,
-            VehicleStatusData vehicleStatus, Trips trips, Location vehicleLocation) {
+            VehicleStatusData vehicleStatus, Trips trips, Location vehicleLocation, HeaterStatus vehicleHeaterStatus) {
         switch (channelId) {
             case MODEL:
                 return new StringType(vehicle.getModel());
@@ -273,6 +274,17 @@ public class VehicleHandler extends VWWeConnectHandler {
             case ACTUAL_LOCATION:
                 Position localPosition = vehicleLocation.getPosition();
                 return localPosition != null ? new VehiclePositionWrapper(localPosition).getPosition() : UnDefType.NULL;
+            case REMOTE_HEATER:
+                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getOperationMode().equals(HEATING)
+                        ? OnOffType.ON
+                        : OnOffType.OFF;
+            case TEMPERATURE:
+                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
+                        .getTemperature() != BaseVehicle.UNDEFINED
+                                ? new QuantityType<Temperature>(
+                                        vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getTemperature(),
+                                        SIUnits.CELSIUS)
+                                : UnDefType.NULL;
         }
 
         return UnDefType.NULL;
@@ -348,9 +360,9 @@ public class VehicleHandler extends VWWeConnectHandler {
     private boolean sendCommand(String vin, String action, String url, String requestStatusUrl, String data) {
         ContentResponse httpResponse = session.sendCommand(url, data);
         if (httpResponse.getStatus() == HttpStatus.OK_200) {
-            logger.warn(" VIN: {} JSON response: {}", vin, httpResponse.getContentAsString());
+            logger.debug(" VIN: {} JSON response: {}", vin, httpResponse.getContentAsString());
             if (!session.isErrorCode(httpResponse.getContentAsString())) {
-                logger.warn(action + " command successfully sent to vehicle!");
+                logger.debug(action + " command successfully sent to vehicle!");
             } else {
                 logger.warn("Failed to {} the vehicle {} JSON response: {}", action, vin,
                         httpResponse.getContentAsString());
@@ -370,11 +382,11 @@ public class VehicleHandler extends VWWeConnectHandler {
         Fields fields = null;
         httpResponse = session.sendCommand(requestStatusUrl, fields);
         String content = httpResponse.getContentAsString();
-        logger.warn("Content: {}", content);
+        logger.debug("Content: {}", content);
         if (!session.isErrorCode(content)) {
             String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
             if (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
-                logger.warn("{} command has status {} ", action, requestStatus);
+                logger.debug("{} command has status {} ", action, requestStatus);
             } else {
                 logger.warn("Failed to request status for vehicle {}! Request status: {}", vin, requestStatus);
                 return false;
@@ -392,7 +404,7 @@ public class VehicleHandler extends VWWeConnectHandler {
         if (bridgeHandler != null) {
             String vin = config.vin;
             if (session != null && vin != null) {
-                Vehicle vehicle = (Vehicle) session.getVWCarNetThing(vin);
+                Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
                 if (vehicle.getVehicleStatus().getVehicleStatusData().getLockData().getDoorsLocked() != controlState) {
                     String data = "{\"spin\":\"" + bridgeHandler.getPinCode() + "\"}";
                     String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + LOCKUNLOCK
@@ -428,7 +440,7 @@ public class VehicleHandler extends VWWeConnectHandler {
         if (bridgeHandler != null) {
             String vin = config.vin;
             if (session != null && vin != null) {
-                Vehicle vehicle = (Vehicle) session.getVWCarNetThing(vin);
+                Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
                 if (action.contains(REMOTE_HEATER)) {
                     String command = start ? START_HEATER : STOP_HEATER;
                     String data;

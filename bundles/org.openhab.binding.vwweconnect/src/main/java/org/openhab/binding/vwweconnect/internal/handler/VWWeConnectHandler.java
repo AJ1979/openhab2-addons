@@ -64,7 +64,7 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
             }
             String vin = config.vin;
             if (session != null && vin != null) {
-                BaseVehicle thing = session.getVWCarNetThing(vin);
+                BaseVehicle thing = session.getVWWeConnectThing(vin);
                 update(thing);
             }
         } else {
@@ -123,7 +123,7 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
                     session = vbh.getSession();
                     String vin = config.vin;
                     if (session != null && vin != null) {
-                        update(session.getVWCarNetThing(vin));
+                        update(session.getVWWeConnectThing(vin));
                         session.registerDeviceStatusListener(this);
                     }
                 }
