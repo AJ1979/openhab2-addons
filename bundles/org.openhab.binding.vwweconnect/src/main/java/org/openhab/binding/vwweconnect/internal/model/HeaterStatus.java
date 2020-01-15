@@ -208,7 +208,7 @@ public class HeaterStatus {
         public double getTemperature() {
             if (outdoorTemp != null) {
                 String[] tempArray = outdoorTemp.split(" ");
-                double temp = Double.parseDouble(tempArray[0]);
+                double temp = Double.parseDouble(tempArray[0].replace(',', '.'));
                 return temp;
             }
             return temperature;

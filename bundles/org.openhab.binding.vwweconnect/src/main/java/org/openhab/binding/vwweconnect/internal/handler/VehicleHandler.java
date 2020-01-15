@@ -275,8 +275,7 @@ public class VehicleHandler extends VWWeConnectHandler {
                 Position localPosition = vehicleLocation.getPosition();
                 return localPosition != null ? new VehiclePositionWrapper(localPosition).getPosition() : UnDefType.NULL;
             case REMOTE_HEATER:
-                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getOperationMode().equals(HEATING)
-                        ? OnOffType.ON
+                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
                         : OnOffType.OFF;
             case TEMPERATURE:
                 return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
@@ -285,9 +284,15 @@ public class VehicleHandler extends VWWeConnectHandler {
                                         vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getTemperature(),
                                         SIUnits.CELSIUS)
                                 : UnDefType.NULL;
+            case REMAINING_TIME:
+                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
+                        .getRemainingTime() != BaseVehicle.UNDEFINED
+                                ? new QuantityType<Time>(
+                                        vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getRemainingTime(),
+                                        SmartHomeUnits.MINUTE)
+                                : UnDefType.UNDEF;
         }
-
-        return UnDefType.NULL;
+        return UnDefType.UNDEF;
     }
 
     public void updateLastTrip(Trips trips) {
