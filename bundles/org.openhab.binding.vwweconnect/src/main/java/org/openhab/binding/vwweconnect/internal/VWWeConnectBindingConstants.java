@@ -119,10 +119,13 @@ public class VWWeConnectBindingConstants {
     public static final String SERVICE_INSPECTION = "serviceInspectionStatus";
     public static final String OIL_INSPECTION = "oilInspectionStatus";
 
-    // Status
+    // Status;
     public static final String CHANNEL_STATUS = "status";
 
     // API URLs
+    public static final String REQUEST_LANDING_PAGE = "/portal/en_GB/web/guest/home";
+    public static final String GET_LOGIN_URL = "portal/web/guest/home/-/csrftokenhandling/get-login-url";
+    public static final String GET_FULLY_LOADED_CARS = "-/mainnavigation/get-fully-loaded-cars";
     public static final String LOGIN_CHECK = "-/msgc/get-new-messages";
     public static final String VEHICLE_DETAILS = "/-/mainnavigation/load-car-details/";
     public static final String VEHICLE_DETAILS_SPECIFIC = "/-/vehicle-info/get-vehicle-details";
@@ -140,6 +143,10 @@ public class VWWeConnectBindingConstants {
     public static final String STOP_HEATER = "stop";
     public static final String STARTSTOP_HEATER = "/-/rah/quick-";
     public static final String PARSE_REQUEST_STATUS = "$.rluRequestStatus.status";
+    public static final String VEHICLES_NOT_FULLY_LOADED = "$['fullyLoadedVehiclesResponse']['vehiclesNotFullyLoaded'][*]";
+    public static final String COMPLETE_VEHICLES = "$['fullyLoadedVehiclesResponse']['completeVehicles'][*]";
+    public static final String COOKIESTORE = "www.portal.volkswagen-we.com";
+    public static final String REQUEST_IN_PROGRESS = "REQUEST_IN_PROGRESS";
 
     // List of all addressable things in OH = SUPPORTED_DEVICE_THING_TYPES_UIDS + the virtual bridge
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream.of(BRIDGE_THING_TYPE, VEHICLE_THING_TYPE)

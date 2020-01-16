@@ -197,7 +197,7 @@ public class VWWeConnectSession {
 
         try {
             httpResult = httpClient.GET(url);
-            logger.debug("HTTP Response ({}) Body:{}", httpResult.getStatus(),
+            logger.trace("HTTP Response ({}) Body:{}", httpResult.getStatus(),
                     httpResult.getContentAsString().replaceAll("\n+", "\n"));
             return httpResult;
         } catch (ExecutionException e) {
@@ -373,12 +373,18 @@ public class VWWeConnectSession {
         return null;
     }
 
-    private synchronized boolean logIn() {
-        logger.info("Attempting to log in to https://www.portal.volkswagen-we.com");
-        // Request landing page and get CSRF:
-        String url = SESSION_BASE + "/portal/en_GB/web/guest/home";
-        logger.debug("Login URL: {}", url);
-        ContentResponse httpResponse = getVWWeConnectAPI(url);
+    private Fields getFields(@Nullable String email, @Nullable String password, String loginToken, String loginHmac,
+            String loginCsrf) {
+        Fields fields = new Fields(true);
+        fields.put("email", email);
+        fields.put("password", password);
+        fields.put("relayState", loginToken);
+        fields.put("hmac", loginHmac);
+        fields.put("_csrf", loginCsrf);
+        return fields;
+    }
+
+    private boolean checkHttpResponse200(@Nullable ContentResponse httpResponse) {
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -386,18 +392,10 @@ public class VWWeConnectSession {
             logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
             return false;
         }
-        Document htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
-        Element nameInput = htmlDocument.select("meta[name=_csrf]").first();
-        String csrf = nameInput.attr("content");
+        return true;
+    }
 
-        // Request login page and get login URL
-        url = SESSION_BASE + "portal/web/guest/home/-/csrftokenhandling/get-login-url";
-        httpResponse = postVWWeConnectAPI(url, null, "portal", csrf);
-        String json = httpResponse.getContentAsString();
-        JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
-        url = jsonObject.get("loginURL").getAsJsonObject().get("path").getAsString();
-
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+    private boolean checkHttpResponse302(@Nullable ContentResponse httpResponse) {
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
@@ -405,14 +403,55 @@ public class VWWeConnectSession {
             logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
             return false;
         }
+        return true;
+    }
 
-        url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+    private boolean checkHttpResponse303(@Nullable ContentResponse httpResponse) {
         if (httpResponse == null) {
             logger.debug("Failed to login, Exception caught!");
             return false;
-        } else if (httpResponse.getStatus() != HttpStatus.OK_200) {
+        } else if (httpResponse.getStatus() != HttpStatus.SEE_OTHER_303) {
             logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+            return false;
+        }
+        return true;
+    }
+
+    private synchronized boolean logIn() {
+        logger.info("Attempting to log in to https://www.portal.volkswagen-we.com");
+        // Request landing page and get CSRF:
+        String url = SESSION_BASE + REQUEST_LANDING_PAGE;
+        logger.debug("Login URL: {}", url);
+        ContentResponse httpResponse = getVWWeConnectAPI(url);
+        if (!checkHttpResponse200(httpResponse)) {
+            return false;
+        }
+
+        // Parse csrf
+        Document htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
+        Element nameInput = htmlDocument.select("meta[name=_csrf]").first();
+        String csrf = nameInput.attr("content");
+
+        // Request login page and get login URL
+        url = SESSION_BASE + GET_LOGIN_URL;
+        httpResponse = postVWWeConnectAPI(url, null, "portal", csrf);
+        if (httpResponse != null && httpResponse.getStatus() == HttpStatus.OK_200) {
+            String json = httpResponse.getContentAsString();
+            JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
+            url = jsonObject.get("loginURL").getAsJsonObject().get("path").getAsString();
+        } else {
+            logger.debug("Failed to login, HTTP response: {}", httpResponse);
+            return false;
+        }
+
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+        if (!checkHttpResponse302(httpResponse)) {
+            return false;
+        }
+
+        url = httpResponse.getHeaders().get("Location");
+        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+        if (!checkHttpResponse200(httpResponse)) {
             return false;
         }
 
@@ -429,30 +468,17 @@ public class VWWeConnectSession {
         Element loginForm = htmlDocument.getElementById("emailPasswordForm");
         url = AUTH_BASE + loginForm.attr("action");
 
-        Fields fields = new Fields(true);
-        fields.put("email", userName);
-        fields.put("password", password);
-        fields.put("relayState", loginToken);
-        fields.put("hmac", loginHmac);
-        fields.put("_csrf", loginCsrf);
+        Fields fields = getFields(userName, password, loginToken, loginHmac, loginCsrf);
 
         httpResponse = postVWWeConnectAPI(url, fields, previousUrl, csrf);
-        if (httpResponse == null) {
-            logger.debug("Failed to login, Exception caught!");
-            return false;
-        } else if (httpResponse.getStatus() != HttpStatus.SEE_OTHER_303) {
-            logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+        if (!checkHttpResponse303(httpResponse)) {
             return false;
         }
 
         url = httpResponse.getHeaders().get("Location");
         url = AUTH_BASE + url;
         httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (httpResponse == null) {
-            logger.debug("Failed to login, Exception caught!");
-            return false;
-        } else if (httpResponse.getStatus() != HttpStatus.OK_200) {
-            logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+        if (!checkHttpResponse200(httpResponse)) {
             return false;
         }
 
@@ -467,49 +493,28 @@ public class VWWeConnectSession {
         Element authForm = htmlDocument.getElementById("credentialsForm");
         url = AUTH_BASE + authForm.attr("action");
 
-        fields = new Fields(true);
-        fields.put("email", userName);
-        fields.put("password", password);
-        fields.put("relayState", authToken);
-        fields.put("hmac", authHmac);
-        fields.put("_csrf", authCsrf);
+        fields = getFields(userName, password, authToken, authHmac, authCsrf);
 
         httpResponse = postVWWeConnectAPI(url, fields, previousUrl, csrf);
-        if (httpResponse == null) {
-            logger.debug("Failed to login, Exception caught!");
-            return false;
-        } else if (httpResponse.getStatus() != HttpStatus.MOVED_TEMPORARILY_302) {
-            logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+        if (!checkHttpResponse302(httpResponse)) {
             return false;
         }
 
         url = httpResponse.getHeaders().get("Location");
         httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (httpResponse == null) {
-            logger.debug("Failed to login, Exception caught!");
-            return false;
-        } else if (httpResponse.getStatus() != HttpStatus.MOVED_TEMPORARILY_302) {
-            logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+        if (!checkHttpResponse302(httpResponse)) {
             return false;
         }
 
         url = httpResponse.getHeaders().get("Location");
         httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (httpResponse == null) {
-            logger.debug("Failed to login, Exception caught!");
-            return false;
-        } else if (httpResponse.getStatus() != HttpStatus.MOVED_TEMPORARILY_302) {
-            logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+        if (!checkHttpResponse302(httpResponse)) {
             return false;
         }
 
         url = httpResponse.getHeaders().get("Location");
         httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (httpResponse == null) {
-            logger.debug("Failed to login, Exception caught!");
-            return false;
-        } else if (httpResponse.getStatus() != HttpStatus.MOVED_TEMPORARILY_302) {
-            logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+        if (!checkHttpResponse302(httpResponse)) {
             return false;
         }
 
@@ -543,21 +548,13 @@ public class VWWeConnectSession {
                 + "&p_p_id=33_WAR_cored5portlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=1&_33_WAR_cored5portlet_javax.portlet.action=getLoginStatus";
 
         httpResponse = postVWWeConnectAPI(url, fields, previousUrl, csrf);
-        if (httpResponse == null) {
-            logger.debug("Failed to login, Exception caught!");
-            return false;
-        } else if (httpResponse.getStatus() != HttpStatus.MOVED_TEMPORARILY_302) {
-            logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+        if (!checkHttpResponse302(httpResponse)) {
             return false;
         }
 
         url = httpResponse.getHeaders().get("Location");
         httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (httpResponse == null) {
-            logger.debug("Failed to login, Exception caught!");
-            return false;
-        } else if (httpResponse.getStatus() != HttpStatus.OK_200) {
-            logger.debug("Failed to login, HTTP status code: {}", httpResponse.getStatus());
+        if (!checkHttpResponse200(httpResponse)) {
             return false;
         }
 
@@ -568,7 +565,7 @@ public class VWWeConnectSession {
         authRefUrl = url + "/";
 
         CookieStore cookieStore = httpClient.getCookieStore();
-        List<HttpCookie> cookies = cookieStore.get(URI.create("www.portal.volkswagen-we.com"));
+        List<HttpCookie> cookies = cookieStore.get(URI.create(COOKIESTORE));
         cookies.forEach(cookie -> {
             logger.debug("Cookie: {}", cookie);
             if (cookie.getName().equals("GUEST_LANGUAGE_ID")) {
@@ -576,88 +573,6 @@ public class VWWeConnectSession {
                 logger.debug("Fetching guest language id {} from cookie", guestLanguageId);
             }
         });
-
-        fields = null;
-        String content = null;
-        logger.debug("get-fully-loaded-cars");
-        url = authRefUrl + "-/mainnavigation/get-fully-loaded-cars";
-        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-        String myVin = "";
-        if (httpResponse != null) {
-            content = httpResponse.getContentAsString();
-            logger.debug(content);
-            DocumentContext context = JsonPath.parse(content);
-            String jsonpathVehiclesNotFullyLoadedPath = "$['fullyLoadedVehiclesResponse']['vehiclesNotFullyLoaded'][*]";
-            List<Object> vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
-
-            context = JsonPath.parse(vehicleList);
-            List<Object> vinList = context.read("$[*]['vin']");
-            for (Object vin : vinList) {
-                logger.debug("VIN: {}", vin);
-                myVin = (String) vin;
-            }
-        }
-
-        logger.debug("get-status");
-        url = authRefUrl + "-/rah/get-status";
-        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-        content = httpResponse.getContentAsString();
-        logger.debug(content);
-
-        logger.debug("get-vehicle-details");
-        url = authRefUrl + "-/vehicle-info/get-vehicle-details";
-        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-        content = httpResponse.getContentAsString();
-        logger.debug(content);
-
-        logger.debug("load-car-details");
-        url = authRefUrl + "-/mainnavigation/load-car-details/" + myVin;
-        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-        content = httpResponse.getContentAsString();
-        Vehicle vehicle = gson.fromJson(content, Vehicle.class);
-        logger.debug(content);
-
-        logger.debug(VEHICLE_STATUS);
-        url = authRefUrl + VEHICLE_STATUS;
-        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-        content = httpResponse.getContentAsString();
-        Status status = gson.fromJson(content, Status.class);
-        logger.debug(content);
-
-        // Request a Vehicle Status report to be sent from vehicle
-        url = authRefUrl + REQUEST_VEHICLE_STATUS_REPORT;
-        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-        content = httpResponse.getContentAsString();
-        logger.debug("API Response ({})", content);
-
-        logger.debug(VEHICLE_STATUS);
-        url = authRefUrl + VEHICLE_STATUS;
-        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-        content = httpResponse.getContentAsString();
-        status = gson.fromJson(content, Status.class);
-        logger.debug(content);
-        String requestStatus = status.getVehicleStatusData().getRequestStatus();
-
-        long start = System.currentTimeMillis();
-        while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
-            try {
-                long currentTime = System.currentTimeMillis();
-                logger.debug("Time: {}", new Timestamp(currentTime));
-                long elapsedTime = currentTime - start;
-                if (elapsedTime > MAX_WAIT_MILLIS) {
-                    logger.debug("Wait timeout, request status: {}", status.getVehicleStatusData().getRequestStatus());
-                    break;
-                } else {
-                    Thread.sleep(SLEEP_TIME_MILLIS);
-                    httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-                    content = httpResponse.getContentAsString();
-                    status = gson.fromJson(content, Status.class);
-                    requestStatus = status.getVehicleStatusData().getRequestStatus();
-                }
-            } catch (InterruptedException e) {
-                logger.warn("Exception caught: {}", e);
-            }
-        }
 
         areWeLoggedOut = false;
 
@@ -677,8 +592,9 @@ public class VWWeConnectSession {
 
     private synchronized void updateVehicleStatus(Class<? extends Vehicle> jsonClass) {
         Fields fields = null;
-        String content = null;
-        String url = authRefUrl + "-/mainnavigation/get-fully-loaded-cars";
+        String content = null;// Check for outstanding pending request
+
+        String url = authRefUrl + GET_FULLY_LOADED_CARS;
         ContentResponse httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
         if (httpResponse != null) {
             content = httpResponse.getContentAsString();
@@ -686,10 +602,10 @@ public class VWWeConnectSession {
                 logger.warn("Failed to update vehicle status.");
                 return;
             }
+            // Find all not loaded vehicles
             DocumentContext context = JsonPath.parse(content);
-            String jsonpathVehiclesNotFullyLoadedPath = "$['fullyLoadedVehiclesResponse']['completeVehicles'][*]";
+            String jsonpathVehiclesNotFullyLoadedPath = VEHICLES_NOT_FULLY_LOADED;
             List<Object> vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
-
             context = JsonPath.parse(vehicleList);
             List<Object> vinList = context.read("$[*]['vin']");
             List<Object> dashboardUrlList = context.read("$[*]['dashboardUrl']");
@@ -699,125 +615,169 @@ public class VWWeConnectSession {
                 String vin = (String) vinList.get(i);
                 String dashboardUrl = (String) dashboardUrlList.get(i);
 
-                // Check for outstanding pending request
-                long start = System.currentTimeMillis();
-                url = SESSION_BASE + dashboardUrl + REQUEST_STATUS;
-                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-                content = httpResponse.getContentAsString();
-                logger.debug("Request status: {}", content);
-                if (!isErrorCode(content)) {
-                    String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
-                    while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
-                        try {
-                            long currentTime = System.currentTimeMillis();
-                            logger.debug("Time: {}", new Timestamp(currentTime));
-                            long elapsedTime = currentTime - start;
-                            if (elapsedTime > MAX_WAIT_MILLIS) {
-                                logger.debug("Wait timeout, request status: {}", requestStatus);
-                                break;
-                            } else {
-                                Thread.sleep(SLEEP_TIME_MILLIS);
-                                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-                                content = httpResponse.getContentAsString();
-                                logger.debug("Content: {}", content);
-                                requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
-                            }
-                        } catch (InterruptedException e) {
-                            logger.warn("Exception caught: {}", e);
-                        }
-                    }
-                    if (requestStatus != null) {
-                        logger.warn("Request status: {}", requestStatus);
-                    }
-                } else {
-                    logger.warn("Error code: {}", content);
-                }
-
-                // Request a Vehicle Status report to be sent from vehicle
-                url = SESSION_BASE + dashboardUrl + REQUEST_VEHICLE_STATUS_REPORT;
-                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-                content = httpResponse.getContentAsString();
-                logger.debug("API Response ({})", content);
-
-                logger.debug(VEHICLE_STATUS);
-                url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
-                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-                content = httpResponse.getContentAsString();
-                Status status = gson.fromJson(content, Status.class);
-                logger.debug(content);
-                String requestStatus = status.getVehicleStatusData().getRequestStatus();
-
-                // Check for progess of Vehicle report
-                start = System.currentTimeMillis();
-                while (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
-                    try {
-                        long currentTime = System.currentTimeMillis();
-                        logger.debug("Time: {}", new Timestamp(currentTime));
-                        long elapsedTime = currentTime - start;
-                        if (elapsedTime > MAX_WAIT_MILLIS) {
-                            logger.debug("Wait timeout, request status: {}",
-                                    status.getVehicleStatusData().getRequestStatus());
-                            break;
-                        } else {
-                            Thread.sleep(SLEEP_TIME_MILLIS);
-                            httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-                            content = httpResponse.getContentAsString();
-                            status = gson.fromJson(content, Status.class);
-                            requestStatus = status.getVehicleStatusData().getRequestStatus();
-                        }
-                    } catch (InterruptedException e) {
-                        logger.warn("Exception caught: {}", e);
-                    }
-                }
-
-                if (requestStatus != null) {
-                    logger.debug("Request status: {}", requestStatus);
-                }
                 // Query API for vehicle details for this VIN
                 url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS + vin;
                 Vehicle vehicle = postJSONVWWeConnectAPI(url, fields, Vehicle.class);
                 logger.debug("API Response ({})", vehicle);
+            }
 
-                // Query API for more specific vehicle details
-                url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS_SPECIFIC;
-                Details vehicleDetails = postJSONVWWeConnectAPI(url, fields, Details.class);
-                logger.debug("API Response ({})", vehicleDetails);
+            // Get fully loaded cars again
+            url = authRefUrl + GET_FULLY_LOADED_CARS;
+            httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+            if (httpResponse != null) {
+                content = httpResponse.getContentAsString();
+                if (isErrorCode(content)) {
+                    logger.warn("Failed to update vehicle status.");
+                    return;
+                }
+                context = JsonPath.parse(content);
+                jsonpathVehiclesNotFullyLoadedPath = COMPLETE_VEHICLES;
+                vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
+                context = JsonPath.parse(vehicleList);
+                vinList = context.read("$[*]['vin']");
+                dashboardUrlList = context.read("$[*]['dashboardUrl']");
 
-                // Query API for trip statistics
-                url = SESSION_BASE + dashboardUrl + TRIP_STATISTICS;
-                Trips trips = postJSONVWWeConnectAPI(url, fields, Trips.class);
-                logger.trace("API Response ({})", trips);
+                // Loop trough all found vehicles
+                for (int i = 0; i < vinList.size(); i++) {
+                    String vin = (String) vinList.get(i);
+                    String dashboardUrl = (String) dashboardUrlList.get(i);
 
-                // Query API for homeLocation status
-                url = SESSION_BASE + dashboardUrl + VEHICLE_LOCATION;
-                Location location = postJSONVWWeConnectAPI(url, fields, Location.class);
-                logger.debug("API Response ({})", location);
-
-                // Query API for vehicle status
-                url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
-                Status vehicleStatus = postJSONVWWeConnectAPI(url, fields, Status.class);
-                logger.debug("API Response ({})", vehicleStatus);
-
-                // Query API for vehicle heating status
-                url = SESSION_BASE + dashboardUrl + GET_HEATER_STATUS;
-                HeaterStatus vehicleHeaterStatus = postJSONVWWeConnectAPI(url, fields, HeaterStatus.class);
-                logger.debug("API Response ({})", vehicleHeaterStatus);
-
-                if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
-                        && location != null && vehicleHeaterStatus != null) {
-                    vehicle.setVehicleDetails(vehicleDetails);
-                    vehicle.setVehicleStatus(vehicleStatus);
-                    vehicle.setTrips(trips);
-                    vehicle.setVehicleLocation(location);
-                    vehicle.setHeaterStatus(vehicleHeaterStatus);
-
-                    BaseVehicle oldObj = vwWeConnectThings.get(vin);
-                    if (oldObj == null || !oldObj.equals(vehicle)) {
-                        vwWeConnectThings.put(vin, vehicle);
-                        notifyListeners(vehicle);
+                    // Check for outstanding pending request
+                    long start = System.currentTimeMillis();
+                    url = SESSION_BASE + dashboardUrl + REQUEST_STATUS;
+                    httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+                    if (httpResponse != null) {
+                        content = httpResponse.getContentAsString();
+                        logger.debug("Request status: {}", content);
+                        if (!isErrorCode(content)) {
+                            String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
+                            while (requestStatus != null && requestStatus.equals(REQUEST_IN_PROGRESS)) {
+                                try {
+                                    long currentTime = System.currentTimeMillis();
+                                    logger.debug("Time: {}", new Timestamp(currentTime));
+                                    long elapsedTime = currentTime - start;
+                                    if (elapsedTime > MAX_WAIT_MILLIS) {
+                                        logger.debug("Wait timeout, request status: {}", requestStatus);
+                                        break;
+                                    } else {
+                                        Thread.sleep(5 * SLEEP_TIME_MILLIS);
+                                        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+                                        if (httpResponse != null) {
+                                            content = httpResponse.getContentAsString();
+                                            logger.debug("Content: {}", content);
+                                            requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
+                                        }
+                                    }
+                                } catch (InterruptedException e) {
+                                    logger.warn("Exception caught: {}", e);
+                                }
+                            }
+                            if (requestStatus != null) {
+                                logger.warn("Request status: {}", requestStatus);
+                            }
+                        } else {
+                            logger.warn("Request status, Error code: {}", content);
+                        }
+                    } else {
+                        logger.warn("Request status, Http response null");
                     }
-                } else {
-                    logger.warn("Failed to update vehicle details for VIN: {}", vin);
+
+                    // Request a Vehicle Status report to be sent from vehicle
+                    url = SESSION_BASE + dashboardUrl + REQUEST_VEHICLE_STATUS_REPORT;
+                    httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+                    if (httpResponse != null) {
+                        content = httpResponse.getContentAsString();
+                        logger.debug("API Response ({})", content);
+                    } else {
+                        logger.warn("Request status, Http response null");
+                    }
+
+                    logger.debug(VEHICLE_STATUS);
+                    url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
+                    httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+                    if (httpResponse != null) {
+                        content = httpResponse.getContentAsString();
+                        Status status = gson.fromJson(content, Status.class);
+                        logger.debug(content);
+                        String requestStatus = status.getVehicleStatusData().getRequestStatus();
+
+                        // Check for progess of Vehicle report
+                        start = System.currentTimeMillis();
+                        while (requestStatus != null && requestStatus.equals(REQUEST_IN_PROGRESS)) {
+                            try {
+                                long currentTime = System.currentTimeMillis();
+                                logger.debug("Time: {}", new Timestamp(currentTime));
+                                long elapsedTime = currentTime - start;
+                                if (elapsedTime > MAX_WAIT_MILLIS) {
+                                    logger.debug("Wait timeout, request status: {}",
+                                            status.getVehicleStatusData().getRequestStatus());
+                                    break;
+                                } else {
+                                    Thread.sleep(5 * SLEEP_TIME_MILLIS);
+                                    httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+                                    if (httpResponse != null) {
+                                        content = httpResponse.getContentAsString();
+                                        status = gson.fromJson(content, Status.class);
+                                        requestStatus = status.getVehicleStatusData().getRequestStatus();
+                                    }
+                                }
+                            } catch (InterruptedException e) {
+                                logger.warn("Exception caught: {}", e);
+                            }
+                        }
+                        if (requestStatus != null) {
+                            logger.debug("Request status: {}", requestStatus);
+                        }
+                    } else {
+                        logger.warn("Request status, Http response null");
+                    }
+
+                    // Query API for vehicle details for this VIN
+                    url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS + vin;
+                    Vehicle vehicle = postJSONVWWeConnectAPI(url, fields, Vehicle.class);
+                    logger.debug("API Response ({})", vehicle);
+
+                    // Query API for more specific vehicle details
+                    url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS_SPECIFIC;
+                    Details vehicleDetails = postJSONVWWeConnectAPI(url, fields, Details.class);
+                    logger.debug("API Response ({})", vehicleDetails);
+
+                    // Query API for trip statistics
+                    url = SESSION_BASE + dashboardUrl + TRIP_STATISTICS;
+                    Trips trips = postJSONVWWeConnectAPI(url, fields, Trips.class);
+                    logger.trace("API Response ({})", trips);
+
+                    // Query API for homeLocation status
+                    url = SESSION_BASE + dashboardUrl + VEHICLE_LOCATION;
+                    Location location = postJSONVWWeConnectAPI(url, fields, Location.class);
+                    logger.debug("API Response ({})", location);
+
+                    // Query API for vehicle status
+                    url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
+                    Status vehicleStatus = postJSONVWWeConnectAPI(url, fields, Status.class);
+                    logger.debug("API Response ({})", vehicleStatus);
+
+                    // Query API for vehicle heating status
+                    url = SESSION_BASE + dashboardUrl + GET_HEATER_STATUS;
+                    HeaterStatus vehicleHeaterStatus = postJSONVWWeConnectAPI(url, fields, HeaterStatus.class);
+                    logger.debug("API Response ({})", vehicleHeaterStatus);
+
+                    if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
+                            && location != null && vehicleHeaterStatus != null) {
+                        vehicle.setVehicleDetails(vehicleDetails);
+                        vehicle.setVehicleStatus(vehicleStatus);
+                        vehicle.setTrips(trips);
+                        vehicle.setVehicleLocation(location);
+                        vehicle.setHeaterStatus(vehicleHeaterStatus);
+
+                        BaseVehicle oldObj = vwWeConnectThings.get(vin);
+                        if (oldObj == null || !oldObj.equals(vehicle)) {
+                            vwWeConnectThings.put(vin, vehicle);
+                            notifyListeners(vehicle);
+                        }
+                    } else {
+                        logger.warn("Failed to update vehicle details for VIN: {}", vin);
+                    }
                 }
             }
         }
