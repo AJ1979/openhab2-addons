@@ -20,12 +20,12 @@ import org.openhab.binding.vwweconnect.internal.handler.VWWeConnectBridgeHandler
  * Configuration class for {@link VWWeConnectBridgeHandler} bridge used to connect to the
  * Verisure MyPage.
  *
- * @author Jarle Hjortland - Initial contribution
+ * @author Jan Gustafsson - Initial contribution
  */
 @NonNullByDefault
 public class VWWeConnectBridgeConfiguration {
     public @Nullable String username;
     public @Nullable String password;
-    public @Nullable String pin;
+    public @Nullable String spin;
     public int refresh;
 }

@@ -87,13 +87,25 @@ public class VehicleHandler extends VWWeConnectHandler {
             OnOffType onOffCommand = (OnOffType) command;
             if (REMOTE_HEATER.equals(channelID)) {
                 actionHeater(onOffCommand == OnOffType.ON);
-            } else if (PRECLIMATIZATION.equals(channelID)) {
-                actionPreclimatization(onOffCommand == OnOffType.ON);
+            } else if (REMOTE_VENTILATION.equals(channelID)) {
+                actionVentilation(onOffCommand == OnOffType.ON);
             } else if (DOORS_LOCKED.equals(channelID)) {
                 if (onOffCommand == OnOffType.ON) {
                     actionLock();
                 } else {
                     actionUnlock();
+                }
+            } else if (EMANAGER_CHARGE.equals(channelID)) {
+                if (onOffCommand == OnOffType.ON) {
+                    actionCharge(onOffCommand == OnOffType.ON);
+                }
+            } else if (EMANAGER_CLIMATE.equals(channelID)) {
+                if (onOffCommand == OnOffType.ON) {
+                    actionCharge(onOffCommand == OnOffType.ON);
+                }
+            } else if (EMANAGER_WINDOW_HEAT.equals(channelID)) {
+                if (onOffCommand == OnOffType.ON) {
+                    actionCharge(onOffCommand == OnOffType.ON);
                 }
             }
         }
@@ -277,6 +289,9 @@ public class VehicleHandler extends VWWeConnectHandler {
             case REMOTE_HEATER:
                 return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
                         : OnOffType.OFF;
+            case REMOTE_VENTILATION:
+                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
+                        : OnOffType.OFF;
             case TEMPERATURE:
                 return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
                         .getTemperature() != BaseVehicle.UNDEFINED
@@ -362,19 +377,19 @@ public class VehicleHandler extends VWWeConnectHandler {
         }
     }
 
-    private boolean sendCommand(String vin, String action, String url, String requestStatusUrl, String data) {
+    private boolean sendCommand(String vin, String url, String requestStatusUrl, String data) {
         ContentResponse httpResponse = session.sendCommand(url, data);
         if (httpResponse.getStatus() == HttpStatus.OK_200) {
             logger.debug(" VIN: {} JSON response: {}", vin, httpResponse.getContentAsString());
             if (!session.isErrorCode(httpResponse.getContentAsString())) {
-                logger.debug(action + " command successfully sent to vehicle!");
+                logger.debug("Command {} successfully sent to vehicle!", url);
             } else {
-                logger.warn("Failed to {} the vehicle {} JSON response: {}", action, vin,
+                logger.warn("Failed to send {} to the vehicle {} JSON response: {}", url, vin,
                         httpResponse.getContentAsString());
                 return false;
             }
         } else {
-            logger.warn("Failed to {} the vehicle {} HTTP response: {}", action, vin, httpResponse.getStatus());
+            logger.warn("Failed to send {} to the vehicle {} HTTP response: {}", url, vin, httpResponse.getStatus());
             return false;
         }
 
@@ -391,7 +406,7 @@ public class VehicleHandler extends VWWeConnectHandler {
         if (!session.isErrorCode(content)) {
             String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
             if (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
-                logger.debug("{} command has status {} ", action, requestStatus);
+                logger.debug("Command has status {} ", requestStatus);
             } else {
                 logger.warn("Failed to request status for vehicle {}! Request status: {}", vin, requestStatus);
                 return false;
@@ -411,12 +426,12 @@ public class VehicleHandler extends VWWeConnectHandler {
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
                 if (vehicle.getVehicleStatus().getVehicleStatusData().getLockData().getDoorsLocked() != controlState) {
-                    String data = "{\"spin\":\"" + bridgeHandler.getPinCode() + "\"}";
+                    String data = "{\"spin\":\"" + bridgeHandler.getSecurePIN() + "\"}";
                     String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + LOCKUNLOCK
                             + action;
                     String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
                             + REQUEST_STATUS;
-                    if (sendCommand(vin, action, url, requestStatusUrl, data)) {
+                    if (sendCommand(vin, url, requestStatusUrl, data)) {
                         scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
                     } else {
                         logger.warn("The vehicle {} failed to handle action {}", vin, action);
@@ -440,17 +455,24 @@ public class VehicleHandler extends VWWeConnectHandler {
         actionUnlockLock(LOCK, OnOffType.ON);
     }
 
-    private void actionHeater(String action, Boolean start) {
+    private void actionHeaterVentilation(String action, Boolean start) {
         VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
         if (bridgeHandler != null) {
             String vin = config.vin;
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
-                if (action.contains(REMOTE_HEATER)) {
+                if (action.contains(REMOTE_HEATER) || action.contains(REMOTE_VENTILATION)) {
                     String command = start ? START_HEATER : STOP_HEATER;
                     String data;
                     if (command.equals(START_HEATER)) {
-                        data = "{\"startMode\":\"HEATING\", \"spin\":\"" + bridgeHandler.getPinCode() + "\"}";
+                        if (action.contains(REMOTE_HEATER)) {
+                            data = "{\"startMode\":\"" + HEATING + "\", \"spin\":\"" + bridgeHandler.getSecurePIN()
+                                    + "\"}";
+                        } else {
+                            data = "{\"startMode\":\"" + VENTILATION + "\", \"spin\":\"" + bridgeHandler.getSecurePIN()
+                                    + "\"}";
+                        }
+
                     } else {
                         data = "empty";
                     }
@@ -458,15 +480,11 @@ public class VehicleHandler extends VWWeConnectHandler {
                             + command;
                     String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
                             + REQUEST_STATUS;
-                    if (sendCommand(vin, action, url, requestStatusUrl, data)) {
+                    if (sendCommand(vin, url, requestStatusUrl, data)) {
                         scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
                     } else {
                         logger.warn("The vehicle {} failed to handle action {} {}", config.vin, action, start);
                     }
-
-                } else if (action.contains(PRECLIMATIZATION)) {
-                    String command = start ? "start" : "stop";
-                    logger.warn("Action Preclimatixation not yet implemented!");
                 }
             } else {
                 logger.warn("Session or vin is null vin: {} action: {}", vin, action);
@@ -477,11 +495,95 @@ public class VehicleHandler extends VWWeConnectHandler {
     }
 
     public void actionHeater(Boolean start) {
-        actionHeater(REMOTE_HEATER, start);
+        actionHeaterVentilation(REMOTE_HEATER, start);
     }
 
-    public void actionPreclimatization(Boolean start) {
-        actionHeater(PRECLIMATIZATION, start);
+    public void actionVentilation(Boolean start) {
+        actionHeaterVentilation(REMOTE_VENTILATION, start);
+    }
+
+    private void actionChargeOnOff(Boolean start) {
+        VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
+        if (bridgeHandler != null) {
+            String vin = config.vin;
+            if (session != null && vin != null) {
+                Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
+                String data;
+                if (start) {
+                    data = "{\"triggerAction\":\"True\", \"batteryPercent\":\"100\"}";
+                } else {
+                    data = "{\"triggerAction\":\"False\", \"batteryPercent\":\"99\"}";
+                }
+                String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + CHARGE_BATTERY;
+                String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                        + REQUEST_STATUS;
+                if (sendCommand(vin, url, requestStatusUrl, data)) {
+                    scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                } else {
+                    logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                }
+            }
+        }
+    }
+
+    public void actionCharge(Boolean start) {
+        actionChargeOnOff(start);
+    }
+
+    private void actionClimateOnOff(Boolean start) {
+        VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
+        if (bridgeHandler != null) {
+            String vin = config.vin;
+            if (session != null && vin != null) {
+                Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
+                String data;
+                if (start) {
+                    data = "{\"triggerAction\":\"True\", \"electricClima\":\"True\"}";
+                } else {
+                    data = "{\"triggerAction\":\"False\", \"electricClima\":\"True\"}";
+                }
+                String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + TRIGGER_CLIMATISATION;
+                String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                        + REQUEST_STATUS;
+                if (sendCommand(vin, url, requestStatusUrl, data)) {
+                    scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                } else {
+                    logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                }
+            }
+        }
+    }
+
+    public void actionClimate(Boolean start) {
+        actionClimateOnOff(start);
+    }
+
+    private void actionWindowHeatOnOff(Boolean start) {
+        VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
+        if (bridgeHandler != null) {
+            String vin = config.vin;
+            if (session != null && vin != null) {
+                Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
+                String data;
+                if (start) {
+                    data = "{\"triggerAction\":\"True\"}";
+                } else {
+                    data = "{\"triggerAction\":\"False\"}";
+                }
+                String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + TRIGGER_WINDOW_HEAT;
+                String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                        + REQUEST_STATUS;
+                if (sendCommand(vin, url, requestStatusUrl, data)) {
+                    scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                } else {
+                    logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                }
+            }
+        }
+    }
+
+    public void actionWindowHeat(Boolean start) {
+        actionWindowHeatOnOff(start);
     }
 
     private @Nullable VWWeConnectBridgeHandler getBridgeHandler() {

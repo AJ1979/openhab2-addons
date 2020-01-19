@@ -98,12 +98,17 @@ public class VWWeConnectBindingConstants {
     // public static final String HONK_BLINK = "honkAndBlink";
     // public static final String HONK_AND_OR_BLINK = "honkAndOrBlink";
 
-    // Other
+    // Actions
     public static final String REMOTE_HEATER = "remoteHeater";
+    public static final String REMOTE_VENTILATION = "remoteVentilation";
     public static final String REMAINING_TIME = "remainingTime";
     public static final String TEMPERATURE = "temperature";
     public static final String HEATING = "HEATING";
-    public static final String PRECLIMATIZATION = "preclimatization";
+    public static final String VENTILATION = "VENTILATION";
+    // Actions Electric
+    public static final String EMANAGER_CHARGE = "emanagerCharge";
+    public static final String EMANAGER_CLIMATE = "emanagerClimate";
+    public static final String EMANAGER_WINDOW_HEAT = "emanagerWindowHeat";
     public static final String LAST_TRIP_ID = "lastTripId";
 
     // Vehicle details
@@ -122,7 +127,7 @@ public class VWWeConnectBindingConstants {
     // Status;
     public static final String CHANNEL_STATUS = "status";
 
-    // API URLs
+    // Common API URLs
     public static final String REQUEST_LANDING_PAGE = "/portal/en_GB/web/guest/home";
     public static final String GET_LOGIN_URL = "portal/web/guest/home/-/csrftokenhandling/get-login-url";
     public static final String GET_FULLY_LOADED_CARS = "-/mainnavigation/get-fully-loaded-cars";
@@ -133,19 +138,31 @@ public class VWWeConnectBindingConstants {
     public static final String VEHICLE_STATUS = "/-/vsr/get-vsr";
     public static final String TRIP_STATISTICS = "/-/rts/get-latest-trip-statistics";
     public static final String VEHICLE_LOCATION = "/-/cf/get-location";
-    public static final String EMANAGER = "-/emanager/get-emanager";
     public static final String REQUEST_STATUS = "/-/vsr/get-request-status";
     public static final String GET_HEATER_STATUS = "/-/rah/get-status";
+
+    // Action URLs
+    public static final String SET_TIMEZONE = "/-/mainnavigation/set-time-zone";
+    public static final String LOCKUNLOCK = "/-/vsr/remote-";
     public static final String LOCK = "lock";
     public static final String UNLOCK = "unlock";
-    public static final String LOCKUNLOCK = "/-/vsr/remote-";
+    public static final String STARTSTOP_HEATER = "/-/rah/quick-";
     public static final String START_HEATER = "start";
     public static final String STOP_HEATER = "stop";
-    public static final String STARTSTOP_HEATER = "/-/rah/quick-";
+
+    // Electric car URLs
+    public static final String EMANAGER_GET_EMANAGER = "-/emanager/get-emanager";
+    public static final String EMANAGER_GET_NOTIFICATIONS = "/-/emanager/get-notifications";
+
+    // Electric car Action URLs
+    public static final String CHARGE_BATTERY = "/-/emanager/charge-battery";
+    public static final String TRIGGER_CLIMATISATION = "/-/emanager/trigger-climatisation";
+    public static final String TRIGGER_WINDOW_HEAT = "/-/emanager/trigger-windowheating";
+
+    // JSON constants
     public static final String PARSE_REQUEST_STATUS = "$.rluRequestStatus.status";
     public static final String VEHICLES_NOT_FULLY_LOADED = "$['fullyLoadedVehiclesResponse']['vehiclesNotFullyLoaded'][*]";
     public static final String COMPLETE_VEHICLES = "$['fullyLoadedVehiclesResponse']['completeVehicles'][*]";
-    public static final String COOKIESTORE = "www.portal.volkswagen-we.com";
     public static final String REQUEST_IN_PROGRESS = "REQUEST_IN_PROGRESS";
 
     // List of all addressable things in OH = SUPPORTED_DEVICE_THING_TYPES_UIDS + the virtual bridge
@@ -159,6 +176,7 @@ public class VWWeConnectBindingConstants {
     public static final String SESSION_HEADERS = "'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json;charset=UTF-8', 'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36'";
     public static final String AUTH_BASE = "https://identity.vwgroup.io";
     public static final String AUTH_HEADERS = "'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3', 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36'";
+    public static final String COOKIESTORE = "www.portal.volkswagen-we.com";
 
     public static final int SLEEP_TIME_MILLIS = 1000;
     public static final int MAX_WAIT_MILLIS = 30000;

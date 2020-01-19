@@ -22,7 +22,7 @@
 			<channel-group typeId="windows" id="windows" />
 			<channel-group typeId="position" id="position" />
 			<channel-group typeId="lasttrip" id="lasttrip" />
-			<channel-group typeId="other" id="other" />
+			<channel-group typeId="action" id="action" />
 		</channel-groups>
 
 		<properties>
@@ -39,12 +39,16 @@
 		</config-description>
 	</thing-type>
 
-	<channel-group-type id="other">
-		<label>Other</label>
+	<channel-group-type id="action">
+		<label>Actions and status</label>
 		<channels>
 			<channel id="remoteHeater" typeId="remoteHeater" />
+			<channel id="remoteVentilation" typeId="remoteVentilation" />
 			<channel id="temperature" typeId="temperature"/>
 			<channel id="remainingTime" typeId="remainingTime" />
+			<channel id="emanagerCharge" typeId="emanagerCharge" />
+			<channel id="emanagerClimate" typeId="emanagerClimate" />
+			<channel id="emanagerWindowHeat" typeId="emanagerWindowHeat" />
 		</channels>
 	</channel-group-type>
 
@@ -226,7 +230,7 @@
 		<item-type>Number:Time</item-type>
 		<label>Duration</label>
 		<description>Trip Duration</description>
-		<state pattern="%d %unit%" readOnly="true"></state>
+		<state pattern="%d min" readOnly="true"></state>
 	</channel-type>
 
 	<channel-type id="window">
@@ -266,7 +270,7 @@
 	<channel-type id="cngLevel">
 		<item-type>Number:Dimensionless</item-type>
 		<label>CNG Level</label>
-		<description>Indicates the level of Compreesed Natural Gas in the tank</description>
+		<description>Indicates the level of Compressed Natural Gas in the tank</description>
 		<state pattern="%d %unit%" readOnly="true"></state>
 	</channel-type>
 
@@ -319,12 +323,6 @@
 		<state readOnly="true" />
 	</channel-type>
 
-	<channel-type id="engineStart">
-		<item-type>Switch</item-type>
-		<label>Start Engine</label>
-		<description>Starts the vehicle engine</description>
-	</channel-type>
-
 	<channel-type id="doorsLocked">
 		<item-type>Switch</item-type>
 		<label>Doors Locked</label>
@@ -337,30 +335,35 @@
 		<description>Trunk locking status</description>
 	</channel-type>
 
-	<channel-type id="engineRunning">
-		<item-type>Switch</item-type>
-		<label>Engine Started</label>
-		<description>Engine status (running or not)</description>
-	</channel-type>
-
-	<channel-type id="preclimatization">
-		<item-type>Switch</item-type>
-		<label>Preclimatization</label>
-		<description>Starts pre-climatization</description>
-	</channel-type>
-
 	<channel-type id="remoteHeater">
 		<item-type>Switch</item-type>
 		<label>Remote Heater</label>
 		<description>(De)Activates remote heater</description>
 	</channel-type>
-
-	<channel-type id="washerFluidLevel">
-		<item-type>String</item-type>
-		<label>Washer Fluid</label>
-		<description>“VeryLow”,"Low", "Normal"</description>
-		<state readOnly="true"></state>
-	</channel-type>
+	
+	<channel-type id="remoteVentilation">
+        <item-type>Switch</item-type>
+        <label>Remote Ventilation</label>
+        <description>(De)Activates remote ventilation</description>
+    </channel-type>
+    
+    <channel-type id="emanagerCharge">
+        <item-type>Switch</item-type>
+        <label>Emanager Charge Battery</label>
+        <description>(De)Activates Emanager battery charging</description>
+    </channel-type>
+    
+    <channel-type id="emanagerClimate">
+        <item-type>Switch</item-type>
+        <label>Emanager Climatisation</label>
+        <description>(De)Activates Emanager climatisation</description>
+    </channel-type>
+    
+    <channel-type id="emanagerWindowHeat">
+        <item-type>Switch</item-type>
+        <label>Emanager Window Heater</label>
+        <description>(De)Activates Emanager window heating</description>
+    </channel-type>
 
 	<channel-type id="serviceInspectionStatus">
 		<item-type>String</item-type>
@@ -448,7 +451,7 @@
 
 	<channel-type id="engineTypeElectric" advanced="true">
 		<item-type>Switch</item-type>
-		<label>Electric engin type</label>
+		<label>Electric engine type</label>
 		<description>Indicates if the engine type is electric.</description>
 		<state readOnly="true"></state>
 	</channel-type>
@@ -457,7 +460,7 @@
         <item-type>Number:Time</item-type>
         <label>Remaining Heater Time</label>
         <description>Remaining Heater Time</description>
-        <state pattern="%d %unit%" readOnly="true"></state>
+        <state pattern="%d min" readOnly="true"></state>
     </channel-type>
 
 	<channel-type id="temperature">
@@ -465,7 +468,7 @@
 		<label>Temperature</label>
 		<description>Current temperature.</description>
 		<category>Temperature</category>
-		<state readOnly="true" pattern="%.1f °C" />
+		<state pattern="%.1f °C" readOnly="true" />
 	</channel-type>
 
 </thing:thing-descriptions>

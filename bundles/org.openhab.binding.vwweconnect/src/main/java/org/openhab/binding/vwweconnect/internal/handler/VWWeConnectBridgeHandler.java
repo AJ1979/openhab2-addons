@@ -64,8 +64,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
     private final Logger logger = LoggerFactory.getLogger(VWWeConnectBridgeHandler.class);
     private final ReentrantLock immediateRefreshJobLock = new ReentrantLock();
 
-    private String authstring = "";
-    private @Nullable String pinCode;
+    private @Nullable String securePIN;
     private int refresh = 600;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable ScheduledFuture<?> immediateRefreshJob;
@@ -103,13 +102,13 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
     public void initialize() {
         logger.debug("Initializing Verisure Binding");
         VWWeConnectBridgeConfiguration config = getConfigAs(VWWeConnectBridgeConfiguration.class);
-        this.pinCode = config.pin;
+        this.securePIN = config.spin;
         this.refresh = config.refresh;
         if (config.username == null || config.password == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "Configuration of username and password is mandatory");
         } else {
-            session.initialize(config.username, config.password, pinCode);
+            session.initialize(config.username, config.password, securePIN);
             startAutomaticRefresh();
         }
     }
@@ -152,8 +151,8 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
         }
     }
 
-    public @Nullable String getPinCode() {
-        return pinCode;
+    public @Nullable String getSecurePIN() {
+        return securePIN;
     }
 
     private void refreshAndUpdateStatus() {

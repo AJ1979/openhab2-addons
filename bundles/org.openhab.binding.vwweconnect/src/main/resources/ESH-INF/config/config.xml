@@ -18,9 +18,9 @@
 			<context>password</context>
 		</parameter>
 
-		<parameter name="pin" type="text">
-			<label>Pin Code</label>
-			<description>Your VW Connect Portal PIN.</description>
+		<parameter name="spin" type="text">
+			<label>Secure Pin Code</label>
+			<description>Your VW Connect Portal S-PIN.</description>
 			<context>password</context>
 		</parameter>
 

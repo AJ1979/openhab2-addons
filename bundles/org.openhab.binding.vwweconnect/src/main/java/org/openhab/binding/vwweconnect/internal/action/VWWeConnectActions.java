@@ -75,7 +75,7 @@ public class VWWeConnectActions implements ThingActions {
     public void preclimatizationStartCommand() {
         logger.debug("preclimatizationStartCommand called");
         if (handler != null) {
-            handler.actionPreclimatization(true);
+            handler.actionVentilation(true);
         } else {
             logger.warn("VWWeConnect Action service ThingHandler is null!");
         }
@@ -111,7 +111,7 @@ public class VWWeConnectActions implements ThingActions {
     public void preclimatizationStopCommand() {
         logger.debug("preclimatizationStopCommand called");
         if (handler != null) {
-            handler.actionPreclimatization(false);
+            handler.actionVentilation(false);
         } else {
             logger.warn("VWWeConnect Action service ThingHandler is null!");
         }

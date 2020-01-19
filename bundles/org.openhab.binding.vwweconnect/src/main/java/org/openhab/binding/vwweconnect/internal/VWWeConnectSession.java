@@ -77,7 +77,7 @@ public class VWWeConnectSession {
     private @Nullable String authRefUrl;
     private @Nullable String guestLanguageId;
 
-    private @Nullable String pinCode;
+    private @Nullable String securePIN;
     private HttpClient httpClient;
     private @Nullable String userName = "";
     private @Nullable String password = "";
@@ -90,7 +90,7 @@ public class VWWeConnectSession {
         logger.debug("VWWeConnectSession:initialize");
         this.userName = userName;
         this.password = password;
-        this.pinCode = pinCode;
+        this.securePIN = pinCode;
         // Try to login to VW We Connect Portal
         if (!logIn()) {
             logger.warn("Failed to login to VWWeConnect!");
@@ -141,11 +141,11 @@ public class VWWeConnectSession {
     }
 
     public @Nullable String getPinCode() {
-        return pinCode;
+        return securePIN;
     }
 
     public @Nullable String getPinCode(@Nullable BigDecimal installationId) {
-        return pinCode;
+        return securePIN;
     }
 
     public @Nullable ContentResponse sendCommand(String url, String data) {
@@ -621,7 +621,14 @@ public class VWWeConnectSession {
                 logger.debug("API Response ({})", vehicle);
             }
 
-            // Get fully loaded cars again
+            // Sleep
+            try {
+                Thread.sleep(5 * SLEEP_TIME_MILLIS);
+            } catch (InterruptedException e) {
+                logger.warn("Exception caught: {}", e);
+            }
+
+            // Get fully loaded cars
             url = authRefUrl + GET_FULLY_LOADED_CARS;
             httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
             if (httpResponse != null) {
@@ -692,7 +699,6 @@ public class VWWeConnectSession {
                         logger.warn("Request status, Http response null");
                     }
 
-                    logger.debug(VEHICLE_STATUS);
                     url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
                     httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                     if (httpResponse != null) {
@@ -761,6 +767,23 @@ public class VWWeConnectSession {
                     url = SESSION_BASE + dashboardUrl + GET_HEATER_STATUS;
                     HeaterStatus vehicleHeaterStatus = postJSONVWWeConnectAPI(url, fields, HeaterStatus.class);
                     logger.debug("API Response ({})", vehicleHeaterStatus);
+
+                    // Query API for electric vehicle status if enginetype electric
+                    if (vehicle.getCompleteVehicleJson().getEngineTypeElectric()) {
+                        url = SESSION_BASE + dashboardUrl + EMANAGER_GET_EMANAGER;
+                        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+                        if (httpResponse != null) {
+                            content = httpResponse.getContentAsString();
+                            logger.debug("Emanager Get Emanager: {}", content);
+                        }
+
+                        url = SESSION_BASE + dashboardUrl + EMANAGER_GET_NOTIFICATIONS;
+                        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+                        if (httpResponse != null) {
+                            content = httpResponse.getContentAsString();
+                            logger.debug("Emanager Get Notifications: {}", content);
+                        }
+                    }
 
                     if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
                             && location != null && vehicleHeaterStatus != null) {

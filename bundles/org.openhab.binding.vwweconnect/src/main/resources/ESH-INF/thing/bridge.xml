@@ -6,7 +6,7 @@
 
 	<!-- VW We Connect Portal Bridge -->
 	<bridge-type id="vwweconnectapi">
-		<label>VW Connect Portal</label>
+		<label>VW We Connect Portal</label>
 		<description>This bridge represents the gateway to the VW We Connect Portal.</description>
 		<config-description-ref uri="thing-type:vwweconnect:vwweconnectapi" />
 	</bridge-type>
