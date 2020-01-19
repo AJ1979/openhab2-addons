@@ -19,7 +19,7 @@ This binding supports the following thing types:
 You will have to configure the bridge with username and password, these must be the same credentials as used when logging into: 
 https://www.portal.volkswagen-we.com. 
 
-You must also configure your pin to be able to lock/unlock and use the start/stop the heater. 
+You must also configure your secure pin to be able to lock/unlock and start/stop the heater/ventilation. 
 
 ## Discovery
 
@@ -35,13 +35,13 @@ Only the bridge require manual configuration. Vehicles can be added by hand, or 
 
 #### Configuration Options
 
-*   username - The username used to connect to http://mypage.verisure.com
+*   username - The username used to connect to VW We Connect Portal
 
-*   password - The password used to connect to http://mypage.verisure.com
+*   password - The password used to connect to VW We Connect Portal
 
 *   refresh - Specifies the refresh interval in seconds
 
-*   pin - The username's pin code to lock/unlock doors and start/stop the heater
+*   spin - The user's secure PIN code to lock/unlock doors and start/stop the heater, same as configured on VW We Connect Portal
 
 
 #### Channels
@@ -64,17 +64,63 @@ Only the bridge require manual configuration. Vehicles can be added by hand, or 
 
 ([vehicle]) supports the following channel groups and channels:
 
-
-| Channel Group ID#Channel Type ID | Item Type | Description                                                                           |
-|-----------------|-----------|-------------------------------------------------------------------------------------------|
-| changedByUser   | String    | This channel reports the user that last changed the state of the alarm.           |
-| changedVia      | String    | This channel reports the method used to change the status.                       |
-| timestamp       | DateTime  | This channel reports the last time the alarm status was changed.                  |
-| installationName| String    | This channel reports the installation name.                                                |
-| installationId  | Number    | This channel reports the installation ID.                                             |
-| alarmStatus     | String    | This channel is used to arm/disarm the alarm. Available alarm status are "DISARMED", "ARMED_HOME" and "ARMED_AWAY".|               |
-
-
+| Channel Group ID#Channel Type ID     | Item Type            | Description                             | 
+|--------------------------------------|----------------------|-----------------------------------------|
+| details#name                         | String               | Vehicle name                            | 
+| details#model                        | String               | Vehicle model                           |
+| details#modelCode                    | String               | Vehicle model code                      |
+| details#modelYear                    | String               | Vehicle model year                      |
+| details#enrollmentDate               | DateTime             | Vehicle enrollment date                 |
+| details#dashboardURL                 | String               | User's home URL                         |
+| details#imageURL                     | Image                | Vehicle picture                         |
+| details#engineTypeCombustian         | Switch               | Is engine type combustian               |
+| details#engineTypeElectric           | Switch               | Is engine type electric                 |
+| details#serviceInspectionStatus      | String               | Service Inspection Status               |         
+| details#oilInspectionStatus          | String               | Oil Inspection Status                   | 
+| odometer#totalAverageSpeed           | Number               | Total average speed                     | 
+| odometer#totalTripDistance           | Number:Length        | Total trip distance                     | 
+| odometer#totalTripDuration           | Number:Time          | Total trip duration                     | 
+| fuel#fuelLevel                       | Number:Dimensionless | Fuel level                              |
+| fuel#fuelConsumption                 | Number               | Average fuel consumption                |
+| fuel#fuelAlert                       | Switch               | Fuel alert (< 10%)                      | 
+| fuel#fuelRange                       | Number:Length        | Fuel range                              | 
+| cng#cngLevel                         | Number:Dimensionless | CNG level                               |
+| cng#cngConsumption                   | Number               | Average CNG consumption                 |
+| cng#cngAlert                         | Switch               | CNG alert (< 10%)                       | 
+| cng#cngRange                         | Number:Length        | CNG range                               |
+| electric#batteryLevel                | Number:Dimensionless | Battery level                           |
+| electric#electricConsumption         | Number               | Electric consumption                    |
+| electric#batteryAlert                | Switch               | Battery alert (< 10%)                   | 
+| electric#batteryRange                | Number:Length        | Battery range                           |  
+| doors#trunk                          | Contact              | Trunk status                            |
+| doors#rightBack                      | Contact              | Right back door status                  |
+| doors#leftBack                       | Contact              | Left back door status                   |
+| doors#rightFront                     | Contact              | Right front door status                 |
+| doors#leftFront                      | Contact              | Left front door status                  |
+| doors#hood                           | Contact              | Hood status                             |
+| doors#doorslocked                    | Switch               | Action lock/unlock door                 |
+| doors#trunklocked                    | Switch               | Not supported by API                    |
+| windows#rightBackWnd                 | Contact              | Right back window status                |
+| windows#leftBackWnd                  | Contact              | Left back window status                 |
+| windows#rightFrontWnd                | Contact              | Right front window status               |
+| windows#leftFrontWnd                 | Contact              | Left front window status                |
+| position#location                    | Location             | Vehicle position                        |
+[ lasttrip#averageFuelConsumption      | Number               | Last trip average fuel consumption      |
+[ lasttrip#averageCngConsumption       | Number               | Last trip average CNG consumption       |
+[ lasttrip#averageElectricConsumption  | Number               | Last trip average electric consumption  |
+[ lasttrip#averageAuxiliaryConsumption | Number               | Last trip average auxiliary consumption |
+[ lasttrip#tripAverageSpeed            | Number               | Last trip average speed                 |
+[ lasttrip#tripDistance                | Number:Length        | Last trip distance                      |
+[ lasttrip#tripStartTime               | DateTime             | Last trip start time                    |
+[ lasttrip#tripEndTime                 | DateTime             | Last trip end time                      |
+[ lasttrip#tripDuration                | Number:Time          | Last trip duration                      |
+| action#remoteHeater                  | Switch               | Action remote heater                    |
+| action#remoteVentilation             | Switch               | Action remote ventilation               |
+| action#temperature                   | Number               | Vehicle outdoor temperature             |
+| action#remainingTime                 | Number:Time          | Remaining heater time                   |
+| action#emanagerCharge                | Switch               | Action emanager charge                  | 
+| action#emanagerClimate               | Switch               | Action emanager climatisation           |  
+| action#emanagerWindowHeat            | Switch               | Action emanager window heater           |              
 
 ## Example
 
