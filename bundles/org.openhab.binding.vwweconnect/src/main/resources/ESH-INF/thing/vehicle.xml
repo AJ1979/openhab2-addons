@@ -110,7 +110,7 @@
 	</channel-group-type>
 
 	<channel-group-type id="doors">
-		<label>Doors Opening Status</label>
+		<label>Door Status</label>
 		<channels>
 			<channel id="trunk" typeId="door">
 				<label>Trunk</label>
@@ -136,7 +136,7 @@
 	</channel-group-type>
 
 	<channel-group-type id="windows">
-		<label>Windows Opening Status</label>
+		<label>Window Status</label>
 		<channels>
 			<channel id="rightBackWnd" typeId="window">
 				<label>Right Back</label>
@@ -244,7 +244,7 @@
 		<item-type>Number:Length</item-type>
 		<label>Odometer</label>
 		<description>Odometer of the vehicle</description>
-		<state pattern="%.2f %unit%" readOnly="true"></state>
+		<state pattern="%.2f km" readOnly="true"></state>
 	</channel-type>
 
 	<channel-type id="fuelQuantity">

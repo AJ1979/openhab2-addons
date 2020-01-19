@@ -319,6 +319,7 @@ public class VehicleHandler extends VWWeConnectHandler {
         int tripId = lastTrip.get().getAggregatedStatistics().getTripId();
         Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
                 .filter(t -> t.getTripId() == tripId).findFirst();
+        logger.debug("Last trip: {}", lastTrip);
 
         getThing().getChannels().stream().map(Channel::getUID)
                 .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
@@ -405,7 +406,8 @@ public class VehicleHandler extends VWWeConnectHandler {
         logger.debug("Content: {}", content);
         if (!session.isErrorCode(content)) {
             String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
-            if (requestStatus != null && requestStatus.equals("REQUEST_IN_PROGRESS")) {
+            if (requestStatus != null
+                    && (requestStatus.equals("REQUEST_IN_PROGRESS") || requestStatus.equals("REQUEST_SUCCESSFUL"))) {
                 logger.debug("Command has status {} ", requestStatus);
             } else {
                 logger.warn("Failed to request status for vehicle {}! Request status: {}", vin, requestStatus);

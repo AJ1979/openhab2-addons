@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * The {@link VWWeConnectBridgeHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
- * @author l3rum - Initial contribution
+ * @author Jan Gustafsson - Initial contribution
  */
 @NonNullByDefault
 public class VWWeConnectBridgeHandler extends BaseBridgeHandler {

@@ -19,7 +19,7 @@ import org.openhab.binding.vwweconnect.internal.model.BaseVehicle;
  * The {@link DeviceStatusListener} is notified when a device status has changed
  * or a device has been removed or added.
  *
- * @author Jarle Hjortland - Initial contribution
+ * @author Jan Gustafsson - Initial contribution
  *
  */
 @NonNullByDefault

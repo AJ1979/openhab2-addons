@@ -23,7 +23,7 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
  * The {@link VerisureBinding} class defines common constants, which are
  * used across the whole binding.
  *
- * @author l3rum - Initial contribution
+ * @author Jan Gustafsson - Initial contribution
  */
 @NonNullByDefault
 public class VWWeConnectBindingConstants {

@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The discovery service, notified by a listener on the VWWeConnectSession.
  *
- * @author Jarle Hjortland - Initial contribution
+ * @author Jan Gustafsson - Initial contribution
  *
  */
 @NonNullByDefault
