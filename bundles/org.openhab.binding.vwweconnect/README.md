@@ -128,103 +128,127 @@ Only the bridge require manual configuration. Vehicles can be added by hand, or 
 
 ````
 // Bridge configuration
-Bridge verisure:bridge:myverisure "Verisure Bridge" [username="x@y.com", password="1234", refresh="600", pin="111111"] {
-
-     Thing alarm         JannesAlarm         "Verisure Alarm"                  [ deviceId="alarm123456789" ]
-     Thing smartLock     JannesSmartLock     "Verisure Entrance Yale Doorman"  [ deviceId="3C446NPO" ]
-     Thing smartPlug     JannesSmartPlug     "Verisure SmartPlug"              [ deviceId="3D7GMANV" ]
-     Thing waterDetector JannesWaterDetector "Verisure Water Detector"         [ deviceId="3WETQRH5" ] 
-     Thing userPresence  JannesUserPresence  "Verisure User Presence"          [ deviceId="uptestgmailcom123456789" ]
+Bridge vwweconnect:vwweconnectapi:myvwweconnect "VW We Connect" [username="x@y.com", password="1234", refresh="600", spin="1111"] {
+     Thing vehicle         JannesFolka         "VW Vehicle"                  [ vin="WVGZZZ5XAPQ834262" ]
 }
 ````
 
 ### Items-file
 
 ````
-// SmartLock and Alarm
-Switch   SmartLock                     "Verisure SmartLock"  <lock>   [ "Switchable" ]  {channel="verisure:smartLock:myverisure:JannesSmartLock:smartLockStatus"}
-Switch   AutoLock                      "AutoLock"            <lock>   [ "Switchable" ]  {channel="verisure:smartLock:myverisure:JannesSmartLock:autoRelock"}
-String   SmartLockVolume               "SmartLock Volume"     <lock>                    {channel="verisure:smartLock:myverisure:JannesSmartLock:smartLockVolume"}
-DateTime SmartLockLastUpdated          "SmartLock Last Updated [%1$tY-%1$tm-%1$td %1$tR]" {channel="verisure:smartLock:myverisure:JannesSmartLock:timestamp"}
-String   AlarmHome                     "Alarm Home"          <alarm>                    {channel="verisure:alarm:myverisure:JannesAlarm:alarmStatus"}
-DateTime  AlarmLastUpdated             "Verisure Alarm Last Updated [%1$tY-%1$tm.%1$td %1$tR]"               {channel="verisure:alarm:myverisure:JannesAlarm:timestamp"}
-String   AlarmChangedByUser            "Verisure Alarm Changed By User"                 {channel="verisure:alarm:myverisure:JannesAlarm:changedByUser"}
+Group gTotalTripData
+Group gLastTripData
+Group gDoorStatus
+Group gWindowStatus
+
+// My bridge
+String   VWWeConnectRefreshStatus  "VW We Connect refesh status" {channel="vwweconnect:vwweconnectapi:myvwweconnect:status"}
+Switch   RefreshVehicleStatus      "Vehicle Refresh Status"
+
+// My vehicles
+String   VehicleName                "Vehicle name [%s]"  <car>   {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:details#name"}
+String   VehicleModel               "Vehicle model [%s]"  <car>  {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:details#model"}
+String   VehicleCode                "Vehicle model code [%s]"  <car>  {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:details#modelCode"}
+String   VehicleYear                "Vehicle model year [%s]" <car> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:details#modelYear"}
+DateTime VehicleRolloutDate         "Vehicle roll-out date [%1$tY-%1$tm-%1$td]" <car> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:details#enrollmentDate"}
+Image    VehicleImage               "Vehicle image" <car> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:details#imageURL"} 
+String   VehicleServiceInspection   "Vehicle service inspection [%s]" <car> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:details#serviceInspectionStatus"}
+String   VehicleOilInspection       "Vehicle oil inspection [%s]" <car> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:details#oilInspectionStatus"}
+
+// Total trip data
+Number   VehicleTotalAvgSpeed       "Total average speed" <odometer> (gTotalTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:odometer#totalAverageSpeed"}
+Number   VehicleTotalDistance       "Total distance" <odometer> (gTotalTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:odometer#totalTripDistance"}
+Number   VehicleTotalDuration       "Total duration" <odometer> (gTotalTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:odometer#totalTripDuration"}
+
+// Fuel Info
+Number   VehicleFuelLevel           "Fuel level (%)" <sewerage> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelLevel"}
+Number   VehicleAvgFuelConsumption  "Average fuel consumption (%)" <sewerage> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelConsumption"}
+Switch   VehicleFuelAlert           "Fuel alert" <sewerage> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelAlert"}
+Number   VehicleFuelRange           "Fuel Range" <motion> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelRange"}
+
+// Door status
+Contact  VehicleTrunk               "Trunk [%s]" <door> (gDoorStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#trunk"}
+Contact  VehicleDoorRightBack       "Door right back [%s]" <door> (gDoorStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#rightBack"}
+Contact  VehicleDoorLeftBack        "Door left back [%s]" <door> (gDoorStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#leftBack"}
+Contact  VehicleDoorRightFont       "Door right front [%s]" <door> (gDoorStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#rightFront"}
+Contact  VehicleDoorLeftFront       "Door left front [%s]" <door> (gDoorStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#leftFront"}
+Contact  VehicleHood                "Hood [%s]" <door> (gDoorStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#hood"}
+
+// Window status
+Contact  VehicleWindowRightBack      "Window right back [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#rightBackWnd"}
+Contact  VehicleWindowLeftBack       "Window left back [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#leftBackWnd"}
+Contact  VehicleWindowRightFont      "Window right front [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#rightFrontWnd"}
+Contact  VehicleWindowLeftFront      "Window left front [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#leftFrontWnd"}
 
 
-// SmartPlugs         
-Switch   SmartPlugLamp                 "SmartPlug"               <lock>   [ "Switchable" ]  {channel="verisure:smartPlug:myverisure:4ED5ZXYC:smartPlugStatus"}
-Switch   SmartPlugGlavaRouter          "SmartPlug Glava Router"  <lock>   [ "Switchable" ]  {channel="verisure:smartPlug:myverisure:JannesSmartPlug:smartPlugStatus"}
+// Location
+Location VehicleLocation             "Location lon/lat" <map> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:position#location"}
 
-// DoorWindow
-String DoorWindowLocation              "Door Window Location"    {channel="verisure:doorWindowSensor:myverisure:1SG5GHGT:location"}
-String DoorWindowStatus                "Door Window Status"      {channel="verisure:doorWindowSensor:myverisure:1SG5GHGT:state"}
+// Last trip
+Number   VehicleLastTripDistance     "Last trip distance" <odometer> (gLastTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:lasttrip#tripDistance"}
+Number   VehicleLastTripAvgFuelCons  "Last trip average fuel consumption" <sewerage> (gLastTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:lasttrip#averageFuelConsumption"}
+Number   VehicleLastTripAvgSpeed     "Last trip average speed" <speed> (gLastTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:lasttrip#tripAverageSpeed"}
+DateTime VehicleLastTripStartTime    "Last trip start time [%1$tY-%1$tm-%1$td %1$tR]" <time> (gLastTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:lasttrip#tripStartTime"}
+DateTime VehicleLastTripEndTime      "Last trip end time [%1$tY-%1$tm-%1$td %1$tR]" <time> (gLastTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:lasttrip#tripEndTime"}
+Number   VehicleLastTripDuration     "Last trip duration" <time> (gLastTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:lasttrip#tripDuration"}
 
-// UserPresence
-String UserName                        "User Name"               {channel="verisure:userPresence:myverisure:JannesUserPresence:userName"}
-String UserLocationEmail               "User Location Email"     {channel="verisure:userPresence:myverisure:JannesUserPresence:webAccount"}
-String UserLocationName                "User Location Name"      {channel="verisure:userPresence:myverisure:JannesUserPresence:userLocationStatus"}
-
-String UserNameGlava                   "User Name Glava"               {channel="verisure:userPresence:myverisure:userpresencetestgmailcom123456789:userName"}
-String UserLocationEmailGlava          "User Location Email Glava"     {channel="verisure:userPresence:myverisure:userpresencetestgmailcom123456789:webAccount"}
-String UserLocationNameGlava           "User Location Name Glava"      {channel="verisure:userPresence:myverisure:userpresencetestgmailcom1123456789:userLocationStatus"}
-
-// Broadband Connection
-String CurrentBBStatus                 "Broadband Connection Status"       {channel="verisure:broadbandConnection:myverisure:bc123456789:status"}
-
+// Actions
+Switch   VehicleDoorLock            "Vehicle DoorLock"  <lock>   [ "Switchable" ]  {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#doorsLocked"}
+Switch   VehicleRemoteHeater        "Vehicle Remote Heater"  <temperature>   [ "Switchable" ]  {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:action#remoteHeater"}
+Switch   VehicleRemoteVentilation   "Vehicle Remote Ventilation"  <temperature>   [ "Switchable" ]  {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:action#remoteVentilation"}
+Number   VehicleTemperature         "Vehicle Temperature"  <temperature>   {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:action#temperature"}
+Number   VehicleRemaingHeaterTime   "Vehicle remaining heater time" <clock> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:action#remainingTime"}
 ````
 
 ### Sitemap
 
 ````
-    Frame label="SmartLock and Alarm" {
-        Text label="SmartLock and Alarm" icon="groundfloor" {
-            Frame label="Yale Doorman SmartLock" {
-                Switch item=SmartLock label="Yale Doorman SmartLock" icon="lock.png"
+ sitemap vwweconnect label="Wolkswagen We Connect"
+{
+    Frame label="Vehicle Details" {
+        Image item=VehicleImage label="Vehicle Details"   {
+            Frame label="Vehicle Details" {
+                Text item=VehicleName icon="car"  
+                Text item=VehicleModel icon="car"
+                Text item=VehicleCode icon="car"
+                Text item=VehicleYear icon="car"
+                Text item=VehicleRolloutDate icon="car"
+                Text item=VehicleServiceInspection icon="car"
+                Text item=VehicleOilInspection icon="car"
             }
-            Frame label="Verisure Alarm" {
-                Switch  item=AlarmHome  icon="alarm" label="Verisure Alarm"  mappings=["DISARMED"="Disarm", "ARMED_HOME"="Arm Home", "ARMED_AWAY"="Arm Away"]
-            }
-            Frame label="Yale Doorman SmartLock AutoLock" {
-                Switch item=AutoLock label="Yale Doorman SmartLock AutoLock" icon="lock.png"
-            }
-            Frame label="Yale Doorman SmartLock Volume"  {
-                Switch  item=SmartLockVolume  icon="lock" label="Yale Doorman SmartLock Volume"  mappings=["SILENCE"="Silence", "LOW"="Low", "HIGH"="High"]
-            }
-            Text item=AlarmHomeInstallationName label="Alarm Installation [%s]"
-            Text item=AlarmChangedByUser label="Changed by user [%s]"
-            Text item=AlarmLastUpdated
-            Text item=SmartLockStatus label="SmartLock status [%s]"
-            Text item=SmartLockLastUpdated
-            Text item=SmartLockOperatedBy label="Changed by user [%s]"
-            Text item=DoorWindowStatus label="Door State"
-            Text item=DoorWindowLocation
         }
     }
+    
+    Group item=gTotalTripData label="Total Trip Data"
 
-    Frame label="SmartPlugs" {
-        Text label="SmartPlugs" icon="attic" {
-            Frame label="SmartPlug Lamp" {
-                Switch item=SmartPlugLamp label="Verisure SmartPlug Lamp" icon="smartheater.png"
+    Group item=gLastTripData label="Last Trip Data"
+
+    Frame label="Vehicle Location" {
+        Mapview item=VehicleLocation label="Vehicle Location" height=5
+    }
+
+    Group item=gDoorStatus label="Door Status"
+
+    Group item=gWindowStatus label="Window Status"
+
+    Frame label="Vehicle Outdoor Temperature" {
+        Text item=VehicleTemperature
+    }
+
+    Frame label="Vehicle Actions" {
+        Text label="Lock/Unlock, Remote Heater/Ventilation" icon="car" {
+            Frame label="Vehicle Doorlock" {
+                Switch item=VehicleDoorLock label="Vehicle Doorlock" icon="lock.png"
             }
+            Frame label="Vehicle Heater" {
+                Switch item=VehicleRemoteHeater label="Vehicle Remote Heater" icon="temperature_hot"
+            }
+            Frame label="Vehicle Ventilation" {
+                Switch item=VehicleRemoteVentilation label="Vehicle Remote Ventilation" icon="temperature_cold"
+            }
+            Text item=VehicleRemaingHeaterTime
+            Switch item=RefreshVehicleStatus label="Manual refresh status from VW We Connect" icon="zoom"
         }
-    }	
-    
-    Frame label="User Presence" {
-		Text label="User Presence" icon="attic" {
-			Frame label="User Presence Champinjonvägen" {
-				Text item=UserName label="User Name [%s]"
-				Text item=UserLocationEmail label="User Email [%s]"
-                     Text item=UserLocationStatus label="User Location Status [%s]"
-			}
-		}
-	}
-
-	Frame label="Broadband Connection" {
-		Text label="Broadband Connection" icon="attic" {
-			Frame label="Broadband Connection Champinjonvägen" {
-				Text item=CurrentBBStatus label="Broadband Connection Status [%s]"
-			}
-		}
-	}
-    
+    }
+}   
 ````
