@@ -98,6 +98,8 @@ Only the bridge require manual configuration. Vehicles can be added by hand, or 
 | doors#rightFront                     | Contact              | Right front door status                 |
 | doors#leftFront                      | Contact              | Left front door status                  |
 | doors#hood                           | Contact              | Hood status                             |
+| doors#roof                           | Contact              | Roof status                             |
+| doors#sunroof                        | Contact              | Sun Roof status                         |
 | doors#doorslocked                    | Switch               | Action lock/unlock door                 |
 | doors#trunklocked                    | Switch               | Not supported by API                    |
 | windows#rightBackWnd                 | Contact              | Right back window status                |
@@ -179,7 +181,8 @@ Contact  VehicleWindowRightBack      "Window right back [%s]" <window> (gWindowS
 Contact  VehicleWindowLeftBack       "Window left back [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#leftBackWnd"}
 Contact  VehicleWindowRightFont      "Window right front [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#rightFrontWnd"}
 Contact  VehicleWindowLeftFront      "Window left front [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#leftFrontWnd"}
-
+Contact  VehicleWindowRoof           "Window roof [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:windows#roof"}
+Contact  VehicleWindowSunRoof        "Window sun roof [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:windows#sunroof"}
 
 // Location
 Location VehicleLocation             "Location lon/lat" <map> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:position#location"}

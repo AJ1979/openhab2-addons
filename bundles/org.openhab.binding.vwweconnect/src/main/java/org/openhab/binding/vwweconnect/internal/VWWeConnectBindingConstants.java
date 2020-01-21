@@ -53,6 +53,8 @@ public class VWWeConnectBindingConstants {
     public static final String LEFT_BACK_WND = "leftBackWnd";
     public static final String RIGHT_FRONT_WND = "rightFrontWnd";
     public static final String LEFT_FRONT_WND = "leftFrontWnd";
+    public static final String ROOF = "roof";
+    public static final String SUN_ROOF = "sunroof";
 
     // Fuel
     public static final String FUEL_LEVEL = "fuelLevel";

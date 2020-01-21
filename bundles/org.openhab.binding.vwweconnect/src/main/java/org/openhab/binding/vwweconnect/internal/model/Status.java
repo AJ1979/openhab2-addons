@@ -418,16 +418,16 @@ public class Status {
             this.windows = windows;
         }
 
-        public int getSunroof() {
-            return sunroof;
+        public OpenClosedType getSunroof() {
+            return getDoorStatus(sunroof);
         }
 
         public void setSunroof(int sunroof) {
             this.sunroof = sunroof;
         }
 
-        public int getRoof() {
-            return roof;
+        public OpenClosedType getRoof() {
+            return getDoorStatus(roof);
         }
 
         public void setRoof(int roof) {

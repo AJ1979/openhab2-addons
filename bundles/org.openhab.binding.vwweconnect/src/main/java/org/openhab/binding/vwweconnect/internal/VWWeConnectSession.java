@@ -55,6 +55,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 
 /**
  * This class performs the communication with VW WeConnect Portal API.
@@ -163,6 +164,20 @@ public class VWWeConnectSession {
         logger.debug("ErrorCode: {}", errorCode);
         if (errorCode.equals("0")) {
             return false;
+        } else {
+            try {
+                if (errorCode.equals("1")) {
+                    String errorType = JsonPath.read(jsonContent, "$.errorType");
+                    if (errorType.equals("429")) {
+                        logger.debug(
+                                "Too many requests, switch ignition on/off to be able to communicate fully to vehicle");
+                    }
+                } else if (errorCode.equals("2")) {
+                    String errorTextCopybookId = JsonPath.read(jsonContent, "$.errorTextCopybookId");
+                    logger.debug("Error: {}", errorTextCopybookId);
+                }
+            } catch (PathNotFoundException e) {
+            }
         }
         return true;
     }
@@ -273,31 +288,47 @@ public class VWWeConnectSession {
 
     private @Nullable ContentResponse postJSONVWWeConnectAPI(String url, @Nullable Fields fields,
             @Nullable String referer, @Nullable String xCsrf) {
-        try {
-            logger.debug("postJSONVWWeConnectAPI URL: {} Fields: {} Referer: {} XCSRF:{}", url, fields, referer, xCsrf);
-            Request request = httpClient.newRequest(url).method(HttpMethod.POST);
+        final int RETRIES = 3;
+        int count = 0;
+        while (true) {
+            try {
+                Thread.sleep(2 * SLEEP_TIME_MILLIS);
+                logger.debug("postJSONVWWeConnectAPI URL: {} Fields: {} Referer: {} XCSRF:{}", url, fields, referer,
+                        xCsrf);
+                Request request = httpClient.newRequest(url).method(HttpMethod.POST);
 
-            request.header("accept", "application/json, text/plain, */*");
-            request.header("content-type", "application/json;charset=UTF-8");
-            request.header("user-agent",
-                    "Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36");
-            request.header("referer", referer);
-            request.header("x-csrf-token", xCsrf);
+                request.header("accept", "application/json, text/plain, */*");
+                request.header("content-type", "application/json;charset=UTF-8");
+                request.header("user-agent",
+                        "Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36");
+                request.header("referer", referer);
+                request.header("x-csrf-token", xCsrf);
 
-            if (fields != null) {
-                fields.forEach(f -> request.param(f.getName(), f.getValue()));
+                if (fields != null) {
+                    fields.forEach(f -> request.param(f.getName(), f.getValue()));
+                }
+
+                logger.debug("HTTP POST Request {}.", request.toString());
+                return request.send();
+            } catch (ExecutionException e) {
+                if (count <= RETRIES) {
+                    logger.warn("Caught 3 consecutive ExecutionExceptions {}", e);
+                    break;
+                } else {
+                    logger.debug("Retry POST due to ExecutionExdeption, try #: {}", count);
+                    count++;
+                }
+                logger.warn("Caught ExecutionException {}", e);
+            } catch (InterruptedException e) {
+                logger.warn("Caught InterruptedException {}", e);
+                break;
+            } catch (TimeoutException e) {
+                logger.warn("Caught TimeoutException {}", e);
+                break;
+            } catch (RuntimeException e) {
+                logger.warn("Caught RuntimeException {}", e);
+                break;
             }
-
-            logger.debug("HTTP POST Request {}.", request.toString());
-            return request.send();
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
-        } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e);
         }
         return null;
     }
@@ -667,7 +698,7 @@ public class VWWeConnectSession {
                                         logger.debug("Wait timeout, request status: {}", requestStatus);
                                         break;
                                     } else {
-                                        Thread.sleep(5 * SLEEP_TIME_MILLIS);
+                                        Thread.sleep(2 * SLEEP_TIME_MILLIS);
                                         httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                                         if (httpResponse != null) {
                                             content = httpResponse.getContentAsString();
@@ -680,13 +711,13 @@ public class VWWeConnectSession {
                                 }
                             }
                             if (requestStatus != null) {
-                                logger.warn("Request status: {}", requestStatus);
+                                logger.warn("Get request status: {}", requestStatus);
                             }
                         } else {
-                            logger.warn("Request status, Error code: {}", content);
+                            logger.warn("Get request status, Error code: {}", content);
                         }
                     } else {
-                        logger.warn("Request status, Http response null");
+                        logger.warn("Get request status, Http response null");
                     }
 
                     // Request a Vehicle Status report to be sent from vehicle
@@ -694,9 +725,11 @@ public class VWWeConnectSession {
                     httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                     if (httpResponse != null) {
                         content = httpResponse.getContentAsString();
-                        logger.debug("API Response ({})", content);
+                        if (isErrorCode(content)) {
+                            logger.debug("Failed to request vehicle status report!");
+                        }
                     } else {
-                        logger.warn("Request status, Http response null");
+                        logger.warn("Request vehicle status report failed, Http response null");
                     }
 
                     url = SESSION_BASE + dashboardUrl + VEHICLE_STATUS;
@@ -719,7 +752,7 @@ public class VWWeConnectSession {
                                             status.getVehicleStatusData().getRequestStatus());
                                     break;
                                 } else {
-                                    Thread.sleep(5 * SLEEP_TIME_MILLIS);
+                                    Thread.sleep(2 * SLEEP_TIME_MILLIS);
                                     httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                                     if (httpResponse != null) {
                                         content = httpResponse.getContentAsString();
@@ -796,8 +829,8 @@ public class VWWeConnectSession {
                         BaseVehicle oldObj = vwWeConnectThings.get(vin);
                         if (oldObj == null || !oldObj.equals(vehicle)) {
                             vwWeConnectThings.put(vin, vehicle);
-                            notifyListeners(vehicle);
                         }
+                        notifyListeners(vehicle);
                     } else {
                         logger.warn("Failed to update vehicle details for VIN: {}", vin);
                     }

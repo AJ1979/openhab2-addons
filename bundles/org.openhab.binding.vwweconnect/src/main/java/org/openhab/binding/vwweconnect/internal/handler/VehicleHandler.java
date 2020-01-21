@@ -260,6 +260,13 @@ public class VehicleHandler extends VWWeConnectHandler {
             case HOOD:
                 return vehicleStatus.getCarRenderData().getHood() != null ? vehicleStatus.getCarRenderData().getHood()
                         : UnDefType.NULL;
+            case ROOF:
+                return vehicleStatus.getCarRenderData().getRoof() != null ? vehicleStatus.getCarRenderData().getRoof()
+                        : UnDefType.NULL;
+            case SUN_ROOF:
+                return vehicleStatus.getCarRenderData().getSunroof() != null
+                        ? vehicleStatus.getCarRenderData().getSunroof()
+                        : UnDefType.NULL;
             case DOORS_LOCKED:
                 return vehicleStatus.getLockData().getDoorsLocked() != null
                         ? vehicleStatus.getLockData().getDoorsLocked()
@@ -374,7 +381,7 @@ public class VehicleHandler extends VWWeConnectHandler {
     public void actionHonkBlink(Boolean honk, Boolean blink) {
         VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
         if (bridgeHandler != null) {
-
+            logger.debug("Not implemented, unknown endpoint!");
         }
     }
 

@@ -117,14 +117,6 @@ public class VWWeConnectActions implements ThingActions {
         }
     }
 
-    public static void preclimatizationStopCommand(@Nullable ThingActions actions) {
-        if (actions instanceof VWWeConnectActions) {
-            ((VWWeConnectActions) actions).preclimatizationStopCommand();
-        } else {
-            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
-        }
-    }
-
     @RuleAction(label = "VW We Connect : Honk-blink", description = "Activates the horn and or lights of the car")
     public void honkBlinkCommand(@ActionInput(name = "honk", label = "Honk") Boolean honk,
             @ActionInput(name = "blink", label = "Blink") Boolean blink) {

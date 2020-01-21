@@ -150,6 +150,12 @@
 			<channel id="leftFrontWnd" typeId="window">
 				<label>Left Front</label>
 			</channel>
+            <channel id="roof" typeId="window">
+                <label>Roof</label>
+            </channel>
+            <channel id="sunroof" typeId="window">
+                <label>Sun Roof</label>
+            </channel>
 		</channels>
 	</channel-group-type>
 
