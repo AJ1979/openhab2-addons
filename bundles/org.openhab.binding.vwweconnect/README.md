@@ -124,6 +124,83 @@ Only the bridge require manual configuration. Vehicles can be added by hand, or 
 | action#emanagerClimate               | Switch               | Action emanager climatisation           |  
 | action#emanagerWindowHeat            | Switch               | Action emanager window heater           |              
 
+## Rule Actions
+
+Multiple actions are supported by this binding. In classic rules these are accessible as shown in the example below:
+
+```
+Example 1a: If Thing has been created using auto-discovery
+
+ val actions = getActions("vwweconnect","vwweconnect:vehicle:thingId")
+ if (null === actions) {
+        logInfo("actions", "Actions not found, check thing ID")
+        return
+ } else {
+        actions.unlockCommand()
+ }
+Example 1b: If Thing has been created using configuration things-file
+
+ val actions = getActions("vwweconnect","vwweconnect:vehicle:bridgeId:thingId")
+ if (null === actions) {
+        logInfo("actions", "Actions not found, check thing ID")
+        return
+ } else {
+        actions.unlockCommand()
+ }
+ ```
+### Supported actions
+ 
+#### unlockCommand()
+
+Sends the command to unlock the vehicle.
+
+#### lockCommand()
+
+Sends the command to lock the vehicle.
+
+#### heaterStartCommand()
+
+Sends the command to start the vehicle heater.
+
+#### heaterStopCommand()
+
+Sends the command to stop the vehicle heater.
+
+#### ventilationStartCommand()
+
+Sends the command to start the vehicle ventilation.
+
+#### ventilationStopCommand()
+
+Sends the command to stop the vehicle ventilation.
+
+### Electrical cars supports the following actions
+
+#### chargerStartCommand()
+
+Sends the command to start the vehicle battery charging.
+
+#### chargerStopCommand()
+
+Sends the command to stop the vehicle battery charging.
+
+#### climateStartCommand()
+
+Sends the command to start the vehicle climatisation.
+
+#### climateStopCommand()
+
+Sends the command to stop the vehicle climatisation.
+
+#### windowHeatStartCommand()
+
+Sends the command to start the vehicle window heating.
+
+#### windowHeatStopCommand()
+
+Sends the command to stop the vehicle window heating.
+ 
+
 ## Example
 
 ### Things-file
