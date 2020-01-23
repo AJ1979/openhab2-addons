@@ -53,7 +53,7 @@ public class VWWeConnectActions implements ThingActions {
         return this.handler;
     }
 
-    @RuleAction(label = "VW We Connect : Heater Start", description = "Starts car heater")
+    @RuleAction(label = "VW We Connect : Heater Start", description = "Starts vehicle heater")
     public void heaterStartCommand() {
         logger.debug("heaterStartCommand called");
         if (handler != null) {
@@ -71,9 +71,27 @@ public class VWWeConnectActions implements ThingActions {
         }
     }
 
-    @RuleAction(label = "VW We Connect : Preclimatization Start", description = "Starts car heater")
-    public void preclimatizationStartCommand() {
-        logger.debug("preclimatizationStartCommand called");
+    @RuleAction(label = "VW We Connect : Lock", description = "Locks vehicle doors")
+    public void lockCommand() {
+        logger.debug("lockCommand called");
+        if (handler != null) {
+            handler.actionLock();
+        } else {
+            logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void lockCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).lockCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
+        }
+    }
+
+    @RuleAction(label = "VW We Connect : Ventilation Start", description = "Starts vehicle ventilation")
+    public void ventilationStartCommand() {
+        logger.debug("ventilationStartCommand called");
         if (handler != null) {
             handler.actionVentilation(true);
         } else {
@@ -81,15 +99,69 @@ public class VWWeConnectActions implements ThingActions {
         }
     }
 
-    public static void preclimatizationStartCommand(@Nullable ThingActions actions) {
+    public static void ventilationStartCommand(@Nullable ThingActions actions) {
         if (actions instanceof VWWeConnectActions) {
-            ((VWWeConnectActions) actions).preclimatizationStartCommand();
+            ((VWWeConnectActions) actions).ventilationStartCommand();
         } else {
             throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
         }
     }
 
-    @RuleAction(label = "VW We Connect : Heater Stop", description = "Stops car heater")
+    @RuleAction(label = "VW We Connect : Charger Start", description = "Starts vehicle charger")
+    public void chargerStartCommand() {
+        logger.debug("chargerStartCommand called");
+        if (handler != null) {
+            handler.actionCharge(true);
+        } else {
+            logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void chargerStartCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).chargerStartCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
+        }
+    }
+
+    @RuleAction(label = "VW We Connect : Climatisation Start", description = "Starts vehicle climatisation")
+    public void climateStartCommand() {
+        logger.debug("climateStartCommand called");
+        if (handler != null) {
+            handler.actionClimate(true);
+        } else {
+            logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void climateStartCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).climateStartCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
+        }
+    }
+
+    @RuleAction(label = "VW We Connect : Window heating Start", description = "Starts vehicle window heating")
+    public void windowHeatStartCommand() {
+        logger.debug("windowHeatStartCommand called");
+        if (handler != null) {
+            handler.actionWindowHeat(true);
+        } else {
+            logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void windowHeatStartCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).windowHeatStartCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
+        }
+    }
+
+    @RuleAction(label = "VW We Connect : Heater Stop", description = "Stops vehicle heater")
     public void heaterStopCommand() {
         logger.debug("heaterStopCommand called");
         if (handler != null) {
@@ -107,13 +179,93 @@ public class VWWeConnectActions implements ThingActions {
         }
     }
 
-    @RuleAction(label = "VW We Connect : Preclimatization Stop", description = "Stops car heater")
-    public void preclimatizationStopCommand() {
-        logger.debug("preclimatizationStopCommand called");
+    @RuleAction(label = "VW We Connect : Unlock", description = "Unlocks vehicle doors")
+    public void unlockCommand() {
+        logger.debug("unlockCommand called");
+        if (handler != null) {
+            handler.actionUnlock();
+        } else {
+            logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void unlockCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).unlockCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
+        }
+    }
+
+    @RuleAction(label = "VW We Connect : Ventilation Stop", description = "Stops car ventilation")
+    public void ventilationStopCommand() {
+        logger.debug("ventilationStopCommand called");
         if (handler != null) {
             handler.actionVentilation(false);
         } else {
             logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void ventilationStopCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).ventilationStopCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
+        }
+    }
+
+    @RuleAction(label = "VW We Connect : Charger Stop", description = "Stops vehicle charger")
+    public void chargerStopCommand() {
+        logger.debug("chargerStopCommand called");
+        if (handler != null) {
+            handler.actionCharge(false);
+        } else {
+            logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void chargerStopCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).chargerStopCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
+        }
+    }
+
+    @RuleAction(label = "VW We Connect : Climatisation Stop", description = "Stops vehicle climatisation")
+    public void climateStopCommand() {
+        logger.debug("climateStopCommand called");
+        if (handler != null) {
+            handler.actionClimate(false);
+        } else {
+            logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void climateStopCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).climateStopCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
+        }
+    }
+
+    @RuleAction(label = "VW We Connect : Window heating Stop", description = "Stops vehicle window heating")
+    public void windowHeatStopCommand() {
+        logger.debug("windowHeatStopCommand called");
+        if (handler != null) {
+            handler.actionWindowHeat(false);
+        } else {
+            logger.warn("VWWeConnect Action service ThingHandler is null!");
+        }
+    }
+
+    public static void windowHeatStopCommand(@Nullable ThingActions actions) {
+        if (actions instanceof VWWeConnectActions) {
+            ((VWWeConnectActions) actions).windowHeatStopCommand();
+        } else {
+            throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
         }
     }
 
@@ -135,4 +287,5 @@ public class VWWeConnectActions implements ThingActions {
             throw new IllegalArgumentException("Instance is not an VWWeConnectActionsService class.");
         }
     }
+
 }
