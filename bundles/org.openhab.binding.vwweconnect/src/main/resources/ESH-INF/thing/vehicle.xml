@@ -16,7 +16,6 @@
 			<channel-group typeId="details" id="details" />
 			<channel-group typeId="odometer" id="odometer" />
 			<channel-group typeId="fuel" id="fuel" />
-			<channel-group typeId="cng" id="cng" />
 			<channel-group typeId="electric" id="electric" />
 			<channel-group typeId="doors" id="doors" />
 			<channel-group typeId="windows" id="windows" />
@@ -44,7 +43,7 @@
 		<channels>
 			<channel id="remoteHeater" typeId="remoteHeater" />
 			<channel id="remoteVentilation" typeId="remoteVentilation" />
-			<channel id="temperature" typeId="temperature"/>
+			<channel id="temperature" typeId="temperature" />
 			<channel id="remainingTime" typeId="remainingTime" />
 			<channel id="emanagerCharge" typeId="emanagerCharge" />
 			<channel id="emanagerClimate" typeId="emanagerClimate" />
@@ -150,12 +149,12 @@
 			<channel id="leftFrontWnd" typeId="window">
 				<label>Left Front</label>
 			</channel>
-            <channel id="roof" typeId="window">
-                <label>Roof</label>
-            </channel>
-            <channel id="sunroof" typeId="window">
-                <label>Sun Roof</label>
-            </channel>
+			<channel id="roof" typeId="window">
+				<label>Roof</label>
+			</channel>
+			<channel id="sunroof" typeId="window">
+				<label>Sun Roof</label>
+			</channel>
 		</channels>
 	</channel-group-type>
 
@@ -346,30 +345,30 @@
 		<label>Remote Heater</label>
 		<description>(De)Activates remote heater</description>
 	</channel-type>
-	
+
 	<channel-type id="remoteVentilation">
-        <item-type>Switch</item-type>
-        <label>Remote Ventilation</label>
-        <description>(De)Activates remote ventilation</description>
-    </channel-type>
-    
-    <channel-type id="emanagerCharge">
-        <item-type>Switch</item-type>
-        <label>Emanager Charge Battery</label>
-        <description>(De)Activates Emanager battery charging</description>
-    </channel-type>
-    
-    <channel-type id="emanagerClimate">
-        <item-type>Switch</item-type>
-        <label>Emanager Climatisation</label>
-        <description>(De)Activates Emanager climatisation</description>
-    </channel-type>
-    
-    <channel-type id="emanagerWindowHeat">
-        <item-type>Switch</item-type>
-        <label>Emanager Window Heater</label>
-        <description>(De)Activates Emanager window heating</description>
-    </channel-type>
+		<item-type>Switch</item-type>
+		<label>Remote Ventilation</label>
+		<description>(De)Activates remote ventilation</description>
+	</channel-type>
+
+	<channel-type id="emanagerCharge">
+		<item-type>Switch</item-type>
+		<label>Emanager Charge Battery</label>
+		<description>(De)Activates Emanager battery charging</description>
+	</channel-type>
+
+	<channel-type id="emanagerClimate">
+		<item-type>Switch</item-type>
+		<label>Emanager Climatisation</label>
+		<description>(De)Activates Emanager climatisation</description>
+	</channel-type>
+
+	<channel-type id="emanagerWindowHeat">
+		<item-type>Switch</item-type>
+		<label>Emanager Window Heater</label>
+		<description>(De)Activates Emanager window heating</description>
+	</channel-type>
 
 	<channel-type id="serviceInspectionStatus">
 		<item-type>String</item-type>
@@ -461,13 +460,13 @@
 		<description>Indicates if the engine type is electric.</description>
 		<state readOnly="true"></state>
 	</channel-type>
-	
+
 	<channel-type id="remainingTime">
-        <item-type>Number:Time</item-type>
-        <label>Remaining Heater Time</label>
-        <description>Remaining Heater Time</description>
-        <state pattern="%d min" readOnly="true"></state>
-    </channel-type>
+		<item-type>Number:Time</item-type>
+		<label>Remaining Heater Time</label>
+		<description>Remaining Heater Time</description>
+		<state pattern="%d min" readOnly="true"></state>
+	</channel-type>
 
 	<channel-type id="temperature">
 		<item-type>Number:Temperature</item-type>

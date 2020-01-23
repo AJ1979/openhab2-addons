@@ -315,7 +315,7 @@ public class VWWeConnectSession {
                     logger.warn("Caught 3 consecutive ExecutionExceptions {}", e);
                     break;
                 } else {
-                    logger.debug("Retry POST due to ExecutionExdeption, try #: {}", count);
+                    logger.debug("Retry POST due to ExecutionException, try #: {}", count);
                     count++;
                 }
                 logger.warn("Caught ExecutionException {}", e);
