@@ -757,6 +757,7 @@ public class VWWeConnectSession {
                                     if (httpResponse != null) {
                                         content = httpResponse.getContentAsString();
                                         status = gson.fromJson(content, Status.class);
+                                        logger.debug("Vehicle status: {}", status);
                                         requestStatus = status.getVehicleStatusData().getRequestStatus();
                                     }
                                 }
