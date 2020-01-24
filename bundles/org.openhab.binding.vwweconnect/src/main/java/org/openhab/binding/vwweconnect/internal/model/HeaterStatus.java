@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -92,7 +92,7 @@ public class HeaterStatus {
         if (other == this) {
             return true;
         }
-        if ((other instanceof HeaterStatus) == false) {
+        if (!(other instanceof HeaterStatus)) {
             return false;
         }
         HeaterStatus rhs = ((HeaterStatus) other);
@@ -155,7 +155,7 @@ public class HeaterStatus {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof RemoteAuxiliaryHeating) == false) {
+            if (!(other instanceof RemoteAuxiliaryHeating)) {
                 return false;
             }
             RemoteAuxiliaryHeating rhs = ((RemoteAuxiliaryHeating) other);
@@ -248,7 +248,7 @@ public class HeaterStatus {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof Status) == false) {
+            if (!(other instanceof Status)) {
                 return false;
             }
             Status rhs = ((Status) other);
@@ -312,7 +312,7 @@ public class HeaterStatus {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof Time) == false) {
+            if (!(other instanceof Time)) {
                 return false;
             }
             Time rhs = ((Time) other);
@@ -404,7 +404,7 @@ public class HeaterStatus {
             if (other == this) {
                 return true;
             }
-            if ((other instanceof Timer) == false) {
+            if (!(other instanceof Timer)) {
                 return false;
             }
             Timer rhs = ((Timer) other);

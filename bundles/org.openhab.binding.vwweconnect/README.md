@@ -148,6 +148,7 @@ Example 1b: If Thing has been created using configuration things-file
         actions.unlockCommand()
  }
  ```
+ 
 ### Supported actions
  
 #### unlockCommand()

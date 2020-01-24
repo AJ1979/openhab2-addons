@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -82,6 +82,8 @@ public class VWWeConnectSession {
     private HttpClient httpClient;
     private @Nullable String userName = "";
     private @Nullable String password = "";
+
+    private static final int RETRIES = 3;
 
     public VWWeConnectSession(HttpClient httpClient) {
         this.httpClient = httpClient;
@@ -243,13 +245,13 @@ public class VWWeConnectSession {
             logger.debug("HTTP GET Request {}.", request);
             return request.send();
         } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
+            logger.warn("Caught ExecutionException {}", e.getMessage(), e);
         } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
+            logger.warn("Caught InterruptedException {}", e.getMessage(), e);
         } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
+            logger.warn("Caught TimeoutException {}", e.getMessage(), e);
         } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e);
+            logger.warn("Caught RuntimeException {}", e.getMessage(), e);
         }
         return null;
     }
@@ -275,20 +277,19 @@ public class VWWeConnectSession {
             logger.debug("HTTP POST Request {}.", request.toString());
             return request.send();
         } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
+            logger.warn("Caught ExecutionException {}", e.getMessage(), e);
         } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
+            logger.warn("Caught InterruptedException {}", e.getMessage(), e);
         } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
+            logger.warn("Caught TimeoutException {}", e.getMessage(), e);
         } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e);
+            logger.warn("Caught RuntimeException {}", e.getMessage(), e);
         }
         return null;
     }
 
     private @Nullable ContentResponse postJSONVWWeConnectAPI(String url, @Nullable Fields fields,
             @Nullable String referer, @Nullable String xCsrf) {
-        final int RETRIES = 3;
         int count = 0;
         while (true) {
             try {
@@ -312,21 +313,21 @@ public class VWWeConnectSession {
                 return request.send();
             } catch (ExecutionException e) {
                 if (count <= RETRIES) {
-                    logger.warn("Caught 3 consecutive ExecutionExceptions {}", e);
+                    logger.warn("Caught 3 consecutive ExecutionExceptions {}", e.getMessage(), e);
                     break;
                 } else {
                     logger.debug("Retry POST due to ExecutionException, try #: {}", count);
                     count++;
                 }
-                logger.warn("Caught ExecutionException {}", e);
+                logger.warn("Caught ExecutionException {}", e.getMessage(), e);
             } catch (InterruptedException e) {
-                logger.warn("Caught InterruptedException {}", e);
+                logger.warn("Caught InterruptedException {}", e.getMessage(), e);
                 break;
             } catch (TimeoutException e) {
-                logger.warn("Caught TimeoutException {}", e);
+                logger.warn("Caught TimeoutException {}", e.getMessage(), e);
                 break;
             } catch (RuntimeException e) {
-                logger.warn("Caught RuntimeException {}", e);
+                logger.warn("Caught RuntimeException {}", e.getMessage(), e);
                 break;
             }
         }
@@ -353,15 +354,15 @@ public class VWWeConnectSession {
             logger.debug("HTTP POST Request {}.", request.toString());
             return request.send();
         } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
+            logger.warn("Caught ExecutionException {}", e.getMessage(), e);
         } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
+            logger.warn("Caught InterruptedException {}", e.getMessage(), e);
         } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
+            logger.warn("Caught TimeoutException {}", e.getMessage(), e);
         } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e);
+            logger.warn("Caught RuntimeException {}", e.getMessage(), e);
         } catch (UnsupportedEncodingException e) {
-            logger.warn("Caught UnsupportedEncodingException {}", e);
+            logger.warn("Caught UnsupportedEncodingException {}", e.getMessage(), e);
         }
         return null;
     }
@@ -393,13 +394,13 @@ public class VWWeConnectSession {
                 return gson.fromJson(content, jsonClass);
             }
         } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
+            logger.warn("Caught ExecutionException {}", e.getMessage(), e);
         } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
+            logger.warn("Caught InterruptedException {}", e.getMessage(), e);
         } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
+            logger.warn("Caught TimeoutException {}", e.getMessage(), e);
         } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e);
+            logger.warn("Caught RuntimeException {}", e.getMessage(), e);
         }
         return null;
     }
@@ -567,7 +568,7 @@ public class VWWeConnectSession {
             }
             path = uri.getPath();
         } catch (URISyntaxException e) {
-            logger.warn("Failed to login, caught URISyntaxException {}", e);
+            logger.warn("Failed to login, caught URISyntaxException {}", e.getMessage(), e);
             return false;
         }
 
@@ -656,7 +657,7 @@ public class VWWeConnectSession {
             try {
                 Thread.sleep(5 * SLEEP_TIME_MILLIS);
             } catch (InterruptedException e) {
-                logger.warn("Exception caught: {}", e);
+                logger.warn("Exception caught: {}", e.getMessage(), e);
             }
 
             // Get fully loaded cars
@@ -707,7 +708,7 @@ public class VWWeConnectSession {
                                         }
                                     }
                                 } catch (InterruptedException e) {
-                                    logger.warn("Exception caught: {}", e);
+                                    logger.warn("Exception caught: {}", e.getMessage(), e);
                                 }
                             }
                             if (requestStatus != null) {
@@ -762,7 +763,7 @@ public class VWWeConnectSession {
                                     }
                                 }
                             } catch (InterruptedException e) {
-                                logger.warn("Exception caught: {}", e);
+                                logger.warn("Exception caught: {}", e.getMessage(), e);
                             }
                         }
                         if (requestStatus != null) {

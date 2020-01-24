@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 @NonNullByDefault
 public class VWWeConnectActions implements ThingActions {
 
-    private final static Logger logger = LoggerFactory.getLogger(VWWeConnectActions.class);
+    private final Logger logger = LoggerFactory.getLogger(VWWeConnectActions.class);
 
     private @Nullable VehicleHandler handler;
 

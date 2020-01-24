@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -404,7 +404,7 @@ public class VehicleHandler extends VWWeConnectHandler {
         try {
             Thread.sleep(5 * SLEEP_TIME_MILLIS);
         } catch (InterruptedException e) {
-            logger.warn("InterruptedException caught: {}", e);
+            logger.warn("InterruptedException caught: {}", e.getMessage(), e);
         }
 
         Fields fields = null;
