@@ -29,19 +29,29 @@ After the configuration of the VW Car Net Bridge all of the available vehicles w
 
 Only the bridge require manual configuration. Vehicles can be added by hand, or you can let the discovery mechanism automatically find all of your vehicles.
 
+## Enable Debugging
+
+To enable DEBUG logging for the binding, login to Karaf console and enter:
+
+`openhab> log:set DEBUG org.openhab.binding.vwweconnect`
+
+## Disclaimer
+
+Any side effects using this binding is the responsibility of the person installing and using the binding and not the binding developer.
+
 ## Supported Things and Channels 
 
 ### VW We Connect Bridge 
 
 #### Configuration Options
 
-*   username - The username used to connect to VW We Connect Portal
+*   `username` - The username used to connect to VW We Connect Portal
 
-*   password - The password used to connect to VW We Connect Portal
+*   `password` - The password used to connect to VW We Connect Portal
 
-*   refresh - Specifies the refresh interval in seconds
+*   `refresh` - Specifies the refresh interval in seconds
 
-*   spin - The user's secure PIN code to lock/unlock doors and start/stop the heater, same as configured on VW We Connect Portal
+*   `spin` - The user's secure PIN code to lock/unlock doors and start/stop the heater, same as configured on VW We Connect Portal
 
 
 #### Channels
@@ -57,7 +67,7 @@ Only the bridge require manual configuration. Vehicles can be added by hand, or 
 
 #### Configuration Options
 
-*   VIN - Vehicle Identification Number
+*   `VIN` - Vehicle Identification Number
     
 
 #### Channels Groups and channels
@@ -107,15 +117,15 @@ Only the bridge require manual configuration. Vehicles can be added by hand, or 
 | windows#rightFrontWnd                | Contact              | Right front window status               |
 | windows#leftFrontWnd                 | Contact              | Left front window status                |
 | position#location                    | Location             | Vehicle position                        |
-[ lasttrip#averageFuelConsumption      | Number               | Last trip average fuel consumption      |
-[ lasttrip#averageCngConsumption       | Number               | Last trip average CNG consumption       |
-[ lasttrip#averageElectricConsumption  | Number               | Last trip average electric consumption  |
-[ lasttrip#averageAuxiliaryConsumption | Number               | Last trip average auxiliary consumption |
-[ lasttrip#tripAverageSpeed            | Number               | Last trip average speed                 |
-[ lasttrip#tripDistance                | Number:Length        | Last trip distance                      |
-[ lasttrip#tripStartTime               | DateTime             | Last trip start time                    |
-[ lasttrip#tripEndTime                 | DateTime             | Last trip end time                      |
-[ lasttrip#tripDuration                | Number:Time          | Last trip duration                      |
+| lasttrip#averageFuelConsumption      | Number               | Last trip average fuel consumption      |
+| lasttrip#averageCngConsumption       | Number               | Last trip average CNG consumption       |
+| lasttrip#averageElectricConsumption  | Number               | Last trip average electric consumption  |
+| lasttrip#averageAuxiliaryConsumption | Number               | Last trip average auxiliary consumption |
+| lasttrip#tripAverageSpeed            | Number               | Last trip average speed                 |
+| lasttrip#tripDistance                | Number:Length        | Last trip distance                      |
+| lasttrip#tripStartTime               | DateTime             | Last trip start time                    |
+| lasttrip#tripEndTime                 | DateTime             | Last trip end time                      |
+| lasttrip#tripDuration                | Number:Time          | Last trip duration                      |
 | action#remoteHeater                  | Switch               | Action remote heater                    |
 | action#remoteVentilation             | Switch               | Action remote ventilation               |
 | action#temperature                   | Number               | Vehicle outdoor temperature             |
@@ -167,15 +177,15 @@ Sends the command to start the vehicle heater.
 
 Sends the command to stop the vehicle heater.
 
-#### ventilationStartCommand()
+#### ventilationStartCommand() NOTE: Does not seem to work
 
 Sends the command to start the vehicle ventilation.
 
-#### ventilationStopCommand()
+#### ventilationStopCommand() NOTE: Does not seem to work
 
 Sends the command to stop the vehicle ventilation.
 
-### Electrical cars supports the following actions
+### Electrical cars supports the following actions NOTE: Not tested at all!!!
 
 #### chargerStartCommand()
 

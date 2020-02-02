@@ -13,7 +13,6 @@
 package org.openhab.binding.vwweconnect.internal.model;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -32,25 +31,6 @@ public class Details {
 
     private @Nullable VehicleDetails vehicleDetails;
     private @Nullable String errorCode;
-    private @Nullable Map<String, Object> additionalProperties;
-
-    /**
-     * No args constructor for use in serialization
-     *
-     */
-    public Details() {
-    }
-
-    /**
-     *
-     * @param vehicleDetails
-     * @param errorCode
-     */
-    public Details(VehicleDetails vehicleDetails, String errorCode) {
-        super();
-        this.vehicleDetails = vehicleDetails;
-        this.errorCode = errorCode;
-    }
 
     public @Nullable VehicleDetails getVehicleDetails() {
         return vehicleDetails;
@@ -68,23 +48,15 @@ public class Details {
         this.errorCode = errorCode;
     }
 
-    public @Nullable Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this).append("vehicleDetails", vehicleDetails).append("errorCode", errorCode)
-                .append("additionalProperties", additionalProperties).toString();
+                .toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(errorCode).append(additionalProperties).append(vehicleDetails).toHashCode();
+        return new HashCodeBuilder().append(errorCode).append(vehicleDetails).toHashCode();
     }
 
     @Override
@@ -96,8 +68,7 @@ public class Details {
             return false;
         }
         Details rhs = ((Details) other);
-        return new EqualsBuilder().append(errorCode, rhs.errorCode)
-                .append(additionalProperties, rhs.additionalProperties).append(vehicleDetails, rhs.vehicleDetails)
+        return new EqualsBuilder().append(errorCode, rhs.errorCode).append(vehicleDetails, rhs.vehicleDetails)
                 .isEquals();
     }
 
@@ -112,14 +83,6 @@ public class Details {
         private @Nullable Boolean showOil;
         private @Nullable Boolean showService;
         private @Nullable Boolean flightMode;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public VehicleDetails() {
-        }
 
         public @Nullable List<String> getLastConnectionTimeStamp() {
             return lastConnectionTimeStamp;
@@ -185,29 +148,20 @@ public class Details {
             this.flightMode = flightMode;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("lastConnectionTimeStamp", lastConnectionTimeStamp)
                     .append("distanceCovered", distanceCovered).append("range", range)
                     .append("serviceInspectionData", serviceInspectionData)
                     .append("oilInspectionData", oilInspectionData).append("showOil", showOil)
-                    .append("showService", showService).append("flightMode", flightMode)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("showService", showService).append("flightMode", flightMode).toString();
         }
 
         @Override
         public int hashCode() {
             return new HashCodeBuilder().append(oilInspectionData).append(distanceCovered).append(range)
-                    .append(serviceInspectionData).append(lastConnectionTimeStamp).append(additionalProperties)
-                    .append(showOil).append(flightMode).append(showService).toHashCode();
+                    .append(serviceInspectionData).append(lastConnectionTimeStamp).append(showOil).append(flightMode)
+                    .append(showService).toHashCode();
         }
 
         @Override
@@ -222,8 +176,7 @@ public class Details {
             return new EqualsBuilder().append(oilInspectionData, rhs.oilInspectionData)
                     .append(distanceCovered, rhs.distanceCovered).append(range, rhs.range)
                     .append(serviceInspectionData, rhs.serviceInspectionData)
-                    .append(lastConnectionTimeStamp, rhs.lastConnectionTimeStamp)
-                    .append(additionalProperties, rhs.additionalProperties).append(showOil, rhs.showOil)
+                    .append(lastConnectionTimeStamp, rhs.lastConnectionTimeStamp).append(showOil, rhs.showOil)
                     .append(flightMode, rhs.flightMode).append(showService, rhs.showService).isEquals();
         }
     }

@@ -387,6 +387,7 @@ public class VWWeConnectSession {
             ContentResponse httpResponse = request.send();
             if (httpResponse != null) {
                 String content = httpResponse.getContentAsString();
+                logger.trace("Http content: {}", content);
                 if (isErrorCode(content)) {
                     logger.warn("Error code on POST: {}", content);
                     return null;
@@ -456,7 +457,13 @@ public class VWWeConnectSession {
         logger.debug("Login URL: {}", url);
         ContentResponse httpResponse = getVWWeConnectAPI(url);
         if (!checkHttpResponse200(httpResponse)) {
-            return false;
+            if (checkHttpResponse302(httpResponse)) {
+                url = httpResponse.getHeaders().get("location");
+                httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+                if (!checkHttpResponse200(httpResponse)) {
+                    return false;
+                }
+            }
         }
 
         // Parse csrf
@@ -653,7 +660,7 @@ public class VWWeConnectSession {
                 logger.debug("API Response ({})", vehicle);
             }
 
-            // Sleep
+            // Sleep, w8 for fully loaded cars
             try {
                 Thread.sleep(5 * SLEEP_TIME_MILLIS);
             } catch (InterruptedException e) {

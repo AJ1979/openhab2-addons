@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.vwweconnect.internal.model;
 
-import java.util.Map;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -35,14 +33,6 @@ public class Status {
 
     private @Nullable String errorCode;
     private @Nullable VehicleStatusData vehicleStatusData;
-    private @Nullable Map<String, Object> additionalProperties;
-
-    /**
-     * No args constructor for use in serialization
-     *
-     */
-    public Status() {
-    }
 
     public @Nullable String getErrorCode() {
         return errorCode;
@@ -60,24 +50,15 @@ public class Status {
         this.vehicleStatusData = vehicleStatusData;
     }
 
-    public @Nullable Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this).append("errorCode", errorCode).append("vehicleStatusData", vehicleStatusData)
-                .append("additionalProperties", additionalProperties).toString();
+                .toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(errorCode).append(additionalProperties).append(vehicleStatusData)
-                .toHashCode();
+        return new HashCodeBuilder().append(errorCode).append(vehicleStatusData).toHashCode();
     }
 
     @Override
@@ -89,8 +70,7 @@ public class Status {
             return false;
         }
         Status rhs = ((Status) other);
-        return new EqualsBuilder().append(errorCode, rhs.errorCode)
-                .append(additionalProperties, rhs.additionalProperties).append(vehicleStatusData, rhs.vehicleStatusData)
+        return new EqualsBuilder().append(errorCode, rhs.errorCode).append(vehicleStatusData, rhs.vehicleStatusData)
                 .isEquals();
     }
 
@@ -119,14 +99,6 @@ public class Status {
         private int cngFuelLevel = BaseVehicle.UNDEFINED;
         private int batteryLevel = BaseVehicle.UNDEFINED;
         private @Nullable String sliceRootPath;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public VehicleStatusData() {
-        }
 
         public @Nullable Boolean getWindowStatusSupported() {
             return windowStatusSupported;
@@ -304,14 +276,6 @@ public class Status {
             this.sliceRootPath = sliceRootPath;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("windowStatusSupported", windowStatusSupported)
@@ -325,8 +289,7 @@ public class Status {
                     .append("primaryEngineRange", primaryEngineRange).append("fuelRange", fuelRange)
                     .append("cngRange", cngRange).append("batteryRange", batteryRange).append("fuelLevel", fuelLevel)
                     .append("cngFuelLevel", cngFuelLevel).append("batteryLevel", batteryLevel)
-                    .append("sliceRootPath", sliceRootPath).append("additionalProperties", additionalProperties)
-                    .toString();
+                    .append("sliceRootPath", sliceRootPath).toString();
         }
 
         @Override
@@ -335,9 +298,8 @@ public class Status {
                     .append(unlockDisabled).append(adBlueLevel).append(batteryRange).append(rluDisabled)
                     .append(totalRange).append(cngFuelLevel).append(sliceRootPath).append(lockData)
                     .append(hideCngFuelLevel).append(rluMibDeactivated).append(cngRange).append(fuelRange)
-                    .append(primaryEngineRange).append(lockDisabled).append(additionalProperties)
-                    .append(windowStatusSupported).append(carRenderData).append(requestStatus)
-                    .append(showAdBlueNotification).append(batteryLevel).toHashCode();
+                    .append(primaryEngineRange).append(lockDisabled).append(windowStatusSupported).append(carRenderData)
+                    .append(requestStatus).append(showAdBlueNotification).append(batteryLevel).toHashCode();
         }
 
         @Override
@@ -357,10 +319,10 @@ public class Status {
                     .append(lockData, rhs.lockData).append(hideCngFuelLevel, rhs.hideCngFuelLevel)
                     .append(rluMibDeactivated, rhs.rluMibDeactivated).append(cngRange, rhs.cngRange)
                     .append(fuelRange, rhs.fuelRange).append(primaryEngineRange, rhs.primaryEngineRange)
-                    .append(lockDisabled, rhs.lockDisabled).append(additionalProperties, rhs.additionalProperties)
-                    .append(windowStatusSupported, rhs.windowStatusSupported).append(carRenderData, rhs.carRenderData)
-                    .append(requestStatus, rhs.requestStatus).append(showAdBlueNotification, rhs.showAdBlueNotification)
-                    .append(batteryLevel, rhs.batteryLevel).isEquals();
+                    .append(lockDisabled, rhs.lockDisabled).append(windowStatusSupported, rhs.windowStatusSupported)
+                    .append(carRenderData, rhs.carRenderData).append(requestStatus, rhs.requestStatus)
+                    .append(showAdBlueNotification, rhs.showAdBlueNotification).append(batteryLevel, rhs.batteryLevel)
+                    .isEquals();
         }
     }
 
@@ -373,14 +335,6 @@ public class Status {
         private @Nullable Windows windows;
         private int sunroof;
         private int roof;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public CarRenderData() {
-        }
 
         public OpenClosedType getDoorStatus(int status) {
             return status == 2 ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
@@ -434,25 +388,17 @@ public class Status {
             this.roof = roof;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("parkingLights", parkingLights).append("hood", hood)
                     .append("doors", doors).append("windows", windows).append("sunroof", sunroof).append("roof", roof)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(doors).append(roof).append(sunroof).append(additionalProperties)
-                    .append(parkingLights).append(hood).append(windows).toHashCode();
+            return new HashCodeBuilder().append(doors).append(roof).append(sunroof).append(parkingLights).append(hood)
+                    .append(windows).toHashCode();
         }
 
         @Override
@@ -465,8 +411,8 @@ public class Status {
             }
             CarRenderData rhs = ((CarRenderData) other);
             return new EqualsBuilder().append(doors, rhs.doors).append(roof, rhs.roof).append(sunroof, rhs.sunroof)
-                    .append(additionalProperties, rhs.additionalProperties).append(parkingLights, rhs.parkingLights)
-                    .append(hood, rhs.hood).append(windows, rhs.windows).isEquals();
+                    .append(parkingLights, rhs.parkingLights).append(hood, rhs.hood).append(windows, rhs.windows)
+                    .isEquals();
         }
     }
 
@@ -482,14 +428,6 @@ public class Status {
         @SerializedName("right_back")
         private int rightBack;
         private int trunk;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public LockData() {
-        }
 
         public OnOffType getDoorsLocked() {
             return leftFront == 2 ? OnOffType.ON : OnOffType.OFF;
@@ -535,25 +473,16 @@ public class Status {
             this.trunk = trunk;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("leftFront", leftFront).append("rightFront", rightFront)
-                    .append("leftBack", leftBack).append("rightBack", rightBack).append("trunk", trunk)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("leftBack", leftBack).append("rightBack", rightBack).append("trunk", trunk).toString();
         }
 
         @Override
         public int hashCode() {
             return new HashCodeBuilder().append(leftFront).append(rightBack).append(rightFront).append(leftBack)
-                    .append(additionalProperties).append(trunk).toHashCode();
+                    .append(trunk).toHashCode();
         }
 
         @Override
@@ -566,8 +495,8 @@ public class Status {
             }
             LockData rhs = ((LockData) other);
             return new EqualsBuilder().append(leftFront, rhs.leftFront).append(rightBack, rhs.rightBack)
-                    .append(rightFront, rhs.rightFront).append(leftBack, rhs.leftBack)
-                    .append(additionalProperties, rhs.additionalProperties).append(trunk, rhs.trunk).isEquals();
+                    .append(rightFront, rhs.rightFront).append(leftBack, rhs.leftBack).append(trunk, rhs.trunk)
+                    .isEquals();
         }
 
     }
@@ -586,14 +515,6 @@ public class Status {
         private int trunk;
         @SerializedName("number_of_doors")
         private int numberOfDoors;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public Doors() {
-        }
 
         public OpenClosedType getDoorStatus(int status) {
             return status == 2 ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
@@ -647,26 +568,17 @@ public class Status {
             this.numberOfDoors = numberOfDoors;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("leftFront", leftFront).append("rightFront", rightFront)
                     .append("leftBack", leftBack).append("rightBack", rightBack).append("trunk", trunk)
-                    .append("numberOfDoors", numberOfDoors).append("additionalProperties", additionalProperties)
-                    .toString();
+                    .append("numberOfDoors", numberOfDoors).toString();
         }
 
         @Override
         public int hashCode() {
             return new HashCodeBuilder().append(leftFront).append(rightBack).append(rightFront).append(numberOfDoors)
-                    .append(leftBack).append(additionalProperties).append(trunk).toHashCode();
+                    .append(leftBack).append(trunk).toHashCode();
         }
 
         @Override
@@ -680,8 +592,7 @@ public class Status {
             Doors rhs = ((Doors) other);
             return new EqualsBuilder().append(leftFront, rhs.leftFront).append(rightBack, rhs.rightBack)
                     .append(rightFront, rhs.rightFront).append(numberOfDoors, rhs.numberOfDoors)
-                    .append(leftBack, rhs.leftBack).append(additionalProperties, rhs.additionalProperties)
-                    .append(trunk, rhs.trunk).isEquals();
+                    .append(leftBack, rhs.leftBack).append(trunk, rhs.trunk).isEquals();
         }
     }
 
@@ -696,14 +607,6 @@ public class Status {
         private int leftBack;
         @SerializedName("right_back")
         private int rightBack;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public Windows() {
-        }
 
         public OpenClosedType getWindowStatus(int status) {
             return status == 2 ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
@@ -741,25 +644,16 @@ public class Status {
             this.rightBack = rightBack;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("leftFront", leftFront).append("rightFront", rightFront)
-                    .append("leftBack", leftBack).append("rightBack", rightBack)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("leftBack", leftBack).append("rightBack", rightBack).toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(leftFront).append(leftBack).append(rightBack)
-                    .append(additionalProperties).append(rightFront).toHashCode();
+            return new HashCodeBuilder().append(leftFront).append(leftBack).append(rightBack).append(rightFront)
+                    .toHashCode();
         }
 
         @Override
@@ -772,8 +666,7 @@ public class Status {
             }
             Windows rhs = ((Windows) other);
             return new EqualsBuilder().append(leftFront, rhs.leftFront).append(leftBack, rhs.leftBack)
-                    .append(rightBack, rhs.rightBack).append(additionalProperties, rhs.additionalProperties)
-                    .append(rightFront, rhs.rightFront).isEquals();
+                    .append(rightBack, rhs.rightBack).append(rightFront, rhs.rightFront).isEquals();
         }
 
     }

@@ -320,13 +320,13 @@ public class VehicleHandler extends VWWeConnectHandler {
     public void updateLastTrip(Trips trips) {
         List<TripStatistic> tripsStat = trips.getRtsViewModel().getTripStatistics();
         Collections.reverse(tripsStat);
-
         Optional<TripStatistic> lastTrip = tripsStat.stream()
                 .filter(aggregatedStatistics -> aggregatedStatistics != null).findFirst();
         int tripId = lastTrip.get().getAggregatedStatistics().getTripId();
         Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
                 .filter(t -> t.getTripId() == tripId).findFirst();
         logger.debug("Last trip: {}", lastTrip);
+        logger.trace("Last trip stats: {}", lastTripStats);
 
         getThing().getChannels().stream().map(Channel::getUID)
                 .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))

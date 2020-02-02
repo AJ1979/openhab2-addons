@@ -13,7 +13,6 @@
 package org.openhab.binding.vwweconnect.internal.model;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -33,14 +32,6 @@ public class HeaterStatus {
     private @Nullable String errorCode;
     private int timerCount;
     private @Nullable RemoteAuxiliaryHeating remoteAuxiliaryHeating;
-    private @Nullable Map<String, Object> additionalProperties;
-
-    /**
-     * No args constructor for use in serialization
-     *
-     */
-    public HeaterStatus() {
-    }
 
     public @Nullable String getErrorCode() {
         return errorCode;
@@ -66,25 +57,15 @@ public class HeaterStatus {
         this.remoteAuxiliaryHeating = remoteAuxiliaryHeating;
     }
 
-    public @Nullable Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this).append("errorCode", errorCode).append("timerCount", timerCount)
-                .append("remoteAuxiliaryHeating", remoteAuxiliaryHeating)
-                .append("additionalProperties", additionalProperties).toString();
+                .append("remoteAuxiliaryHeating", remoteAuxiliaryHeating).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(errorCode).append(timerCount).append(additionalProperties)
-                .append(remoteAuxiliaryHeating).toHashCode();
+        return new HashCodeBuilder().append(errorCode).append(timerCount).append(remoteAuxiliaryHeating).toHashCode();
     }
 
     @Override
@@ -97,7 +78,6 @@ public class HeaterStatus {
         }
         HeaterStatus rhs = ((HeaterStatus) other);
         return new EqualsBuilder().append(errorCode, rhs.errorCode).append(timerCount, rhs.timerCount)
-                .append(additionalProperties, rhs.additionalProperties)
                 .append(remoteAuxiliaryHeating, rhs.remoteAuxiliaryHeating).isEquals();
     }
 
@@ -106,14 +86,6 @@ public class HeaterStatus {
 
         private @Nullable Status status;
         private @Nullable List<Timer> timers;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public RemoteAuxiliaryHeating() {
-        }
 
         public @Nullable Status getStatus() {
             return status;
@@ -131,23 +103,14 @@ public class HeaterStatus {
             this.timers = timers;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
-            return new ToStringBuilder(this).append("status", status).append("timers", timers)
-                    .append("additionalProperties", additionalProperties).toString();
+            return new ToStringBuilder(this).append("status", status).append("timers", timers).toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(timers).append(additionalProperties).append(status).toHashCode();
+            return new HashCodeBuilder().append(timers).append(status).toHashCode();
         }
 
         @Override
@@ -159,8 +122,7 @@ public class HeaterStatus {
                 return false;
             }
             RemoteAuxiliaryHeating rhs = ((RemoteAuxiliaryHeating) other);
-            return new EqualsBuilder().append(timers, rhs.timers).append(additionalProperties, rhs.additionalProperties)
-                    .append(status, rhs.status).isEquals();
+            return new EqualsBuilder().append(timers, rhs.timers).append(status, rhs.status).isEquals();
         }
     }
 
@@ -172,14 +134,6 @@ public class HeaterStatus {
         private @Nullable String outdoorTemp;
         private double temperature = BaseVehicle.UNDEFINED;
         private int remainingTime;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public Status() {
-        }
 
         public boolean isActive() {
             return active;
@@ -222,25 +176,16 @@ public class HeaterStatus {
             this.remainingTime = remainingTime;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("active", active).append("operationMode", operationMode)
-                    .append("outdoorTemp", outdoorTemp).append("remainingTime", remainingTime)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("outdoorTemp", outdoorTemp).append("remainingTime", remainingTime).toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(active).append(operationMode).append(additionalProperties)
-                    .append(outdoorTemp).append(remainingTime).toHashCode();
+            return new HashCodeBuilder().append(active).append(operationMode).append(outdoorTemp).append(remainingTime)
+                    .toHashCode();
         }
 
         @Override
@@ -253,8 +198,7 @@ public class HeaterStatus {
             }
             Status rhs = ((Status) other);
             return new EqualsBuilder().append(active, rhs.active).append(operationMode, rhs.operationMode)
-                    .append(additionalProperties, rhs.additionalProperties).append(outdoorTemp, rhs.outdoorTemp)
-                    .append(remainingTime, rhs.remainingTime).isEquals();
+                    .append(outdoorTemp, rhs.outdoorTemp).append(remainingTime, rhs.remainingTime).isEquals();
         }
     }
 
@@ -263,14 +207,6 @@ public class HeaterStatus {
 
         private int hours;
         private int minutes;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public Time() {
-        }
 
         public int getHours() {
             return hours;
@@ -288,23 +224,14 @@ public class HeaterStatus {
             this.minutes = minutes;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
-            return new ToStringBuilder(this).append("hours", hours).append("minutes", minutes)
-                    .append("additionalProperties", additionalProperties).toString();
+            return new ToStringBuilder(this).append("hours", hours).append("minutes", minutes).toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(hours).append(additionalProperties).append(minutes).toHashCode();
+            return new HashCodeBuilder().append(hours).append(minutes).toHashCode();
         }
 
         @Override
@@ -316,8 +243,7 @@ public class HeaterStatus {
                 return false;
             }
             Time rhs = ((Time) other);
-            return new EqualsBuilder().append(hours, rhs.hours).append(additionalProperties, rhs.additionalProperties)
-                    .append(minutes, rhs.minutes).isEquals();
+            return new EqualsBuilder().append(hours, rhs.hours).append(minutes, rhs.minutes).isEquals();
         }
     }
 
@@ -329,14 +255,6 @@ public class HeaterStatus {
         private int weekDay;
         private @Nullable Time time;
         private @Nullable String nextActivationDate;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public Timer() {
-        }
 
         public int getTimerId() {
             return timerId;
@@ -378,25 +296,17 @@ public class HeaterStatus {
             this.nextActivationDate = nextActivationDate;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("timerId", timerId).append("active", active)
                     .append("weekDay", weekDay).append("time", time).append("nextActivationDate", nextActivationDate)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .toString();
         }
 
         @Override
         public int hashCode() {
             return new HashCodeBuilder().append(weekDay).append(nextActivationDate).append(active).append(time)
-                    .append(additionalProperties).append(timerId).toHashCode();
+                    .append(timerId).toHashCode();
         }
 
         @Override
@@ -409,8 +319,7 @@ public class HeaterStatus {
             }
             Timer rhs = ((Timer) other);
             return new EqualsBuilder().append(weekDay, rhs.weekDay).append(nextActivationDate, rhs.nextActivationDate)
-                    .append(active, rhs.active).append(time, rhs.time)
-                    .append(additionalProperties, rhs.additionalProperties).append(timerId, rhs.timerId).isEquals();
+                    .append(active, rhs.active).append(time, rhs.time).append(timerId, rhs.timerId).isEquals();
         }
     }
 }

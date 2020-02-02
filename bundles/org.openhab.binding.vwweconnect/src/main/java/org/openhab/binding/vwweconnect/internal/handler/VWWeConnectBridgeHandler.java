@@ -14,6 +14,8 @@ package org.openhab.binding.vwweconnect.internal.handler;
 
 import static org.openhab.binding.vwweconnect.internal.VWWeConnectBindingConstants.CHANNEL_STATUS;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -29,11 +31,13 @@ import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandlerService;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.vwweconnect.internal.DeviceStatusListener;
 import org.openhab.binding.vwweconnect.internal.VWWeConnectBridgeConfiguration;
 import org.openhab.binding.vwweconnect.internal.VWWeConnectSession;
+import org.openhab.binding.vwweconnect.internal.discovery.VWWeConnectDiscoveryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,6 +153,11 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             session.dispose();
             session = null;
         }
+    }
+
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return Collections.singleton(VWWeConnectDiscoveryService.class);
     }
 
     public @Nullable String getSecurePIN() {

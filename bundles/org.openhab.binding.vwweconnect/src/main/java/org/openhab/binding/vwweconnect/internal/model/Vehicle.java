@@ -18,7 +18,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -49,13 +48,6 @@ public class Vehicle extends BaseVehicle {
     private @Nullable Location vehicleLocation;
     @Expose(serialize = false, deserialize = false)
     private @Nullable HeaterStatus heaterStatus;
-
-    /**
-     * No args constructor for use in serialization
-     *
-     */
-    public Vehicle() {
-    }
 
     public @Nullable String getErrorCode() {
         return errorCode;
@@ -148,7 +140,6 @@ public class Vehicle extends BaseVehicle {
         private @Nullable String modelCode;
         private @Nullable String modelYear;
         private @Nullable String imageUrl;
-
         private @Nullable Object vehicleSpecificFallbackImageUrl;
         private @Nullable Object modelSpecificFallbackImageUrl;
         private @Nullable String defaultImageUrl;
@@ -191,13 +182,6 @@ public class Vehicle extends BaseVehicle {
         private @Nullable Boolean selected;
         private @Nullable Boolean defaultCar;
         private @Nullable Boolean vwConnectPowerLayerAvailable;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public CompleteVehicleJson() {
-        }
 
         public @Nullable String getVin() {
             return vin;
@@ -702,13 +686,6 @@ public class Vehicle extends BaseVehicle {
         private @Nullable String packageType;
         private @Nullable String enrollmentPackageType;
 
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public PackageService() {
-        }
-
         public @Nullable String getPackageServiceId() {
             return packageServiceId;
         }
@@ -836,39 +813,6 @@ public class Vehicle extends BaseVehicle {
         private @Nullable Boolean showOil;
         private @Nullable Boolean showService;
         private @Nullable Boolean flightMode;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public VehicleDetails() {
-        }
-
-        /**
-         *
-         * @param oilInspectionData
-         * @param distanceCovered
-         * @param range
-         * @param serviceInspectionData
-         * @param lastConnectionTimeStamp
-         * @param showOil
-         * @param flightMode
-         * @param showService
-         */
-        public VehicleDetails(List<String> lastConnectionTimeStamp, String distanceCovered, String range,
-                String serviceInspectionData, String oilInspectionData, Boolean showOil, Boolean showService,
-                Boolean flightMode) {
-            super();
-            this.lastConnectionTimeStamp = lastConnectionTimeStamp;
-            this.distanceCovered = distanceCovered;
-            this.range = range;
-            this.serviceInspectionData = serviceInspectionData;
-            this.oilInspectionData = oilInspectionData;
-            this.showOil = showOil;
-            this.showService = showService;
-            this.flightMode = flightMode;
-        }
 
         public @Nullable List<String> getLastConnectionTimeStamp() {
             return lastConnectionTimeStamp;
@@ -934,29 +878,20 @@ public class Vehicle extends BaseVehicle {
             this.flightMode = flightMode;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("lastConnectionTimeStamp", lastConnectionTimeStamp)
                     .append("distanceCovered", distanceCovered).append("range", range)
                     .append("serviceInspectionData", serviceInspectionData)
                     .append("oilInspectionData", oilInspectionData).append("showOil", showOil)
-                    .append("showService", showService).append("flightMode", flightMode)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("showService", showService).append("flightMode", flightMode).toString();
         }
 
         @Override
         public int hashCode() {
             return new HashCodeBuilder().append(oilInspectionData).append(distanceCovered).append(range)
-                    .append(serviceInspectionData).append(lastConnectionTimeStamp).append(additionalProperties)
-                    .append(showOil).append(flightMode).append(showService).toHashCode();
+                    .append(serviceInspectionData).append(lastConnectionTimeStamp).append(showOil).append(flightMode)
+                    .append(showService).toHashCode();
         }
 
         @Override
@@ -971,8 +906,7 @@ public class Vehicle extends BaseVehicle {
             return new EqualsBuilder().append(oilInspectionData, rhs.oilInspectionData)
                     .append(distanceCovered, rhs.distanceCovered).append(range, rhs.range)
                     .append(serviceInspectionData, rhs.serviceInspectionData)
-                    .append(lastConnectionTimeStamp, rhs.lastConnectionTimeStamp)
-                    .append(additionalProperties, rhs.additionalProperties).append(showOil, rhs.showOil)
+                    .append(lastConnectionTimeStamp, rhs.lastConnectionTimeStamp).append(showOil, rhs.showOil)
                     .append(flightMode, rhs.flightMode).append(showService, rhs.showService).isEquals();
         }
     }

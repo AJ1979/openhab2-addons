@@ -22,7 +22,10 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
 import org.eclipse.smarthome.config.discovery.DiscoveryResult;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
+import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.ThingUID;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandlerService;
 import org.openhab.binding.vwweconnect.internal.VWWeConnectSession;
 import org.openhab.binding.vwweconnect.internal.handler.VWWeConnectBridgeHandler;
 import org.openhab.binding.vwweconnect.internal.model.BaseVehicle;
@@ -37,18 +40,16 @@ import org.slf4j.LoggerFactory;
  *
  */
 @NonNullByDefault
-public class VWWeConnectDiscoveryService extends AbstractDiscoveryService {
+public class VWWeConnectDiscoveryService extends AbstractDiscoveryService
+        implements DiscoveryService, ThingHandlerService {
 
     private static final int SEARCH_TIME_SECONDS = 60;
     private final Logger logger = LoggerFactory.getLogger(VWWeConnectDiscoveryService.class);
-
     private @Nullable VWWeConnectBridgeHandler vwWeConnectBridgeHandler;
+    private @NonNullByDefault({}) ThingUID bridgeUID;
 
-    public VWWeConnectDiscoveryService(VWWeConnectBridgeHandler bridgeHandler) throws IllegalArgumentException {
+    public VWWeConnectDiscoveryService() {
         super(SUPPORTED_THING_TYPES_UIDS, SEARCH_TIME_SECONDS);
-
-        this.vwWeConnectBridgeHandler = bridgeHandler;
-
     }
 
     @Override
@@ -78,9 +79,7 @@ public class VWWeConnectDiscoveryService extends AbstractDiscoveryService {
             String vin = theVehicle.getCompleteVehicleJson().getVin();
             if (vin != null) {
                 ThingUID thingUID = new ThingUID(VEHICLE_THING_TYPE, vin);
-                ThingUID bridgeUID = vwWeConnectBridgeHandler.getThing().getUID();
                 String label = theVehicle.getCompleteVehicleJson().getName();
-
                 DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withLabel(label)
                         .withBridge(bridgeUID).withProperty(VIN, vin).withRepresentationProperty(vin).build();
                 logger.debug("Discovered thing: thinguid: {}, bridge {}, label {}", thingUID.toString(), bridgeUID,
@@ -89,10 +88,33 @@ public class VWWeConnectDiscoveryService extends AbstractDiscoveryService {
             } else {
                 logger.debug("VIN is null for thing '{}'", thing);
             }
-
         } else {
             logger.debug("Discovered unsupported thing of type '{}'", thing.getClass());
         }
+    }
 
+    @Override
+    public void activate() {
+        Map<String, @Nullable Object> properties = new HashMap<>();
+        properties.put(DiscoveryService.CONFIG_PROPERTY_BACKGROUND_DISCOVERY, Boolean.TRUE);
+        super.activate(properties);
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+    }
+
+    @Override
+    public void setThingHandler(@Nullable ThingHandler handler) {
+        if (handler instanceof VWWeConnectBridgeHandler) {
+            vwWeConnectBridgeHandler = (VWWeConnectBridgeHandler) handler;
+            bridgeUID = vwWeConnectBridgeHandler.getThing().getUID();
+        }
+    }
+
+    @Override
+    public @Nullable ThingHandler getThingHandler() {
+        return vwWeConnectBridgeHandler;
     }
 }

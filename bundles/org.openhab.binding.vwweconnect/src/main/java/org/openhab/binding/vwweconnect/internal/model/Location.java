@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.vwweconnect.internal.model;
 
-import java.util.Map;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -31,14 +29,6 @@ public class Location {
 
     private @Nullable String errorCode;
     private @Nullable Position position;
-    private @Nullable Map<String, Object> additionalProperties;
-
-    /**
-     * No args constructor for use in serialization
-     *
-     */
-    public Location() {
-    }
 
     public @Nullable String getErrorCode() {
         return errorCode;
@@ -56,23 +46,14 @@ public class Location {
         this.position = position;
     }
 
-    public @Nullable Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("errorCode", errorCode).append("position", position)
-                .append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("errorCode", errorCode).append("position", position).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(errorCode).append(position).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(errorCode).append(position).toHashCode();
     }
 
     @Override
@@ -84,8 +65,7 @@ public class Location {
             return false;
         }
         Location rhs = ((Location) other);
-        return new EqualsBuilder().append(errorCode, rhs.errorCode).append(position, rhs.position)
-                .append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(errorCode, rhs.errorCode).append(position, rhs.position).isEquals();
     }
 
     @NonNullByDefault
@@ -93,25 +73,6 @@ public class Location {
 
         private double lat;
         private double lng;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public Position() {
-        }
-
-        /**
-         *
-         * @param lng
-         * @param lat
-         */
-        public Position(double lat, double lng) {
-            super();
-            this.lat = lat;
-            this.lng = lng;
-        }
 
         public double getLat() {
             return lat;
@@ -129,23 +90,14 @@ public class Location {
             this.lng = lng;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
-            return new ToStringBuilder(this).append("lat", lat).append("lng", lng)
-                    .append("additionalProperties", additionalProperties).toString();
+            return new ToStringBuilder(this).append("lat", lat).append("lng", lng).toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(additionalProperties).append(lng).append(lat).toHashCode();
+            return new HashCodeBuilder().append(lng).append(lat).toHashCode();
         }
 
         @Override
@@ -157,8 +109,7 @@ public class Location {
                 return false;
             }
             Position rhs = ((Position) other);
-            return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).append(lng, rhs.lng)
-                    .append(lat, rhs.lat).isEquals();
+            return new EqualsBuilder().append(lng, rhs.lng).append(lat, rhs.lat).isEquals();
         }
     }
 }

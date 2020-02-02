@@ -27,10 +27,6 @@ public class BaseVehicle {
 
     protected @Nullable String status;
 
-    public BaseVehicle() {
-        super();
-    }
-
     /**
      *
      * @return
@@ -85,11 +81,6 @@ public class BaseVehicle {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

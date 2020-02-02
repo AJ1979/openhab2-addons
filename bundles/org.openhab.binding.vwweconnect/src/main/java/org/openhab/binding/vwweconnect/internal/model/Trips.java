@@ -18,7 +18,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -37,14 +36,6 @@ public class Trips {
 
     private @Nullable String errorCode;
     private @Nullable RtsViewModel rtsViewModel;
-    private @Nullable Map<String, Object> additionalProperties;
-
-    /**
-     * No args constructor for use in serialization
-     *
-     */
-    public Trips() {
-    }
 
     public @Nullable String getErrorCode() {
         return errorCode;
@@ -62,23 +53,14 @@ public class Trips {
         this.rtsViewModel = rtsViewModel;
     }
 
-    public @Nullable Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("errorCode", errorCode).append("rtsViewModel", rtsViewModel)
-                .append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("errorCode", errorCode).append("rtsViewModel", rtsViewModel).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(errorCode).append(rtsViewModel).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(errorCode).append(rtsViewModel).toHashCode();
     }
 
     @Override
@@ -90,8 +72,7 @@ public class Trips {
             return false;
         }
         Trips rhs = ((Trips) other);
-        return new EqualsBuilder().append(errorCode, rhs.errorCode).append(rtsViewModel, rhs.rtsViewModel)
-                .append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(errorCode, rhs.errorCode).append(rtsViewModel, rhs.rtsViewModel).isEquals();
     }
 
     @NonNullByDefault
@@ -107,15 +88,6 @@ public class Trips {
         private @Nullable Object cyclicData;
         private @Nullable ServiceConfiguration serviceConfiguration;
         private boolean tripFromLastRefuelAvailable;
-
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public RtsViewModel() {
-        }
 
         public int getDaysInMonth() {
             return daysInMonth;
@@ -197,30 +169,20 @@ public class Trips {
             this.tripFromLastRefuelAvailable = tripFromLastRefuelAvailable;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("daysInMonth", daysInMonth).append("firstWeekday", firstWeekday)
                     .append("month", month).append("year", year).append("firstTripYear", firstTripYear)
                     .append("tripStatistics", tripStatistics).append("longTermData", longTermData)
                     .append("cyclicData", cyclicData).append("serviceConfiguration", serviceConfiguration)
-                    .append("tripFromLastRefuelAvailable", tripFromLastRefuelAvailable)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("tripFromLastRefuelAvailable", tripFromLastRefuelAvailable).toString();
         }
 
         @Override
         public int hashCode() {
             return new HashCodeBuilder().append(firstWeekday).append(firstTripYear).append(longTermData)
                     .append(serviceConfiguration).append(daysInMonth).append(month).append(year).append(cyclicData)
-                    .append(tripFromLastRefuelAvailable).append(tripStatistics).append(additionalProperties)
-                    .toHashCode();
+                    .append(tripFromLastRefuelAvailable).append(tripStatistics).toHashCode();
         }
 
         @Override
@@ -236,9 +198,7 @@ public class Trips {
                     .append(longTermData, rhs.longTermData).append(serviceConfiguration, rhs.serviceConfiguration)
                     .append(daysInMonth, rhs.daysInMonth).append(month, rhs.month).append(year, rhs.year)
                     .append(cyclicData, rhs.cyclicData)
-                    .append(tripFromLastRefuelAvailable, rhs.tripFromLastRefuelAvailable)
-                    .append(tripStatistics, rhs.tripStatistics).append(additionalProperties, rhs.additionalProperties)
-                    .isEquals();
+                    .append(tripFromLastRefuelAvailable, rhs.tripFromLastRefuelAvailable).isEquals();
         }
     }
 
@@ -258,14 +218,6 @@ public class Trips {
         private double averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;
         private double totalElectricConsumption = BaseVehicle.UNDEFINED;
         private @Nullable String longFormattedTimestamp;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public LongTermData() {
-        }
 
         public int getTripId() {
             return tripId;
@@ -371,14 +323,6 @@ public class Trips {
             this.longFormattedTimestamp = longFormattedTimestamp;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("tripId", tripId)
@@ -390,8 +334,7 @@ public class Trips {
                     .append("recuperation", recuperation)
                     .append("averageAuxiliaryConsumption", averageAuxiliaryConsumption)
                     .append("totalElectricConsumption", totalElectricConsumption)
-                    .append("longFormattedTimestamp", longFormattedTimestamp)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("longFormattedTimestamp", longFormattedTimestamp).toString();
         }
 
         @Override
@@ -399,8 +342,8 @@ public class Trips {
             return new HashCodeBuilder().append(averageElectricConsumption).append(tripLength)
                     .append(averageFuelConsumption).append(averageAuxiliaryConsumption).append(tripId)
                     .append(averageSpeed).append(recuperation).append(totalElectricConsumption)
-                    .append(averageCngConsumption).append(longFormattedTimestamp).append(additionalProperties)
-                    .append(tripDuration).append(tripDurationFormatted).append(timestamp).toHashCode();
+                    .append(averageCngConsumption).append(longFormattedTimestamp).append(tripDuration)
+                    .append(tripDurationFormatted).append(timestamp).toHashCode();
         }
 
         @Override
@@ -418,8 +361,7 @@ public class Trips {
                     .append(averageSpeed, rhs.averageSpeed).append(recuperation, rhs.recuperation)
                     .append(totalElectricConsumption, rhs.totalElectricConsumption)
                     .append(averageCngConsumption, rhs.averageCngConsumption)
-                    .append(longFormattedTimestamp, rhs.longFormattedTimestamp)
-                    .append(additionalProperties, rhs.additionalProperties).append(tripDuration, rhs.tripDuration)
+                    .append(longFormattedTimestamp, rhs.longFormattedTimestamp).append(tripDuration, rhs.tripDuration)
                     .append(tripDurationFormatted, rhs.tripDurationFormatted).append(timestamp, rhs.timestamp)
                     .isEquals();
         }
@@ -441,14 +383,6 @@ public class Trips {
         private double averageAuxiliaryConsumption;
         private double totalElectricConsumption;
         private @Nullable Object longFormattedTimestamp;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public AggregatedStatistics() {
-        }
 
         public int getTripId() {
             return tripId;
@@ -554,14 +488,6 @@ public class Trips {
             this.longFormattedTimestamp = longFormattedTimestamp;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("tripId", tripId)
@@ -573,8 +499,7 @@ public class Trips {
                     .append("recuperation", recuperation)
                     .append("averageAuxiliaryConsumption", averageAuxiliaryConsumption)
                     .append("totalElectricConsumption", totalElectricConsumption)
-                    .append("longFormattedTimestamp", longFormattedTimestamp)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("longFormattedTimestamp", longFormattedTimestamp).toString();
         }
 
         @Override
@@ -582,8 +507,8 @@ public class Trips {
             return new HashCodeBuilder().append(averageElectricConsumption).append(tripLength)
                     .append(averageFuelConsumption).append(averageAuxiliaryConsumption).append(tripId)
                     .append(averageSpeed).append(recuperation).append(totalElectricConsumption)
-                    .append(averageCngConsumption).append(longFormattedTimestamp).append(additionalProperties)
-                    .append(tripDuration).append(tripDurationFormatted).append(timestamp).toHashCode();
+                    .append(averageCngConsumption).append(longFormattedTimestamp).append(tripDuration)
+                    .append(tripDurationFormatted).append(timestamp).toHashCode();
         }
 
         @Override
@@ -601,8 +526,7 @@ public class Trips {
                     .append(averageSpeed, rhs.averageSpeed).append(recuperation, rhs.recuperation)
                     .append(totalElectricConsumption, rhs.totalElectricConsumption)
                     .append(averageCngConsumption, rhs.averageCngConsumption)
-                    .append(longFormattedTimestamp, rhs.longFormattedTimestamp)
-                    .append(additionalProperties, rhs.additionalProperties).append(tripDuration, rhs.tripDuration)
+                    .append(longFormattedTimestamp, rhs.longFormattedTimestamp).append(tripDuration, rhs.tripDuration)
                     .append(tripDurationFormatted, rhs.tripDurationFormatted).append(timestamp, rhs.timestamp)
                     .isEquals();
         }
@@ -620,14 +544,6 @@ public class Trips {
         private boolean triptypeLong;
         private boolean cngOverallConsumption;
         private boolean recuperation;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public ServiceConfiguration() {
-        }
 
         public boolean isElectricConsumption() {
             return electricConsumption;
@@ -701,14 +617,6 @@ public class Trips {
             this.recuperation = recuperation;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("electricConsumption", electricConsumption)
@@ -716,16 +624,15 @@ public class Trips {
                     .append("fuelOverallConsumption", fuelOverallConsumption).append("triptypeCyclic", triptypeCyclic)
                     .append("electricOverallConsumption", electricOverallConsumption)
                     .append("triptypeLong", triptypeLong).append("cngOverallConsumption", cngOverallConsumption)
-                    .append("recuperation", recuperation).append("additionalProperties", additionalProperties)
-                    .toString();
+                    .append("recuperation", recuperation).toString();
         }
 
         @Override
         public int hashCode() {
             return new HashCodeBuilder().append(triptypeCyclic).append(triptypeShort).append(electricConsumption)
                     .append(cngOverallConsumption).append(triptypeLong).append(auxiliaryConsumption)
-                    .append(additionalProperties).append(electricOverallConsumption).append(fuelOverallConsumption)
-                    .append(recuperation).toHashCode();
+                    .append(electricOverallConsumption).append(fuelOverallConsumption).append(recuperation)
+                    .toHashCode();
         }
 
         @Override
@@ -741,7 +648,6 @@ public class Trips {
                     .append(triptypeShort, rhs.triptypeShort).append(electricConsumption, rhs.electricConsumption)
                     .append(cngOverallConsumption, rhs.cngOverallConsumption).append(triptypeLong, rhs.triptypeLong)
                     .append(auxiliaryConsumption, rhs.auxiliaryConsumption)
-                    .append(additionalProperties, rhs.additionalProperties)
                     .append(electricOverallConsumption, rhs.electricOverallConsumption)
                     .append(fuelOverallConsumption, rhs.fuelOverallConsumption).append(recuperation, rhs.recuperation)
                     .isEquals();
@@ -753,14 +659,6 @@ public class Trips {
 
         private @Nullable AggregatedStatistics aggregatedStatistics;
         private @Nullable List<TripStatisticDetail> tripStatistics;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public TripStatistic() {
-        }
 
         public @Nullable AggregatedStatistics getAggregatedStatistics() {
             return aggregatedStatistics;
@@ -778,25 +676,15 @@ public class Trips {
             this.tripStatistics = tripStatistics;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("aggregatedStatistics", aggregatedStatistics)
-                    .append("tripStatistics", tripStatistics).append("additionalProperties", additionalProperties)
-                    .toString();
+                    .append("tripStatistics", tripStatistics).toString();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(tripStatistics).append(additionalProperties)
-                    .append(aggregatedStatistics).toHashCode();
+            return new HashCodeBuilder().append(tripStatistics).append(aggregatedStatistics).toHashCode();
         }
 
         @Override
@@ -809,7 +697,6 @@ public class Trips {
             }
             TripStatistic rhs = ((TripStatistic) other);
             return new EqualsBuilder().append(tripStatistics, rhs.tripStatistics)
-                    .append(additionalProperties, rhs.additionalProperties)
                     .append(aggregatedStatistics, rhs.aggregatedStatistics).isEquals();
         }
     }
@@ -830,14 +717,6 @@ public class Trips {
         private int averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;
         private int totalElectricConsumption = BaseVehicle.UNDEFINED;
         private @Nullable String longFormattedTimestamp;
-        private @Nullable Map<String, Object> additionalProperties;
-
-        /**
-         * No args constructor for use in serialization
-         *
-         */
-        public TripStatisticDetail() {
-        }
 
         public int getTripId() {
             return tripId;
@@ -971,14 +850,6 @@ public class Trips {
             return null;
         }
 
-        public @Nullable Map<String, Object> getAdditionalProperties() {
-            return this.additionalProperties;
-        }
-
-        public void setAdditionalProperty(String name, Object value) {
-            this.additionalProperties.put(name, value);
-        }
-
         @Override
         public String toString() {
             return new ToStringBuilder(this).append("tripId", tripId)
@@ -990,8 +861,7 @@ public class Trips {
                     .append("recuperation", recuperation)
                     .append("averageAuxiliaryConsumption", averageAuxiliaryConsumption)
                     .append("totalElectricConsumption", totalElectricConsumption)
-                    .append("longFormattedTimestamp", longFormattedTimestamp)
-                    .append("additionalProperties", additionalProperties).toString();
+                    .append("longFormattedTimestamp", longFormattedTimestamp).toString();
         }
 
         @Override
@@ -999,8 +869,8 @@ public class Trips {
             return new HashCodeBuilder().append(averageElectricConsumption).append(tripLength)
                     .append(averageFuelConsumption).append(averageAuxiliaryConsumption).append(tripId)
                     .append(averageSpeed).append(recuperation).append(totalElectricConsumption)
-                    .append(averageCngConsumption).append(longFormattedTimestamp).append(additionalProperties)
-                    .append(tripDuration).append(tripDurationFormatted).append(timestamp).toHashCode();
+                    .append(averageCngConsumption).append(longFormattedTimestamp).append(tripDuration)
+                    .append(tripDurationFormatted).append(timestamp).toHashCode();
         }
 
         @Override
@@ -1018,8 +888,7 @@ public class Trips {
                     .append(averageSpeed, rhs.averageSpeed).append(recuperation, rhs.recuperation)
                     .append(totalElectricConsumption, rhs.totalElectricConsumption)
                     .append(averageCngConsumption, rhs.averageCngConsumption)
-                    .append(longFormattedTimestamp, rhs.longFormattedTimestamp)
-                    .append(additionalProperties, rhs.additionalProperties).append(tripDuration, rhs.tripDuration)
+                    .append(longFormattedTimestamp, rhs.longFormattedTimestamp).append(tripDuration, rhs.tripDuration)
                     .append(tripDurationFormatted, rhs.tripDurationFormatted).append(timestamp, rhs.timestamp)
                     .isEquals();
         }
