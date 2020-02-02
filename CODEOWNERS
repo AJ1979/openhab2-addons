@@ -175,6 +175,7 @@
 /bundles/org.openhab.binding.sonyprojector/ @lolodomo
 /bundles/org.openhab.binding.spotify/ @Hilbrand
 /bundles/org.openhab.binding.squeezebox/ @digitaldan @mhilbush
+/bundles/org.openhab.binding.srvrecycling/ @jannegpriv
 /bundles/org.openhab.binding.synopanalyzer/ @clinique
 /bundles/org.openhab.binding.systeminfo/ @svilenvul
 /bundles/org.openhab.binding.tado/ @dfrommi
@@ -197,6 +198,7 @@
 /bundles/org.openhab.binding.wemo/ @hmerk
 /bundles/org.openhab.binding.wifiled/ @rvt @xylo
 /bundles/org.openhab.binding.windcentrale/ @marcelrv
+/bundles/org.openhab.binding.vwweconnect/ @jannegpriv
 /bundles/org.openhab.binding.xmltv/ @clinique
 /bundles/org.openhab.binding.xmppclient/ @pavel-gololobov
 /bundles/org.openhab.binding.yamahareceiver/ @davidgraeff @zarusz
