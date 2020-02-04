@@ -391,7 +391,7 @@ public class VWWeConnectSession {
                 content = httpResponse.getContentAsString();
                 logger.trace("Http content: {}", content);
                 if (isErrorCode(content)) {
-                    logger.warn("Error code on POST: {}", content);
+                    logger.warn("Error code on POST: url {}, response {}", url, content);
                     return null;
                 }
                 return gson.fromJson(content, jsonClass);
@@ -838,13 +838,32 @@ public class VWWeConnectSession {
                         }
                     }
 
-                    if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
-                            && location != null && vehicleHeaterStatus != null) {
-                        vehicle.setVehicleDetails(vehicleDetails);
-                        vehicle.setVehicleStatus(vehicleStatus);
-                        vehicle.setTrips(trips);
-                        vehicle.setVehicleLocation(location);
-                        vehicle.setHeaterStatus(vehicleHeaterStatus);
+                    if (vehicle != null) {
+                        if (vehicleDetails != null) {
+                            vehicle.setVehicleDetails(vehicleDetails);
+                        } else {
+                            logger.warn("Vehicle details is null!");
+                        }
+                        if (vehicleStatus != null) {
+                            vehicle.setVehicleStatus(vehicleStatus);
+                        } else {
+                            logger.warn("Vehicle status is null!");
+                        }
+                        if (trips != null) {
+                            vehicle.setTrips(trips);
+                        } else {
+                            logger.warn("Vehicle trips is null!");
+                        }
+                        if (location != null) {
+                            vehicle.setVehicleLocation(location);
+                        } else {
+                            logger.warn("Vehicle location is null!");
+                        }
+                        if (vehicleHeaterStatus != null) {
+                            vehicle.setHeaterStatus(vehicleHeaterStatus);
+                        } else {
+                            logger.warn("Vehicle heater status is null!");
+                        }
 
                         BaseVehicle oldObj = vwWeConnectThings.get(vin);
                         if (oldObj == null || !oldObj.equals(vehicle)) {

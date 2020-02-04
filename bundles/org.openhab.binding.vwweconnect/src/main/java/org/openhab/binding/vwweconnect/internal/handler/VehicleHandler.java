@@ -135,8 +135,7 @@ public class VehicleHandler extends VWWeConnectHandler {
         Location vehicleLocation = vehicleJSON.getVehicleLocation();
         HeaterStatus vehicleHeaterStatus = vehicleJSON.getHeaterStatus();
 
-        if (vehicle != null && vehicleDetails != null && vehicleStatus != null && trips != null
-                && vehicleLocation != null && vehicleHeaterStatus != null) {
+        if (vehicle != null) {
             getThing().getChannels().stream().map(Channel::getUID)
                     .filter(channelUID -> isLinked(channelUID) && !LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
                     .forEach(channelUID -> {
@@ -151,8 +150,9 @@ public class VehicleHandler extends VWWeConnectHandler {
         }
     }
 
-    public State getValue(String channelId, CompleteVehicleJson vehicle, VehicleDetails vehicleDetails,
-            VehicleStatusData vehicleStatus, Trips trips, Location vehicleLocation, HeaterStatus vehicleHeaterStatus) {
+    public State getValue(String channelId, CompleteVehicleJson vehicle, @Nullable VehicleDetails vehicleDetails,
+            @Nullable VehicleStatusData vehicleStatus, @Nullable Trips trips, @Nullable Location vehicleLocation,
+            @Nullable HeaterStatus vehicleHeaterStatus) {
         switch (channelId) {
             case MODEL:
                 return new StringType(vehicle.getModel());
@@ -175,166 +175,277 @@ public class VehicleHandler extends VWWeConnectHandler {
             case ENGINE_TYPE_ELECTRIC:
                 return vehicle.getEngineTypeElectric() ? OnOffType.ON : OnOffType.OFF;
             case FUEL_LEVEL:
-                return vehicleStatus.getFuelLevel() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<>(vehicleStatus.getFuelLevel(), SmartHomeUnits.PERCENT)
-                        : UnDefType.UNDEF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getFuelLevel() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<>(vehicleStatus.getFuelLevel(), SmartHomeUnits.PERCENT)
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case FUEL_CONSUMPTION:
-                return trips.getRtsViewModel().getLongTermData().getAverageFuelConsumption() != BaseVehicle.UNDEFINED
-                        ? new DecimalType(trips.getRtsViewModel().getLongTermData().getAverageFuelConsumption() / 10)
-                        : UnDefType.UNDEF;
+                if (trips != null) {
+                    return trips.getRtsViewModel().getLongTermData()
+                            .getAverageFuelConsumption() != BaseVehicle.UNDEFINED
+                                    ? new DecimalType(
+                                            trips.getRtsViewModel().getLongTermData().getAverageFuelConsumption() / 10)
+                                    : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case FUEL_RANGE:
-                return vehicleStatus.getFuelRange() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<Length>(vehicleStatus.getFuelRange(), KILO(SIUnits.METRE))
-                        : UnDefType.UNDEF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getFuelRange() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<Length>(vehicleStatus.getFuelRange(), KILO(SIUnits.METRE))
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case FUEL_ALERT:
-                return vehicleStatus.getFuelRange() < 100 ? OnOffType.ON : OnOffType.OFF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getFuelRange() < 100 ? OnOffType.ON : OnOffType.OFF;
+                }
+                return UnDefType.UNDEF;
             case CNG_LEVEL:
-                return vehicleStatus.getCngFuelLevel() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<>(vehicleStatus.getCngFuelLevel(), SmartHomeUnits.PERCENT)
-                        : UnDefType.UNDEF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCngFuelLevel() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<>(vehicleStatus.getCngFuelLevel(), SmartHomeUnits.PERCENT)
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case CNG_CONSUMPTION:
-                return trips.getRtsViewModel().getLongTermData().getAverageCngConsumption() != BaseVehicle.UNDEFINED
-                        ? new DecimalType(trips.getRtsViewModel().getLongTermData().getAverageCngConsumption() / 10)
-                        : UnDefType.UNDEF;
+                if (trips != null) {
+                    return trips.getRtsViewModel().getLongTermData().getAverageCngConsumption() != BaseVehicle.UNDEFINED
+                            ? new DecimalType(trips.getRtsViewModel().getLongTermData().getAverageCngConsumption() / 10)
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case CNG_RANGE:
-                return vehicleStatus.getCngRange() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<Length>(vehicleStatus.getCngRange(), KILO(SIUnits.METRE))
-                        : UnDefType.UNDEF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCngRange() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<Length>(vehicleStatus.getCngRange(), KILO(SIUnits.METRE))
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case CNG_ALERT:
-                return vehicleStatus.getCngRange() < 100 ? OnOffType.ON : OnOffType.OFF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCngRange() < 100 ? OnOffType.ON : OnOffType.OFF;
+                }
+                return UnDefType.UNDEF;
             case BATTERY_LEVEL:
-                return vehicleStatus.getBatteryLevel() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<>(vehicleStatus.getBatteryLevel(), SmartHomeUnits.PERCENT)
-                        : UnDefType.UNDEF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getBatteryLevel() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<>(vehicleStatus.getBatteryLevel(), SmartHomeUnits.PERCENT)
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case ELECTRIC_CONSUMPTION:
-                return trips.getRtsViewModel().getLongTermData()
-                        .getAverageElectricConsumption() != BaseVehicle.UNDEFINED
-                                ? new DecimalType(
-                                        trips.getRtsViewModel().getLongTermData().getAverageElectricConsumption() / 10)
-                                : UnDefType.UNDEF;
+                if (trips != null) {
+                    return trips.getRtsViewModel().getLongTermData()
+                            .getAverageElectricConsumption() != BaseVehicle.UNDEFINED ? new DecimalType(
+                                    trips.getRtsViewModel().getLongTermData().getAverageElectricConsumption() / 10)
+                                    : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case BATTERY_RANGE:
-                return vehicleStatus.getBatteryRange() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<Length>(vehicleStatus.getBatteryRange(), KILO(SIUnits.METRE))
-                        : UnDefType.UNDEF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getBatteryRange() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<Length>(vehicleStatus.getBatteryRange(), KILO(SIUnits.METRE))
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case BATTERY_ALERT:
-                return vehicleStatus.getBatteryRange() < 100 ? OnOffType.ON : OnOffType.OFF;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getBatteryRange() < 100 ? OnOffType.ON : OnOffType.OFF;
+                }
+                return UnDefType.UNDEF;
             case TOTAL_TRIP_DISTANCE:
-                return trips.getRtsViewModel().getLongTermData().getTripLength() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<Length>(trips.getRtsViewModel().getLongTermData().getTripLength(),
-                                KILO(SIUnits.METRE))
-                        : UnDefType.UNDEF;
+                if (trips != null) {
+                    return trips.getRtsViewModel().getLongTermData().getTripLength() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<Length>(trips.getRtsViewModel().getLongTermData().getTripLength(),
+                                    KILO(SIUnits.METRE))
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case TOTAL_TRIP_DURATION:
-                return trips.getRtsViewModel().getLongTermData().getTripDuration() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<Time>(trips.getRtsViewModel().getLongTermData().getTripDuration(),
-                                SmartHomeUnits.MINUTE)
-                        : UnDefType.UNDEF;
+                if (trips != null) {
+                    return trips.getRtsViewModel().getLongTermData().getTripDuration() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<Time>(trips.getRtsViewModel().getLongTermData().getTripDuration(),
+                                    SmartHomeUnits.MINUTE)
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case TOTAL_AVERAGE_SPEED:
-                return trips.getRtsViewModel().getLongTermData().getAverageSpeed() != BaseVehicle.UNDEFINED
-                        ? new QuantityType<Speed>(trips.getRtsViewModel().getLongTermData().getAverageSpeed(),
-                                SIUnits.KILOMETRE_PER_HOUR)
-                        : UnDefType.UNDEF;
+                if (trips != null) {
+                    return trips.getRtsViewModel().getLongTermData().getAverageSpeed() != BaseVehicle.UNDEFINED
+                            ? new QuantityType<Speed>(trips.getRtsViewModel().getLongTermData().getAverageSpeed(),
+                                    SIUnits.KILOMETRE_PER_HOUR)
+                            : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
             case SERVICE_INSPECTION:
-                return new StringType(vehicleDetails.getServiceInspectionData());
+                if (vehicleDetails != null) {
+                    return new StringType(vehicleDetails.getServiceInspectionData());
+                }
+                return UnDefType.NULL;
             case OIL_INSPECTION:
-                return new StringType(vehicleDetails.getOilInspectionData());
+                if (vehicleDetails != null) {
+                    return new StringType(vehicleDetails.getOilInspectionData());
+                }
+                return UnDefType.NULL;
             case TRUNK:
-                return vehicleStatus.getCarRenderData().getDoors().getTrunk() != null
-                        ? vehicleStatus.getCarRenderData().getDoors().getTrunk()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getDoors().getTrunk() != null
+                            ? vehicleStatus.getCarRenderData().getDoors().getTrunk()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case RIGHT_BACK:
-                return vehicleStatus.getCarRenderData().getDoors().getRightBack() != null
-                        ? vehicleStatus.getCarRenderData().getDoors().getRightBack()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getDoors().getRightBack() != null
+                            ? vehicleStatus.getCarRenderData().getDoors().getRightBack()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case LEFT_BACK:
-                return vehicleStatus.getCarRenderData().getDoors().getLeftBack() != null
-                        ? vehicleStatus.getCarRenderData().getDoors().getLeftBack()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getDoors().getLeftBack() != null
+                            ? vehicleStatus.getCarRenderData().getDoors().getLeftBack()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case RIGHT_FRONT:
-                return vehicleStatus.getCarRenderData().getDoors().getRightFront() != null
-                        ? vehicleStatus.getCarRenderData().getDoors().getRightFront()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getDoors().getRightFront() != null
+                            ? vehicleStatus.getCarRenderData().getDoors().getRightFront()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case LEFT_FRONT:
-                return vehicleStatus.getCarRenderData().getDoors().getLeftFront() != null
-                        ? vehicleStatus.getCarRenderData().getDoors().getLeftFront()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getDoors().getLeftFront() != null
+                            ? vehicleStatus.getCarRenderData().getDoors().getLeftFront()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case HOOD:
-                return vehicleStatus.getCarRenderData().getHood() != null ? vehicleStatus.getCarRenderData().getHood()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getHood() != null
+                            ? vehicleStatus.getCarRenderData().getHood()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case ROOF:
-                return vehicleStatus.getCarRenderData().getRoof() != null ? vehicleStatus.getCarRenderData().getRoof()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getRoof() != null
+                            ? vehicleStatus.getCarRenderData().getRoof()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case SUN_ROOF:
-                return vehicleStatus.getCarRenderData().getSunroof() != null
-                        ? vehicleStatus.getCarRenderData().getSunroof()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getSunroof() != null
+                            ? vehicleStatus.getCarRenderData().getSunroof()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case DOORS_LOCKED:
-                return vehicleStatus.getLockData().getDoorsLocked() != null
-                        ? vehicleStatus.getLockData().getDoorsLocked()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getLockData().getDoorsLocked() != null
+                            ? vehicleStatus.getLockData().getDoorsLocked()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case TRUNK_LOCKED:
-                return vehicleStatus.getLockData().getTrunk() != null ? vehicleStatus.getLockData().getTrunk()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getLockData().getTrunk() != null ? vehicleStatus.getLockData().getTrunk()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case RIGHT_BACK_WND:
-                return vehicleStatus.getCarRenderData().getWindows().getRightBack() != null
-                        ? vehicleStatus.getCarRenderData().getWindows().getRightBack()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getWindows().getRightBack() != null
+                            ? vehicleStatus.getCarRenderData().getWindows().getRightBack()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case LEFT_BACK_WND:
-                return vehicleStatus.getCarRenderData().getWindows().getLeftBack() != null
-                        ? vehicleStatus.getCarRenderData().getWindows().getLeftBack()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getWindows().getLeftBack() != null
+                            ? vehicleStatus.getCarRenderData().getWindows().getLeftBack()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case RIGHT_FRONT_WND:
-                return vehicleStatus.getCarRenderData().getWindows().getRightFront() != null
-                        ? vehicleStatus.getCarRenderData().getWindows().getRightFront()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getWindows().getRightFront() != null
+                            ? vehicleStatus.getCarRenderData().getWindows().getRightFront()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case LEFT_FRONT_WND:
-                return vehicleStatus.getCarRenderData().getWindows().getLeftFront() != null
-                        ? vehicleStatus.getCarRenderData().getWindows().getLeftFront()
-                        : UnDefType.NULL;
+                if (vehicleStatus != null) {
+                    return vehicleStatus.getCarRenderData().getWindows().getLeftFront() != null
+                            ? vehicleStatus.getCarRenderData().getWindows().getLeftFront()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case ACTUAL_LOCATION:
-                Position localPosition = vehicleLocation.getPosition();
-                return localPosition != null ? new VehiclePositionWrapper(localPosition).getPosition() : UnDefType.NULL;
+                if (vehicleLocation != null) {
+                    Position localPosition = vehicleLocation.getPosition();
+                    return localPosition != null ? new VehiclePositionWrapper(localPosition).getPosition()
+                            : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case REMOTE_HEATER:
-                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
-                        : OnOffType.OFF;
+                if (vehicleHeaterStatus != null) {
+                    return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
+                            : OnOffType.OFF;
+                }
+                return UnDefType.UNDEF;
             case REMOTE_VENTILATION:
-                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
-                        : OnOffType.OFF;
+                if (vehicleHeaterStatus != null) {
+                    return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
+                            : OnOffType.OFF;
+                }
+                return UnDefType.UNDEF;
             case TEMPERATURE:
-                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
-                        .getTemperature() != BaseVehicle.UNDEFINED
-                                ? new QuantityType<Temperature>(
-                                        vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getTemperature(),
-                                        SIUnits.CELSIUS)
-                                : UnDefType.NULL;
+                if (vehicleHeaterStatus != null) {
+                    return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
+                            .getTemperature() != BaseVehicle.UNDEFINED ? new QuantityType<Temperature>(
+                                    vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getTemperature(),
+                                    SIUnits.CELSIUS) : UnDefType.NULL;
+                }
+                return UnDefType.NULL;
             case REMAINING_TIME:
-                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
-                        .getRemainingTime() != BaseVehicle.UNDEFINED
-                                ? new QuantityType<Time>(
-                                        vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getRemainingTime(),
-                                        SmartHomeUnits.MINUTE)
-                                : UnDefType.UNDEF;
+                if (vehicleHeaterStatus != null) {
+                    return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
+                            .getRemainingTime() != BaseVehicle.UNDEFINED ? new QuantityType<Time>(
+                                    vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getRemainingTime(),
+                                    SmartHomeUnits.MINUTE) : UnDefType.UNDEF;
+                }
+                return UnDefType.UNDEF;
         }
         return UnDefType.UNDEF;
     }
 
-    public void updateLastTrip(Trips trips) {
-        List<TripStatistic> tripsStat = trips.getRtsViewModel().getTripStatistics();
-        Collections.reverse(tripsStat);
-        Optional<TripStatistic> lastTrip = tripsStat.stream()
-                .filter(aggregatedStatistics -> aggregatedStatistics != null).findFirst();
-        int tripId = lastTrip.get().getAggregatedStatistics().getTripId();
-        Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
-                .filter(t -> t.getTripId() == tripId).findFirst();
-        logger.debug("Last trip: {}", lastTrip);
-        logger.trace("Last trip stats: {}", lastTripStats);
+    public void updateLastTrip(@Nullable Trips trips) {
+        if (trips != null) {
+            List<TripStatistic> tripsStat = trips.getRtsViewModel().getTripStatistics();
+            Collections.reverse(tripsStat);
+            Optional<TripStatistic> lastTrip = tripsStat.stream()
+                    .filter(aggregatedStatistics -> aggregatedStatistics != null).findFirst();
+            int tripId = lastTrip.get().getAggregatedStatistics().getTripId();
+            Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
+                    .filter(t -> t.getTripId() == tripId).findFirst();
+            logger.debug("Last trip: {}", lastTrip);
+            logger.trace("Last trip stats: {}", lastTripStats);
 
-        getThing().getChannels().stream().map(Channel::getUID)
-                .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
-                .forEach(channelUID -> {
-                    State state = getTripValue(channelUID.getIdWithoutGroup(), lastTripStats.get());
-                    updateState(channelUID, state);
-                });
-
+            getThing().getChannels().stream().map(Channel::getUID)
+                    .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
+                    .forEach(channelUID -> {
+                        State state = getTripValue(channelUID.getIdWithoutGroup(), lastTripStats.get());
+                        updateState(channelUID, state);
+                    });
+        } else {
+            logger.warn("Cannot update last trip, trips is null!");
+        }
     }
 
     public State getTripValue(String channelId, TripStatisticDetail trip) {
