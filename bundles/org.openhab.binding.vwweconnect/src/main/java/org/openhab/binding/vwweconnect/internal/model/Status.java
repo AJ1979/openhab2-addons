@@ -87,7 +87,7 @@ public class Status {
         private @Nullable Boolean rluDisabled;
         private @Nullable Boolean hideCngFuelLevel;
         private @Nullable Boolean adBlueEnabled;
-        private int adBlueLevel = BaseVehicle.UNDEFINED;
+        private @Nullable String adBlueLevel;
         private @Nullable Boolean showAdBlueNotification;
         private @Nullable Boolean rluMibDeactivated;
         private int totalRange = BaseVehicle.UNDEFINED;
@@ -180,11 +180,11 @@ public class Status {
             this.adBlueEnabled = adBlueEnabled;
         }
 
-        public int getAdBlueLevel() {
+        public @Nullable String getAdBlueLevel() {
             return adBlueLevel;
         }
 
-        public void setAdBlueLevel(int adBlueLevel) {
+        public void setAdBlueLevel(@Nullable String adBlueLevel) {
             this.adBlueLevel = adBlueLevel;
         }
 
