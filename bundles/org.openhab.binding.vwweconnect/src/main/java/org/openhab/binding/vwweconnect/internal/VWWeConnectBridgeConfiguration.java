@@ -18,7 +18,7 @@ import org.openhab.binding.vwweconnect.internal.handler.VWWeConnectBridgeHandler
 
 /**
  * Configuration class for {@link VWWeConnectBridgeHandler} bridge used to connect to the
- * Verisure MyPage.
+ * VW We Connect portal.
  *
  * @author Jan Gustafsson - Initial contribution
  */

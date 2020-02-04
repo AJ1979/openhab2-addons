@@ -53,6 +53,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
@@ -368,6 +369,7 @@ public class VWWeConnectSession {
     }
 
     private @Nullable <T> T postJSONVWWeConnectAPI(String url, @Nullable Fields fields, Class<T> jsonClass) {
+        String content = null;
         try {
             logger.debug("postJSONVWWeConnectAPI URL: {} Fields: {}", url, fields);
             Request request = httpClient.newRequest(url).method(HttpMethod.POST);
@@ -386,7 +388,7 @@ public class VWWeConnectSession {
             logger.debug("HTTP POST Request {}.", request.toString());
             ContentResponse httpResponse = request.send();
             if (httpResponse != null) {
-                String content = httpResponse.getContentAsString();
+                content = httpResponse.getContentAsString();
                 logger.trace("Http content: {}", content);
                 if (isErrorCode(content)) {
                     logger.warn("Error code on POST: {}", content);
@@ -394,6 +396,9 @@ public class VWWeConnectSession {
                 }
                 return gson.fromJson(content, jsonClass);
             }
+        } catch (JsonSyntaxException e) {
+            logger.warn("Exception caught {} while parsing JSON response {} for request {}", e.getMessage(), content,
+                    url);
         } catch (ExecutionException e) {
             logger.warn("Caught ExecutionException {}", e.getMessage(), e);
         } catch (InterruptedException e) {
@@ -744,34 +749,40 @@ public class VWWeConnectSession {
                     httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                     if (httpResponse != null) {
                         content = httpResponse.getContentAsString();
-                        Status status = gson.fromJson(content, Status.class);
                         logger.debug(content);
-                        String requestStatus = status.getVehicleStatusData().getRequestStatus();
-
-                        // Check for progess of Vehicle report
-                        start = System.currentTimeMillis();
-                        while (requestStatus != null && requestStatus.equals(REQUEST_IN_PROGRESS)) {
-                            try {
-                                long currentTime = System.currentTimeMillis();
-                                logger.debug("Time: {}", new Timestamp(currentTime));
-                                long elapsedTime = currentTime - start;
-                                if (elapsedTime > MAX_WAIT_MILLIS) {
-                                    logger.debug("Wait timeout, request status: {}",
-                                            status.getVehicleStatusData().getRequestStatus());
-                                    break;
-                                } else {
-                                    Thread.sleep(2 * SLEEP_TIME_MILLIS);
-                                    httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-                                    if (httpResponse != null) {
-                                        content = httpResponse.getContentAsString();
-                                        status = gson.fromJson(content, Status.class);
-                                        logger.debug("Vehicle status: {}", status);
-                                        requestStatus = status.getVehicleStatusData().getRequestStatus();
+                        Status status;
+                        String requestStatus = null;
+                        try {
+                            status = gson.fromJson(content, Status.class);
+                            requestStatus = status.getVehicleStatusData().getRequestStatus();
+                            // Check for progess of Vehicle report
+                            start = System.currentTimeMillis();
+                            while (requestStatus != null && requestStatus.equals(REQUEST_IN_PROGRESS)) {
+                                try {
+                                    long currentTime = System.currentTimeMillis();
+                                    logger.debug("Time: {}", new Timestamp(currentTime));
+                                    long elapsedTime = currentTime - start;
+                                    if (elapsedTime > MAX_WAIT_MILLIS) {
+                                        logger.debug("Wait timeout, request status: {}",
+                                                status.getVehicleStatusData().getRequestStatus());
+                                        break;
+                                    } else {
+                                        Thread.sleep(2 * SLEEP_TIME_MILLIS);
+                                        httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
+                                        if (httpResponse != null) {
+                                            content = httpResponse.getContentAsString();
+                                            logger.debug("Vehicle status: {}", status);
+                                            status = gson.fromJson(content, Status.class);
+                                            requestStatus = status.getVehicleStatusData().getRequestStatus();
+                                        }
                                     }
+                                } catch (InterruptedException e) {
+                                    logger.warn("Exception caught: {}", e.getMessage(), e);
                                 }
-                            } catch (InterruptedException e) {
-                                logger.warn("Exception caught: {}", e.getMessage(), e);
                             }
+                        } catch (JsonSyntaxException e) {
+                            logger.warn("Exception caught {} while parsing JSON response {} for request {}",
+                                    e.getMessage(), content, url);
                         }
                         if (requestStatus != null) {
                             logger.debug("Request status: {}", requestStatus);

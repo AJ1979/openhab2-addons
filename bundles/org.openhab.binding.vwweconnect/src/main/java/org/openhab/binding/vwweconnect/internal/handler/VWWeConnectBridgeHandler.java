@@ -83,7 +83,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        logger.debug("VerisureBridgeHandler Handle command {} on channelUID: {}", command, channelUID);
+        logger.debug("VWWeConnectBridgeHandler Handle command {} on channelUID: {}", command, channelUID);
         if (command instanceof RefreshType) {
             if (channelUID.getId().equals(CHANNEL_STATUS) && channelUID.getThingUID().equals(getThing().getUID())) {
                 logger.debug("Refresh command on status channel {} will trigger instant refresh", channelUID);
@@ -104,7 +104,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void initialize() {
-        logger.debug("Initializing Verisure Binding");
+        logger.debug("Initializing VWWeConnect Binding");
         VWWeConnectBridgeConfiguration config = getConfigAs(VWWeConnectBridgeConfiguration.class);
         this.securePIN = config.spin;
         this.refresh = config.refresh;
@@ -184,7 +184,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
     }
 
     void scheduleImmediateRefresh(int refreshDelay) {
-        logger.debug("VerisureBridgeHandler - scheduleImmediateRefresh");
+        logger.debug("VWWeConnectBridgeHandler - scheduleImmediateRefresh");
         immediateRefreshJobLock.lock();
         try {
             // We schedule in 10 sec, to avoid multiple updates

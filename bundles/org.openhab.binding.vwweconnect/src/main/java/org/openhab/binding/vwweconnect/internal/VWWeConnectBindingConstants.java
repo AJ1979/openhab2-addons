@@ -20,7 +20,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 
 /**
- * The {@link VerisureBinding} class defines common constants, which are
+ * The {@link VWWeConnectBinding} class defines common constants, which are
  * used across the whole binding.
  *
  * @author Jan Gustafsson - Initial contribution

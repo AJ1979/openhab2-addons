@@ -84,7 +84,7 @@ public class BaseVehicle {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("VerisureBaseThingJSON [");
+        builder.append("BaseVehicle [");
 
         if (status != null) {
             builder.append(", status=");

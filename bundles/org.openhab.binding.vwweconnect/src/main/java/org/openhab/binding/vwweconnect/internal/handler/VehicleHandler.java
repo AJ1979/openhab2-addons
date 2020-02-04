@@ -113,7 +113,7 @@ public class VehicleHandler extends VWWeConnectHandler {
 
     @Override
     public synchronized void update(@Nullable BaseVehicle vehicle) {
-        logger.debug("update on thing: {}", vehicle);
+        logger.debug("update on vehicle: {}", vehicle);
         if (vehicle != null) {
             if (getThing().getThingTypeUID().equals(VEHICLE_THING_TYPE)) {
                 Vehicle obj = (Vehicle) vehicle;
