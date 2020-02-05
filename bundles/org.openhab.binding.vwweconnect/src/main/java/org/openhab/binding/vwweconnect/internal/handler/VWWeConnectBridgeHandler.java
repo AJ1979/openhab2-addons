@@ -52,19 +52,6 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
 
     private static final int REFRESH_DELAY_SECONDS = 30;
 
-    @Override
-    protected void updateThing(Thing thing) {
-        super.updateThing(thing);
-    }
-
-    @Override
-    protected void updateConfiguration(Configuration configuration) {
-        stopAutomaticRefresh();
-        stopImmediateRefresh();
-        super.updateConfiguration(configuration);
-        initialize();
-    }
-
     private final Logger logger = LoggerFactory.getLogger(VWWeConnectBridgeHandler.class);
     private final ReentrantLock immediateRefreshJobLock = new ReentrantLock();
 
@@ -96,6 +83,19 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
         } else {
             logger.warn("unknown command! {}", command);
         }
+    }
+
+    @Override
+    protected void updateThing(Thing thing) {
+        super.updateThing(thing);
+    }
+
+    @Override
+    protected void updateConfiguration(Configuration configuration) {
+        stopAutomaticRefresh();
+        stopImmediateRefresh();
+        super.updateConfiguration(configuration);
+        initialize();
     }
 
     public @Nullable VWWeConnectSession getSession() {

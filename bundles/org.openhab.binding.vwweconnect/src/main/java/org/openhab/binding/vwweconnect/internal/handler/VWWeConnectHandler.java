@@ -94,7 +94,7 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Vehicle is missing VIN");
         }
 
-        // Set status to UNKNWN ans let background task set status
+        // Set status to UNKNOWN and let background task set status
         updateStatus(ThingStatus.UNKNOWN);
 
         scheduler.execute(() -> {

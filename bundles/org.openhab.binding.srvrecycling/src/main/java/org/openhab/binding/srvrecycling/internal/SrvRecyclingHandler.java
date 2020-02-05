@@ -12,7 +12,11 @@
  */
 package org.openhab.binding.srvrecycling.internal;
 
-import static org.openhab.binding.srvrecycling.internal.SrvRecyclingBindingConstants.*;
+import static org.openhab.binding.srvrecycling.internal.SrvRecyclingBindingConstants.CHANNEL_1;
+
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -37,6 +41,9 @@ public class SrvRecyclingHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(SrvRecyclingHandler.class);
 
     private @Nullable SrvRecyclingConfiguration config;
+
+    private int refresh = 600;
+    private @Nullable ScheduledFuture<?> refreshJob;
 
     public SrvRecyclingHandler(Thing thing) {
         super(thing);
@@ -85,6 +92,7 @@ public class SrvRecyclingHandler extends BaseThingHandler {
             } else {
                 updateStatus(ThingStatus.OFFLINE);
             }
+            startAutomaticRefresh();
         });
 
         // logger.debug("Finished initializing!");
@@ -95,4 +103,24 @@ public class SrvRecyclingHandler extends BaseThingHandler {
         // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
         // "Can not access device as username and/or password are invalid");
     }
+
+    private void startAutomaticRefresh() {
+        logger.warn("Start automatic refresh {}", refreshJob);
+        if (refreshJob == null || refreshJob.isCancelled()) {
+            try {
+                refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,
+                        TimeUnit.SECONDS);
+                logger.debug("Scheduling at fixed delay refreshjob {}", refreshJob);
+            } catch (IllegalArgumentException e) {
+                logger.warn("Refresh time value is invalid! Please change the refresh time configuration!", e);
+            } catch (RejectedExecutionException e) {
+                logger.warn("Automatic refresh job cannot be started!");
+            }
+        }
+    }
+
+    private void refreshAndUpdateStatus() {
+        logger.debug("SrvRecyclingHandler - Refresh thread is up'n running!");
+    }
+
 }
