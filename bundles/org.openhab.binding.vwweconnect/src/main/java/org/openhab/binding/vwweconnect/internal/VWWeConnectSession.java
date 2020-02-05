@@ -90,7 +90,7 @@ public class VWWeConnectSession {
         this.httpClient = httpClient;
     }
 
-    public void initialize(@Nullable String userName, @Nullable String password, @Nullable String pinCode) {
+    public boolean initialize(@Nullable String userName, @Nullable String password, @Nullable String pinCode) {
         logger.debug("VWWeConnectSession:initialize");
         this.userName = userName;
         this.password = password;
@@ -98,7 +98,9 @@ public class VWWeConnectSession {
         // Try to login to VW We Connect Portal
         if (!logIn()) {
             logger.warn("Failed to login to VWWeConnect!");
+            return false;
         }
+        return true;
     }
 
     public boolean refresh() {
@@ -466,6 +468,10 @@ public class VWWeConnectSession {
                 url = httpResponse.getHeaders().get("location");
                 httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
                 if (!checkHttpResponse200(httpResponse)) {
+                    if (checkHttpResponse302(httpResponse)) {
+                        logger.debug("Most probably already logged in");
+                        return true;
+                    }
                     return false;
                 }
             }
@@ -771,7 +777,7 @@ public class VWWeConnectSession {
                                         httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
                                         if (httpResponse != null) {
                                             content = httpResponse.getContentAsString();
-                                            logger.debug("Vehicle status: {}", status);
+                                            logger.debug("Status JSON {}, Vehicle status: {}", content, status);
                                             status = gson.fromJson(content, Status.class);
                                             requestStatus = status.getVehicleStatusData().getRequestStatus();
                                         }

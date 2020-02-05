@@ -86,15 +86,21 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
     @Override
     public void initialize() {
         logger.debug("initialize on thing: {}", thing);
-        // Do not go online
+
         config = getConfigAs(VehicleConfiguration.class);
         if (config.vin == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Vehicle is missing VIN");
         }
-        Bridge bridge = getBridge();
-        if (bridge != null) {
-            this.bridgeStatusChanged(bridge.getStatusInfo());
-        }
+
+        // Set status to UNKNWN ans let background task set status
+        updateStatus(ThingStatus.UNKNOWN);
+
+        scheduler.execute(() -> {
+            Bridge bridge = getBridge();
+            if (bridge != null) {
+                this.bridgeStatusChanged(bridge.getStatusInfo());
+            }
+        });
     }
 
     @Override

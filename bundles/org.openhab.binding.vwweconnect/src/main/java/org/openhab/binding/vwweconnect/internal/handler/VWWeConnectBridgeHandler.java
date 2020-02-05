@@ -88,10 +88,6 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             if (channelUID.getId().equals(CHANNEL_STATUS) && channelUID.getThingUID().equals(getThing().getUID())) {
                 logger.debug("Refresh command on status channel {} will trigger instant refresh", channelUID);
                 scheduleImmediateRefresh(0);
-            } else {
-                logger.debug("Refresh command on channel {} will trigger refresh in {} seconds", channelUID,
-                        REFRESH_DELAY_SECONDS);
-                scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
             }
         } else {
             logger.warn("unknown command! {}", command);
@@ -104,7 +100,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void initialize() {
-        logger.debug("Initializing VWWeConnect Binding");
+        logger.debug("Initializing VWWeConnect Bridge");
         VWWeConnectBridgeConfiguration config = getConfigAs(VWWeConnectBridgeConfiguration.class);
         this.securePIN = config.spin;
         this.refresh = config.refresh;
@@ -112,8 +108,15 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "Configuration of username and password is mandatory");
         } else {
-            session.initialize(config.username, config.password, securePIN);
-            startAutomaticRefresh();
+            updateStatus(ThingStatus.UNKNOWN);
+
+            scheduler.execute(() -> {
+                if (!session.initialize(config.username, config.password, securePIN)) {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_REGISTERING_ERROR,
+                            "Failed to login to VW WeConnect portal, please check your credentials!");
+                }
+                startAutomaticRefresh();
+            });
         }
     }
 
@@ -126,6 +129,12 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             session.dispose();
             session = null;
         }
+    }
+
+    @Override
+    public void channelLinked(ChannelUID channelUID) {
+        // Do not do a refresh since that will refresh all things as well
+        logger.debug("Channel linked {}.", channelUID);
     }
 
     public boolean registerObjectStatusListener(DeviceStatusListener deviceStatusListener) {
@@ -165,13 +174,13 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
     }
 
     private void refreshAndUpdateStatus() {
-        logger.warn("VWWeConnectBridgeHandler - Refresh thread is up'n running!");
+        logger.debug("VWWeConnectBridgeHandler - Refresh thread is up'n running!");
         try {
             if (session != null) {
                 boolean success = session.refresh();
                 if (success) {
                     updateStatus(ThingStatus.ONLINE);
-                    logger.warn("Refresh success!");
+                    logger.debug("Refresh success!");
                 } else {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
                     logger.warn("Refresh failed!");
@@ -224,7 +233,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             try {
                 refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,
                         TimeUnit.SECONDS);
-                logger.warn("Scheduling at fixed delay refreshjob {}", refreshJob);
+                logger.debug("Scheduling at fixed delay refreshjob {}", refreshJob);
             } catch (IllegalArgumentException e) {
                 logger.warn("Refresh time value is invalid! Please change the refresh time configuration!", e);
             } catch (RejectedExecutionException e) {
