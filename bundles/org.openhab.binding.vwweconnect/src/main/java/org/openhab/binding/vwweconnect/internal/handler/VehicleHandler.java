@@ -48,6 +48,7 @@ import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BridgeHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerService;
 import org.eclipse.smarthome.core.types.Command;
+import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.core.types.UnDefType;
 import org.eclipse.smarthome.io.net.http.HttpUtil;
@@ -83,7 +84,9 @@ public class VehicleHandler extends VWWeConnectHandler {
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         String channelID = channelUID.getIdWithoutGroup();
-        if (command instanceof OnOffType) {
+        if (command instanceof RefreshType) {
+            super.handleCommand(channelUID, command);
+        } else if (command instanceof OnOffType) {
             OnOffType onOffCommand = (OnOffType) command;
             if (REMOTE_HEATER.equals(channelID)) {
                 actionHeater(onOffCommand == OnOffType.ON);
@@ -542,6 +545,10 @@ public class VehicleHandler extends VWWeConnectHandler {
     private void actionUnlockLock(String action, OnOffType controlState) {
         VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
         if (bridgeHandler != null) {
+            if (bridgeHandler.getSecurePIN() == null) {
+                logger.warn("S-PIN has to be configured to handle action {}", action);
+                return;
+            }
             String vin = config.vin;
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
@@ -578,6 +585,10 @@ public class VehicleHandler extends VWWeConnectHandler {
     private void actionHeaterVentilation(String action, Boolean start) {
         VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
         if (bridgeHandler != null) {
+            if (bridgeHandler.getSecurePIN() == null) {
+                logger.warn("S-PIN has to be configured to handle action {}", action);
+                return;
+            }
             String vin = config.vin;
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);

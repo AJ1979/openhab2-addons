@@ -541,8 +541,12 @@ public class VWWeConnectSession {
         nameInput = htmlDocument.select("input[name=hmac]").first();
         String authHmac = nameInput.attr("value");
         Element authForm = htmlDocument.getElementById("credentialsForm");
-        url = AUTH_BASE + authForm.attr("action");
+        if (authForm == null) {
+            logger.warn("Failed to login, check your credentials!");
+            return false;
+        }
 
+        url = AUTH_BASE + authForm.attr("action");
         fields = getFields(userName, password, authToken, authHmac, authCsrf);
 
         httpResponse = postVWWeConnectAPI(url, fields, previousUrl, csrf);

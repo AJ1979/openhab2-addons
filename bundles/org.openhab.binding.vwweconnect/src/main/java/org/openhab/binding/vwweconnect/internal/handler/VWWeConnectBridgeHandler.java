@@ -88,6 +88,10 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             if (channelUID.getId().equals(CHANNEL_STATUS) && channelUID.getThingUID().equals(getThing().getUID())) {
                 logger.debug("Refresh command on status channel {} will trigger instant refresh", channelUID);
                 scheduleImmediateRefresh(0);
+            } else {
+                logger.debug("Refresh command on channel {} will trigger refresh in {} seconds", channelUID,
+                        REFRESH_DELAY_SECONDS);
+                scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
             }
         } else {
             logger.warn("unknown command! {}", command);
@@ -111,9 +115,14 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             updateStatus(ThingStatus.UNKNOWN);
 
             scheduler.execute(() -> {
+                if (session == null) {
+                    logger.debug("Session is null, let's create a new one");
+                    session = new VWWeConnectSession(this.httpClient);
+                }
                 if (!session.initialize(config.username, config.password, securePIN)) {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_REGISTERING_ERROR,
-                            "Failed to login to VW WeConnect portal, please check your credentials!");
+                            "Failed to login to VW We Connect portal, please check your credentials!");
+                    return;
                 }
                 startAutomaticRefresh();
             });

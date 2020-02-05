@@ -59,11 +59,13 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
             if (bridge != null) {
                 BridgeHandler bridgeHandler = bridge.getHandler();
                 if (bridgeHandler != null) {
+                    // Lets do an immediate session refresh by calling bridge
                     bridgeHandler.handleCommand(channelUID, command);
                 }
             }
             String vin = config.vin;
             if (session != null && vin != null) {
+                // In the mean time update vehicle with current status of session
                 BaseVehicle thing = session.getVWWeConnectThing(vin);
                 update(thing);
             }
