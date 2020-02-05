@@ -313,6 +313,8 @@ Number   VehicleRemaingHeaterTime   "Vehicle remaining heater time" <clock> {cha
     Group item=gTotalTripData label="Total Trip Data"
 
     Group item=gLastTripData label="Last Trip Data"
+    
+    Group item=gFuelInfo label="Fuel Data"
 
     Frame label="Vehicle Location" {
         Mapview item=VehicleLocation label="Vehicle Location" height=5

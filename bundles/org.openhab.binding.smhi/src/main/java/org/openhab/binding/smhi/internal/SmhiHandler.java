@@ -27,7 +27,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DateTimeType;
@@ -67,7 +66,7 @@ public class SmhiHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(SmhiHandler.class);
     private @Nullable ScheduledFuture<?> refreshJob;
 
-    protected static final String smhiURL = "http://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/%s/lat/%s/data.json";
+    protected static final String SMHI_URL = "http://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/%s/lat/%s/data.json";
 
     protected @Nullable PointType location;
 
@@ -100,19 +99,20 @@ public class SmhiHandler extends BaseThingHandler {
         logger.debug("Initializing SMHI weather handler.");
 
         config = getConfigAs(SmhiConfiguration.class);
+        String localLocation = config.location;
 
-        if (StringUtils.trimToNull(config.location) == null) {
+        if (localLocation != null) {
+            try {
+                location = new PointType(localLocation);
+            } catch (IllegalArgumentException e) {
+                location = null;
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                        "The 'location' parameter could not be split into latitude and longitude.");
+                return;
+            }
+        } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "The 'location' parameter must be configured.");
-            return;
-        }
-
-        try {
-            location = new PointType(config.location);
-        } catch (IllegalArgumentException e) {
-            location = null;
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "The 'location' parameter could not be split into latitude and longitude.");
             return;
         }
 
@@ -127,18 +127,15 @@ public class SmhiHandler extends BaseThingHandler {
         String latitude = df.format(Double.valueOf(parts[0]));
         String longitude = df.format(Double.valueOf(parts[1]));
 
-        apiRequest = String.format(smhiURL, longitude, latitude);
+        apiRequest = String.format(SMHI_URL, longitude, latitude);
 
         try {
             if (HttpUtil.executeUrl("GET", apiRequest, null, null, "application/json", SMHI_TIMEOUT)
                     .contains("out of bounds")) {
-
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                        "The 'location' parameter is out of bound.");
+                        "The 'location' parameter is out of bounds.");
                 return;
-
             }
-
         } catch (IOException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Error connecting to SMHI API.");
             return;
@@ -147,15 +144,12 @@ public class SmhiHandler extends BaseThingHandler {
         updateStatus(ThingStatus.ONLINE);
 
         startAutomaticRefresh(config.refresh);
-
     }
 
     private void startAutomaticRefresh(int refresh) {
         if (refreshJob == null || refreshJob.isCancelled()) {
-
             refreshJob = scheduler.scheduleWithFixedDelay(this::queryApiAndUpdateChannels, 10, refresh * 60,
                     TimeUnit.SECONDS);
-
         }
     }
 
@@ -167,7 +161,7 @@ public class SmhiHandler extends BaseThingHandler {
         SmhiData dataList = null;
 
         try {
-            logger.debug("Quering SMHI API: " + apiRequest);
+            logger.debug("Quering SMHI API: {} ", apiRequest);
 
             apiResponseJson = HttpUtil.executeUrl("GET", apiRequest, null, null, "application/json", SMHI_TIMEOUT);
 
@@ -198,8 +192,8 @@ public class SmhiHandler extends BaseThingHandler {
             SimpleDateFormat cDateFormat = new SimpleDateFormat("yyyy-MM-dd");
             cDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-            logger.debug("Current date : " + cDateTimeFormat.format(currentValidDate));
-            logger.debug("Tomorrow date : " + cDateTimeFormat.format(tomorrowValidDate));
+            logger.debug("Current date : {}", cDateTimeFormat.format(currentValidDate));
+            logger.debug("Tomorrow date : {}", cDateTimeFormat.format(tomorrowValidDate));
 
             final List<SmhiTimeSeries> timeSeries = dataList.getTimeSeries();
 
@@ -215,13 +209,15 @@ public class SmhiHandler extends BaseThingHandler {
             temperatureMaxToday = temperatureMaxDay1 = temperatureMaxDay2 = temperatureMaxDay3 = -100;
 
             while (timeSeries.size() > 1) {
-
-                logger.debug("Processing date : " + cDateTimeFormat.format(timeSeries.get(0).getValidTime()));
+                logger.debug("Processing date : {}", cDateTimeFormat.format(timeSeries.get(0).getValidTime()));
 
                 parameters = timeSeries.get(0).getParameters();
 
                 for (SmhiParameters parameter : parameters) {
-                    hashParameters.put(parameter.name, parameter);
+                    String localName = parameter.name;
+                    if (localName != null) {
+                        hashParameters.put(localName, parameter);
+                    }
                 }
                 groupId = "";
                 if (cDateTimeFormat.format(currentValidDate)
@@ -239,7 +235,7 @@ public class SmhiHandler extends BaseThingHandler {
                 }
 
                 if (groupId != "") {
-                    logger.debug("Getting Weatherdata for : " + timeSeries.get(0).getValidTime());
+                    logger.debug("Getting Weatherdata for : {}", timeSeries.get(0).getValidTime());
                     getThing().getChannels().stream().map(Channel::getUID)
                             .filter(channelUID -> isLinked(channelUID) && groupId.equals(channelUID.getGroupId()))
                             .forEach(channelUID -> {
@@ -298,16 +294,15 @@ public class SmhiHandler extends BaseThingHandler {
             updateState("forecastDay2#temperature-max", new DecimalType(temperatureMaxDay2));
             updateState("forecastDay3#temperature-min", new DecimalType(temperatureMinDay3));
             updateState("forecastDay3#temperature-max", new DecimalType(temperatureMaxDay3));
-
         } catch (IOException e) {
             logger.debug("Exception occurred during execution: {}", e.getMessage(), e);
-
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
         }
     }
 
-    public State extractValue(String channelId, HashMap<String, SmhiParameters> hashParameters, Date processingDate) {
-        logger.debug("Getting Weatherdata for : " + channelId);
+    public State extractValue(String channelId, HashMap<String, SmhiParameters> hashParameters,
+            @Nullable Date processingDate) {
+        logger.debug("Getting Weatherdata for : {}", channelId);
 
         switch (channelId) {
             case CHANNEL_TIME_STAMP:

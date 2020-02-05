@@ -14,35 +14,38 @@ package org.openhab.binding.smhi.internal.model;
 
 import java.util.List;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * The {@link SmhiData} is the Java class used to map the JSON response to an SMHI
  * request.
  *
  * @author Michael Parment - Initial contribution
  */
-
+@NonNullByDefault
 public class SmhiData {
-    private List<SmhiTimeSeries> timeSeries;
+    private @Nullable List<SmhiTimeSeries> timeSeries;
 
-    private String referenceTime;
+    private @Nullable String referenceTime;
 
-    private String approvedTime;
+    private @Nullable String approvedTime;
 
-    private SmhiGeometry geometry;
+    private @Nullable SmhiGeometry geometry;
 
-    public List<SmhiTimeSeries> getTimeSeries() {
+    public @Nullable List<SmhiTimeSeries> getTimeSeries() {
         return timeSeries;
     }
 
-    public String getReferenceTime() {
+    public @Nullable String getReferenceTime() {
         return referenceTime;
     }
 
-    public String getApprovedTime() {
+    public @Nullable String getApprovedTime() {
         return approvedTime;
     }
 
-    public SmhiGeometry getGeometry() {
+    public @Nullable SmhiGeometry getGeometry() {
         return geometry;
     }
 

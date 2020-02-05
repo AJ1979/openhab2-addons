@@ -12,31 +12,34 @@
  */
 package org.openhab.binding.smhi.internal.model;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * The {@link smhiGeometry} is the Java class used to map the JSON response to an SMHI
  * request.
  *
  * @author Michael Parment - Initial contribution
  */
-
+@NonNullByDefault
 public class SmhiGeometry {
-    private String type;
+    private @Nullable String type;
 
-    private String[][] coordinates;
+    private String @Nullable [][] coordinates;
 
-    public String getType() {
+    public @Nullable String getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(@Nullable String type) {
         this.type = type;
     }
 
-    public String[][] getCoordinates() {
+    public String @Nullable [][] getCoordinates() {
         return coordinates;
     }
 
-    public void setCoordinates(String[][] coordinates) {
+    public void setCoordinates(@Nullable String[][] coordinates) {
         this.coordinates = coordinates;
     }
 

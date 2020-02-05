@@ -14,12 +14,15 @@ package org.openhab.binding.smhi.internal.model;
 
 import java.util.HashMap;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
 /**
  * The {@link smhiParameterTables} is the Java class used to map the JSON response to an SMHI
  * request.
  *
  * @author Michael Parment - Initial contribution
  */
+@NonNullByDefault
 public class SmhiParameterTables {
 
     private HashMap<Integer, String> condition = new HashMap<Integer, String>();

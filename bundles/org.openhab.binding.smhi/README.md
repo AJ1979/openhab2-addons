@@ -56,10 +56,13 @@ You can get more information at [SMHI API pmp3g Parameters](https://opendata.smh
 ## Full Example
 
 smhi.things
+
 ```
 smhi:weather-and-forecast:gavle [ weatherlocation="60.123456,17.123456", refresh=60 ]
 ```
+
 smhi.items
+
 ```
 Group gSmhi (All)
 DateTime SMHI_ObsTime   			"Prognos tid [%1$tY-%1$tm-%1$td %1$tH:%1$tM]" 			<clock>	(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:current#time-stamp"}
@@ -87,6 +90,7 @@ Number SMHI_PrecipitationMin		"Nederbörd Min [%.1f mm/h]"			<rain>   		(gSmhi, 
 Number SMHI_PrecipitationMax		"Nederbörd Max [%.1f mm/h]"			<rain>		   	(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:current#precipitation-max"}
 Number SMHI_PrecipitationFrozen		"Frysen nederbörd [%.0f %%]"		<climate>  		(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:current#precipitation-frozen"}
 ```
+
 ```
 DateTime SMHI_ObsTime_1   			"Prognos tid P1 [%1$tY-%1$tm-%1$td %1$tH:%1$tM]" <clock> (gSmhi, gPCR)  { channel="smhi:weather-and-forecast:gavle:forecastTomorrow#time-stamp"}
 String SMHI_Condition_1   			"Vädret imorgon är [%s]" 			    <sun_clouds>	(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastTomorrow#condition"}
@@ -113,6 +117,7 @@ Number SMHI_PrecipitationMin_1		"Nederbörd Min P1 [%.1f mm/h]"			<rain>   		(gS
 Number SMHI_PrecipitationMax_1		"Nederbörd Max P1 [%.1f mm/h]"			<rain>		   	(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastTomorrow#precipitation-max"}
 Number SMHI_PrecipitationFrozen_1	"Frysen nederbörd P1 [%.0f %%]"		    <climate>  		(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastTomorrow#precipitation-frozen"}
 ```
+
 ```
 DateTime SMHI_ObsTime_2   			"Prognos tid P2 [%1$tY-%1$tm-%1$td %1$tH:%1$tM]" <clock> (gSmhi, gPCR)  { channel="smhi:weather-and-forecast:gavle:forecastDay2#time-stamp"}
 String SMHI_Condition_2   			"Vädret Dag 2 är [%s]" 			    <sun_clouds>	(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastDay2#condition"}
@@ -139,6 +144,7 @@ Number SMHI_PrecipitationMin_2		"Nederbörd Min P2 [%.1f mm/h]"			<rain>   		(gS
 Number SMHI_PrecipitationMax_2		"Nederbörd Max P2 [%.1f mm/h]"			<rain>		   	(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastDay2#precipitation-max"}
 Number SMHI_PrecipitationFrozen_2	"Frysen nederbörd P2 [%.0f %%]"		    <climate>  		(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastDay2#precipitation-frozen"}
 ```
+
 ```
 DateTime SMHI_ObsTime_3   			"Prognos tid P3 [%1$tY-%1$tm-%1$td %1$tH:%1$tM]" <clock> (gSmhi, gPCR)  { channel="smhi:weather-and-forecast:gavle:forecastDay3#time-stamp"}
 String SMHI_Condition_3   			"Vädret Dag 3 är [%s]" 			        <sun_clouds>	(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastDay3#condition"}
@@ -165,8 +171,11 @@ Number SMHI_PrecipitationMin_3		"Nederbörd Min P3 [%.1f mm/h]"			<rain>   		(gS
 Number SMHI_PrecipitationMax_3		"Nederbörd Max P3 [%.1f mm/h]"			<rain>		   	(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastDay3#precipitation-max"}
 Number SMHI_PrecipitationFrozen_3	"Frysen nederbörd P3 [%.0f %%]"		    <climate>  		(gSmhi, gPCR)   { channel="smhi:weather-and-forecast:gavle:forecastDay3#precipitation-frozen"}
 ```
+
 ## Remark
-Note that current temperature min/max is from actual time to end of day so this have to be adjusted with historic values e.q.
+
+Note that current temperature min/max is from actual time to end of day so this have to be adjusted with historic values e.g.
+
 ```
 rule "SMHI Min/Max Current "
 when

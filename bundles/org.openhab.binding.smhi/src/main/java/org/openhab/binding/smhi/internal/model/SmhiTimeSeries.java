@@ -15,23 +15,26 @@ package org.openhab.binding.smhi.internal.model;
 import java.util.Date;
 import java.util.List;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * The {@link smhiTimeSeries} is the Java class used to map the JSON response to an SMHI
  * request.
  *
  * @author Michael Parment - Initial contribution
  */
-
+@NonNullByDefault
 public final class SmhiTimeSeries {
-    public Date validTime;
+    public @Nullable Date validTime;
 
-    public List<SmhiParameters> parameters;
+    public @Nullable List<SmhiParameters> parameters;
 
-    public Date getValidTime() {
+    public @Nullable Date getValidTime() {
         return validTime;
     }
 
-    public List<SmhiParameters> getParameters() {
+    public @Nullable List<SmhiParameters> getParameters() {
         return parameters;
     }
 

@@ -12,15 +12,19 @@
  */
 package org.openhab.binding.smhi.internal;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * The {@link smhiConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Michael Parment - Initial contribution
  */
+@NonNullByDefault
 public class SmhiConfiguration {
 
-    public Integer refresh;
+    public @Nullable Integer refresh;
 
-    public String location;
+    public @Nullable String location;
 
 }

@@ -12,41 +12,44 @@
  */
 package org.openhab.binding.smhi.internal.model;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * The {@link SmhiParameters} is the Java class used to map the JSON response to an SMHI
  * request.
  *
  * @author Michael Parment - Initial contribution
  */
-
+@NonNullByDefault
 public class SmhiParameters {
-    private String unit;
+    private @Nullable String unit;
 
-    private String levelType;
+    private @Nullable String levelType;
 
-    public Double[] values;
+    public Double @Nullable [] values;
 
-    private String level;
+    private @Nullable String level;
 
-    public String name;
+    public @Nullable String name;
 
-    public String getUnit() {
+    public @Nullable String getUnit() {
         return unit;
     }
 
-    public String getLevelType() {
+    public @Nullable String getLevelType() {
         return levelType;
     }
 
-    public Double[] getValues() {
+    public Double @Nullable [] getValues() {
         return values;
     }
 
-    public String getLevel() {
+    public @Nullable String getLevel() {
         return level;
     }
 
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 

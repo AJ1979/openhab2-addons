@@ -107,18 +107,19 @@ public class VWWeConnectSession {
         logger.debug("VWWeConnectSession:refresh");
 
         if (!areWeLoggedOut && areWeLoggedIn()) {
-            updateStatus();
-            return true;
+            if (updateStatus()) {
+                return true;
+            }
         } else {
             if (logIn()) {
-                updateStatus();
-                areWeLoggedOut = false;
-                return true;
-            } else {
-                areWeLoggedOut = true;
-                return false;
+                if (updateStatus()) {
+                    areWeLoggedOut = false;
+                    return true;
+                }
             }
         }
+        areWeLoggedOut = true;
+        return false;
     }
 
     public boolean unregisterDeviceStatusListener(DeviceStatusListener deviceStatusListener) {
@@ -639,14 +640,14 @@ public class VWWeConnectSession {
         }
     }
 
-    private void updateStatus() {
+    private boolean updateStatus() {
         logger.debug("VWWeConnectSession:updateStatus");
-        updateVehicleStatus(Vehicle.class);
+        return updateVehicleStatus(Vehicle.class);
     }
 
-    private synchronized void updateVehicleStatus(Class<? extends Vehicle> jsonClass) {
+    private synchronized boolean updateVehicleStatus(Class<? extends Vehicle> jsonClass) {
         Fields fields = null;
-        String content = null;// Check for outstanding pending request
+        String content = null;
 
         String url = authRefUrl + GET_FULLY_LOADED_CARS;
         ContentResponse httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
@@ -654,7 +655,7 @@ public class VWWeConnectSession {
             content = httpResponse.getContentAsString();
             if (isErrorCode(content)) {
                 logger.warn("Failed to update vehicle status.");
-                return;
+                return false;
             }
             // Find all not loaded vehicles
             DocumentContext context = JsonPath.parse(content);
@@ -663,6 +664,10 @@ public class VWWeConnectSession {
             context = JsonPath.parse(vehicleList);
             List<Object> vinList = context.read("$[*]['vin']");
             List<Object> dashboardUrlList = context.read("$[*]['dashboardUrl']");
+
+            if (vinList.size() == 0) {
+                logger.debug("No Not Fully loaded vehicle(s) found on VW We Connect portal! JSON: {}", content);
+            }
 
             // Loop trough all found vehicles
             for (int i = 0; i < vinList.size(); i++) {
@@ -689,7 +694,7 @@ public class VWWeConnectSession {
                 content = httpResponse.getContentAsString();
                 if (isErrorCode(content)) {
                     logger.warn("Failed to update vehicle status.");
-                    return;
+                    return false;
                 }
                 context = JsonPath.parse(content);
                 jsonpathVehiclesNotFullyLoadedPath = COMPLETE_VEHICLES;
@@ -697,6 +702,11 @@ public class VWWeConnectSession {
                 context = JsonPath.parse(vehicleList);
                 vinList = context.read("$[*]['vin']");
                 dashboardUrlList = context.read("$[*]['dashboardUrl']");
+
+                if (vinList.size() == 0) {
+                    logger.warn("No Fully loaded vehicle(s) found on VW We Connect portal! JSON: {}", content);
+                    return false;
+                }
 
                 // Loop trough all found vehicles
                 for (int i = 0; i < vinList.size(); i++) {
@@ -882,9 +892,12 @@ public class VWWeConnectSession {
                         notifyListeners(vehicle);
                     } else {
                         logger.warn("Failed to update vehicle details for VIN: {}", vin);
+                        return false;
                     }
                 }
             }
         }
+        return true;
     }
+
 }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <thing:thing-descriptions bindingId="smhi"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
-	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
 	<channel-group-type id="weather">
 		<label>Current Weather</label>
@@ -31,7 +31,7 @@
 			<channel id="precipitation-min" typeId="pmin" />
 			<channel id="precipitation-max" typeId="pmax" />
 			<channel id="precipitation-frozen" typeId="spp" />
-			
+
 		</channels>
 	</channel-group-type>
 
@@ -81,7 +81,7 @@
 		<category>Time</category>
 		<state readOnly="true" pattern="%1$tY-%1$tm-%1$td" />
 	</channel-type>
-	
+
 	<channel-type id="currentCondition">
 		<item-type>String</item-type>
 		<label>Weather Condition</label>
@@ -104,7 +104,7 @@
 		<description>Id of the weather condition.</description>
 		<state readOnly="true" />
 	</channel-type>
-	
+
 	<channel-type id="forecasted-t">
 		<item-type>Number:Temperature</item-type>
 		<label>Forecasted Temperature</label>
@@ -376,7 +376,7 @@
 		<category>Rain</category>
 		<state readOnly="true" pattern="%.1f mm/h" />
 	</channel-type>
-	
+
 	<channel-type id="pmin" advanced="true">
 		<item-type>Number:Length</item-type>
 		<label>Precipitation Min</label>
@@ -424,5 +424,5 @@
 		<category>Energy</category>
 		<state readOnly="true" pattern="%.0f %%" />
 	</channel-type>
-	
+
 </thing:thing-descriptions>	
