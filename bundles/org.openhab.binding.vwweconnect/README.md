@@ -233,7 +233,7 @@ Group gDoorStatus
 Group gWindowStatus
 
 // My bridge
-String   VWWeConnectRefreshStatus  "VW We Connect refesh status" {channel="vwweconnect:vwweconnectapi:myvwweconnect:status"}
+String   VWWeConnectRefreshStatus  "VW We Connect refresh status" {channel="vwweconnect:vwweconnectapi:myvwweconnect:status"}
 Switch   RefreshVehicleStatus      "Vehicle Refresh Status"
 
 // My vehicles
