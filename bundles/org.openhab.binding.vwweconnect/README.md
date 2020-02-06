@@ -252,10 +252,10 @@ Number   VehicleTotalDistance       "Total distance" <odometer> (gTotalTripData)
 Number   VehicleTotalDuration       "Total duration" <odometer> (gTotalTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:odometer#totalTripDuration"}
 
 // Fuel Info
-Number   VehicleFuelLevel           "Fuel level (%)" <sewerage> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:fuel#fuelLevel"}
-Number   VehicleAvgFuelConsumption  "Average fuel consumption (%)" <sewerage> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:fuel#fuelConsumption"}
-Switch   VehicleFuelAlert           "Fuel alert" <sewerage>  {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:fuel#fuelAlert"}
-Number   VehicleFuelRange           "Fuel Range" <motion> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:fuel#fuelRange"}
+Number   VehicleFuelLevel           "Fuel level (%)" <sewerage> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelLevel"}
+Number   VehicleAvgFuelConsumption  "Average fuel consumption (%)" <sewerage> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelConsumption"}
+Switch   VehicleFuelAlert           "Fuel alert" <sewerage>  {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelAlert"}
+Number   VehicleFuelRange           "Fuel Range" <motion> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelRange"}
 
 // Door status
 Contact  VehicleTrunk               "Trunk [%s]" <door> (gDoorStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#trunk"}
@@ -270,8 +270,8 @@ Contact  VehicleWindowRightBack      "Window right back [%s]" <window> (gWindowS
 Contact  VehicleWindowLeftBack       "Window left back [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#leftBackWnd"}
 Contact  VehicleWindowRightFont      "Window right front [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#rightFrontWnd"}
 Contact  VehicleWindowLeftFront      "Window left front [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#leftFrontWnd"}
-Contact  VehicleWindowRoof           "Window roof [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:windows#roof"}
-Contact  VehicleWindowSunRoof        "Window sun roof [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:windows#sunroof"}
+Contact  VehicleWindowRoof           "Window roof [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#roof"}
+Contact  VehicleWindowSunRoof        "Window sun roof [%s]" <window> (gWindowStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:windows#sunroof"}
 
 // Location
 Location VehicleLocation             "Location lon/lat" <map> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:position#location"}

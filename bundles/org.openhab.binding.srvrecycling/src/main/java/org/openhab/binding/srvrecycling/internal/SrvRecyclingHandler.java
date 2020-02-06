@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.srvrecycling.internal;
 
-import static org.openhab.binding.srvrecycling.internal.SrvRecyclingBindingConstants.CHANNEL_1;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +30,9 @@ import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.io.net.http.HttpUtil;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,10 +50,10 @@ public class SrvRecyclingHandler extends BaseThingHandler {
     private final Properties httpHeader = new Properties();
 
     private @Nullable SrvRecyclingConfiguration config;
-    private final static String SRV_URL = "https://www.srvatervinning.se/Privat/Din-sophamtning/Nar-hamtar-vi-dina-sopor/";
-    private final static String COOKIE_DOMAIN = "www.srvatervinning.se";
-    private final static String COOKIE_NAME = "cc_aceptSRV";
-    private final static String COOKIE_VALUE = "1";
+    private static final String SRV_URL = "https://www.srvatervinning.se/Privat/Din-sophamtning/Nar-hamtar-vi-dina-sopor/";
+    private static final String COOKIE_DOMAIN = "www.srvatervinning.se";
+    private static final String COOKIE_NAME = "cc_aceptSRV";
+    private static final String COOKIE_VALUE = "1";
     private int refresh = 600;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @NonNullByDefault({}) HttpClient httpClient;
@@ -66,17 +67,8 @@ public class SrvRecyclingHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_1.equals(channelUID.getId())) {
-            if (command instanceof RefreshType) {
-                // TODO: handle data refresh
-            }
-
-            // TODO: handle command
-
-            // Note: if communication with thing fails for some reason,
-            // indicate that by setting the status with detail information:
-            // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-            // "Could not control device at IP address x.x.x.x");
+        if (command instanceof RefreshType) {
+            refreshAndUpdateStatus();
         }
     }
 
@@ -141,9 +133,46 @@ public class SrvRecyclingHandler extends BaseThingHandler {
         body = body + searchString;
         try {
             InputStream inputStream = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
-            String jsonString = HttpUtil.executeUrl("POST", SRV_URL, httpHeader, inputStream, null, REQUEST_TIMEOUT);
-            logger.warn("Post URL: {} Attributes {} Content {}", SRV_URL, httpHeader);
-            logger.warn("Result: {}", jsonString);
+            String htmlResponse = HttpUtil.executeUrl("POST", SRV_URL, httpHeader, inputStream, null, REQUEST_TIMEOUT);
+
+            logger.warn("Result: {}", htmlResponse);
+
+            Document htmlDocument = Jsoup.parse(htmlResponse);
+            Elements elements = htmlDocument.select("div.collectInfo");
+            elements.stream().forEach(e -> logger.debug("Element: {}", e));
+            Elements elements2 = elements.select("div.collectDescr");
+            elements2.stream().forEach(e -> logger.debug("Element: {}", e.text()));
+            Elements elements3 = elements.select("ul.upcommingPickups");
+            elements3.stream().forEach(e -> logger.debug("Element: {}", e.text()));
+
+            // Fields fields = new Fields();
+            // Request request = httpClient.newRequest(SRV_URL).method(HttpMethod.POST);
+            // byte[] data = body.getBytes(StandardCharsets.UTF_8);
+            // // request.content(new BytesContentProvider(data), "application/x-www-form-urlencoded; charset=UTF-8");
+            // fields.put("__VIEWSTATE",
+            // "/wEPDwUKMTExNDg5MDkxNmQYAQUeX19Db250cm9sc1JlcXVpcmVQb3N0QmFja0tleV9fFgIFF2N0bDAwJEhlYWRlcjEkYnRuU2VhcmNoBStjdGwwMCRDb250ZW50UmVnaW9uJE1haW5SZWdpb24kc2VhcmNoQnV0dG9uzOo6lzZamuo/xzTZqyyJeqf2uuAkW1%2FyJhUA1txgWI8=");
+            // fields.put("__VIEWSTATEGENERATOR", "3A29F2D0");
+            // fields.put("__EVENTTARGET", "");
+            // fields.put("__EVENTARGUMENT", "");
+            // fields.put("__EVENTVALIDATION",
+            // "/wEdAAWEon0nvZp9yjglBOOi+j2Ck8cg7oqO6kilKCnfaEUUkxxcQNtO2VOAhaW/dNQyOIMXkWXPWWQEyRsmQUC2h4ZTnsm/Dy81eWU7hK9r9inyaRadyWsTYWFNoc9rOdVnoXHszMBfG7yEp+pT1fNunty9");
+            // fields.put("ctl00$Header1$tbSearch", "");
+            // fields.put("ctl00$ContentRegion$MainRegion$txtSearch", "Rostvingevägen+46+Huddinge");
+            //
+            // if (fields != null) {
+            // fields.forEach(f -> request.param(f.getName(), f.getValue()));
+            // }
+            //
+            // // request.content(new FormContentProvider(fields), "application/x-www-form-urlencoded; charset=UTF-8");
+            // logger.debug("Setting cookie with name {} and value {}", COOKIE_NAME, COOKIE_VALUE);
+            // HttpCookie httpCookie = new HttpCookie(COOKIE_NAME, COOKIE_VALUE);
+            // httpCookie.setDomain(COOKIE_DOMAIN);
+            // request.cookie(httpCookie);
+            // logger.debug("HTTP POST Request {}.", request.toString());
+            // ContentResponse response = request.send();
+            // String content = response.getContentAsString();
+            //
+            // logger.warn("Post URL: {} Attributes {} Content {}", SRV_URL, httpHeader, content);
 
         } catch (Exception e) {
             logger.warn("Failed to poll SRV {}", e.getMessage(), e);

@@ -12,15 +12,19 @@
  */
 package org.openhab.binding.srvrecycling.internal;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * The {@link SrvRecyclingConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Jan Gustafsson - Initial contribution
  */
+@NonNullByDefault
 public class SrvRecyclingConfiguration {
 
     /**
      * Sample configuration parameter. Replace with your own.
      */
-    public String config1;
+    public @Nullable String address;
 }

@@ -14,9 +14,9 @@
 		</channels>
 
 		<config-description>
-			<parameter name="config1" type="text" required="true">
-				<label>Sample Parameter</label>
-				<description>This is a sample text configuration parameter</description>
+			<parameter name="address" type="text" required="true">
+				<label>Home Address</label>
+				<description>This is your home address.</description>
 			</parameter>
 		</config-description>
 
