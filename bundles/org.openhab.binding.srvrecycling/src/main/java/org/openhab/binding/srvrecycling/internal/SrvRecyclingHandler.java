@@ -14,18 +14,24 @@ package org.openhab.binding.srvrecycling.internal;
 
 import static org.openhab.binding.srvrecycling.internal.SrvRecyclingBindingConstants.CHANNEL_1;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.eclipse.smarthome.io.net.http.HttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,15 +44,24 @@ import org.slf4j.LoggerFactory;
 @NonNullByDefault
 public class SrvRecyclingHandler extends BaseThingHandler {
 
+    private static final int REQUEST_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(20);
     private final Logger logger = LoggerFactory.getLogger(SrvRecyclingHandler.class);
+    private final Properties httpHeader = new Properties();
 
     private @Nullable SrvRecyclingConfiguration config;
-
+    private final static String SRV_URL = "https://www.srvatervinning.se/Privat/Din-sophamtning/Nar-hamtar-vi-dina-sopor/";
+    private final static String COOKIE_DOMAIN = "www.srvatervinning.se";
+    private final static String COOKIE_NAME = "cc_aceptSRV";
+    private final static String COOKIE_VALUE = "1";
     private int refresh = 600;
     private @Nullable ScheduledFuture<?> refreshJob;
+    private @NonNullByDefault({}) HttpClient httpClient;
 
-    public SrvRecyclingHandler(Thing thing) {
+    public SrvRecyclingHandler(Thing thing, HttpClient httpClient) {
         super(thing);
+        this.httpClient = httpClient;
+
+        httpHeader.put("content-type", "application/x-www-form-urlencoded");
     }
 
     @Override
@@ -121,6 +136,18 @@ public class SrvRecyclingHandler extends BaseThingHandler {
 
     private void refreshAndUpdateStatus() {
         logger.debug("SrvRecyclingHandler - Refresh thread is up'n running!");
+        String body = "__VIEWSTATE=%2FwEPDwUKMTExNDg5MDkxNmQYAQUeX19Db250cm9sc1JlcXVpcmVQb3N0QmFja0tleV9fFgIFF2N0bDAwJEhlYWRlcjEkYnRuU2VhcmNoBStjdGwwMCRDb250ZW50UmVnaW9uJE1haW5SZWdpb24kc2VhcmNoQnV0dG9uzOo6lzZamuo%2FxzTZqyyJeqf2uuAkW1%2FyJhUA1txgWI8%3D&__EVENTVALIDATION=%2FwEdAAWEon0nvZp9yjglBOOi%2Bj2Ck8cg7oqO6kilKCnfaEUUkxxcQNtO2VOAhaW%2FdNQyOIMXkWXPWWQEyRsmQUC2h4ZTnsm%2FDy81eWU7hK9r9inyaRadyWsTYWFNoc9rOdVnoXHszMBfG7yEp%2BpT1fNunty9&ctl00%24ContentRegion%24MainRegion%24txtSearch=";
+        String searchString = "Champinjonvägen 44, Huddinge";
+        body = body + searchString;
+        try {
+            InputStream inputStream = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
+            String jsonString = HttpUtil.executeUrl("POST", SRV_URL, httpHeader, inputStream, null, REQUEST_TIMEOUT);
+            logger.warn("Post URL: {} Attributes {} Content {}", SRV_URL, httpHeader);
+            logger.warn("Result: {}", jsonString);
+
+        } catch (Exception e) {
+            logger.warn("Failed to poll SRV {}", e.getMessage(), e);
+        }
     }
 
 }

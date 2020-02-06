@@ -14,7 +14,6 @@ package org.openhab.binding.vwweconnect.internal;
 
 import static org.openhab.binding.vwweconnect.internal.VWWeConnectBindingConstants.*;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.CookieStore;
 import java.net.HttpCookie;
@@ -32,7 +31,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.BytesContentProvider;
+import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.Fields;
@@ -214,13 +213,13 @@ public class VWWeConnectSession {
 
     private @Nullable ContentResponse getVWWeConnectAPI(String url) {
         logger.debug("getVWWeConnectAPI: {}", url);
-        ContentResponse httpResult = null;
+        ContentResponse httpResponse = null;
 
         try {
-            httpResult = httpClient.GET(url);
-            logger.trace("HTTP Response ({}) Body:{}", httpResult.getStatus(),
-                    httpResult.getContentAsString().replaceAll("\n+", "\n"));
-            return httpResult;
+            httpResponse = httpClient.GET(url);
+            logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                    httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+            return httpResponse;
         } catch (ExecutionException e) {
             logger.warn("Caught ExecutionException {} for URL string {}", e, url);
         } catch (InterruptedException e) {
@@ -228,12 +227,13 @@ public class VWWeConnectSession {
         } catch (TimeoutException e) {
             logger.warn("Caught TimeoutException {} for URL string {}", e, url);
         }
-        return httpResult;
+        return httpResponse;
     }
 
     private @Nullable ContentResponse getVWWeConnectAPI(String url, Boolean headers) {
         try {
             logger.debug("getVWWeConnectAPI URL: {} headers: {}", url, headers);
+            ContentResponse httpResponse = null;
             String correctEncodedURL = url.replace(" ", "%20");
             logger.debug("Encoded URL: {}", correctEncodedURL);
 
@@ -247,7 +247,10 @@ public class VWWeConnectSession {
                         "Mozilla/5.0 (Linux; Android 6.0.1; D5803 Build/23.5.A.1.291; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/63.0.3239.111 Mobile Safari/537.36");
             }
             logger.debug("HTTP GET Request {}.", request);
-            return request.send();
+            httpResponse = request.send();
+            logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                    httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+            return httpResponse;
         } catch (ExecutionException e) {
             logger.warn("Caught ExecutionException {}", e.getMessage(), e);
         } catch (InterruptedException e) {
@@ -264,6 +267,7 @@ public class VWWeConnectSession {
             String csrf) {
         try {
             logger.debug("postVWWeConnectAPI URL: {} Fields: {} Referer: {} CSRF:{}", url, fields, referer, csrf);
+            ContentResponse httpResponse = null;
             Request request = httpClient.newRequest(url).method(HttpMethod.POST);
 
             request.header("accept",
@@ -279,7 +283,10 @@ public class VWWeConnectSession {
                 request.header("x-csrf-token", csrf);
             }
             logger.debug("HTTP POST Request {}.", request.toString());
-            return request.send();
+            httpResponse = request.send();
+            logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                    httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+            return httpResponse;
         } catch (ExecutionException e) {
             logger.warn("Caught ExecutionException {}", e.getMessage(), e);
         } catch (InterruptedException e) {
@@ -300,6 +307,7 @@ public class VWWeConnectSession {
                 Thread.sleep(2 * SLEEP_TIME_MILLIS);
                 logger.debug("postJSONVWWeConnectAPI URL: {} Fields: {} Referer: {} XCSRF:{}", url, fields, referer,
                         xCsrf);
+                ContentResponse httpResponse = null;
                 Request request = httpClient.newRequest(url).method(HttpMethod.POST);
 
                 request.header("accept", "application/json, text/plain, */*");
@@ -314,7 +322,10 @@ public class VWWeConnectSession {
                 }
 
                 logger.debug("HTTP POST Request {}.", request.toString());
-                return request.send();
+                httpResponse = request.send();
+                logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                        httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+                return httpResponse;
             } catch (ExecutionException e) {
                 if (count <= RETRIES) {
                     logger.warn("Caught 3 consecutive ExecutionExceptions {}", e.getMessage(), e);
@@ -342,6 +353,7 @@ public class VWWeConnectSession {
             @Nullable String xCsrf) {
         try {
             logger.debug("postJSONVWWeConnectAPI URL: {} Data: {} Referer: {} XCSRF:{}", url, data, referer, xCsrf);
+            ContentResponse httpResponse = null;
             Request request = httpClient.newRequest(url).method(HttpMethod.POST);
 
             request.header("accept", "application/json, text/plain, */*");
@@ -352,11 +364,15 @@ public class VWWeConnectSession {
             request.header("x-csrf-token", xCsrf);
 
             if (!data.equals("empty")) {
-                request.content(new BytesContentProvider(data.getBytes("UTF-8")),
-                        "application/x-www-form-urlencoded; charset=UTF-8");
+                request.content(new StringContentProvider(data, "application/json"));
+                // request.content(new BytesContentProvider(data.getBytes(StandardCharsets.UTF_8)),
+                // "application/x-www-form-urlencoded; charset=UTF-8");
             }
             logger.debug("HTTP POST Request {}.", request.toString());
-            return request.send();
+            httpResponse = request.send();
+            logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                    httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+            return httpResponse;
         } catch (ExecutionException e) {
             logger.warn("Caught ExecutionException {}", e.getMessage(), e);
         } catch (InterruptedException e) {
@@ -365,8 +381,6 @@ public class VWWeConnectSession {
             logger.warn("Caught TimeoutException {}", e.getMessage(), e);
         } catch (RuntimeException e) {
             logger.warn("Caught RuntimeException {}", e.getMessage(), e);
-        } catch (UnsupportedEncodingException e) {
-            logger.warn("Caught UnsupportedEncodingException {}", e.getMessage(), e);
         }
         return null;
     }
@@ -392,7 +406,7 @@ public class VWWeConnectSession {
             ContentResponse httpResponse = request.send();
             if (httpResponse != null) {
                 content = httpResponse.getContentAsString();
-                logger.trace("Http content: {}", content);
+                logger.trace("Http response JSON: {}", content);
                 if (isErrorCode(content)) {
                     logger.warn("Error code on POST: url {}, response {}", url, content);
                     return null;
@@ -467,13 +481,17 @@ public class VWWeConnectSession {
         if (!checkHttpResponse200(httpResponse)) {
             if (checkHttpResponse302(httpResponse)) {
                 url = httpResponse.getHeaders().get("location");
-                httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+                logger.debug("Redirection to: {}", url);
+                httpResponse = getVWWeConnectAPI(url);
                 if (!checkHttpResponse200(httpResponse)) {
                     if (checkHttpResponse302(httpResponse)) {
-                        logger.debug("Most probably already logged in");
-                        return true;
+                        url = httpResponse.getHeaders().get("location");
+                        logger.debug("Redirection to: {}", url);
+                        logger.debug("Most probably already logged in, but lets continue");
+                    } else {
+                        logger.debug("Login failed, HTTP response: {}", httpResponse);
+                        return false;
                     }
-                    return false;
                 }
             }
         }
@@ -482,6 +500,7 @@ public class VWWeConnectSession {
         Document htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
         Element nameInput = htmlDocument.select("meta[name=_csrf]").first();
         String csrf = nameInput.attr("content");
+        logger.debug("Found csrf {}", csrf);
 
         // Request login page and get login URL
         url = SESSION_BASE + GET_LOGIN_URL;
@@ -882,7 +901,7 @@ public class VWWeConnectSession {
                         if (vehicleHeaterStatus != null) {
                             vehicle.setHeaterStatus(vehicleHeaterStatus);
                         } else {
-                            logger.warn("Vehicle heater status is null!");
+                            logger.debug("Vehicle heater status is null, no heater installed!");
                         }
 
                         BaseVehicle oldObj = vwWeConnectThings.get(vin);

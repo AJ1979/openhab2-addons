@@ -237,7 +237,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
     }
 
     private void startAutomaticRefresh() {
-        logger.warn("Start automatic refresh {}", refreshJob);
+        logger.debug("Start automatic refresh {}", refreshJob);
         if (refreshJob == null || refreshJob.isCancelled()) {
             try {
                 refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,

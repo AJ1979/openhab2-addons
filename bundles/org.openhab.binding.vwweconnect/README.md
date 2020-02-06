@@ -228,6 +228,7 @@ Bridge vwweconnect:vwweconnectapi:myvwweconnect "VW We Connect" [username="x@y.c
 ````
 Group gTotalTripData
 Group gLastTripData
+Group gFuelInfo
 Group gDoorStatus
 Group gWindowStatus
 
@@ -251,10 +252,10 @@ Number   VehicleTotalDistance       "Total distance" <odometer> (gTotalTripData)
 Number   VehicleTotalDuration       "Total duration" <odometer> (gTotalTripData) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:odometer#totalTripDuration"}
 
 // Fuel Info
-Number   VehicleFuelLevel           "Fuel level (%)" <sewerage> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelLevel"}
-Number   VehicleAvgFuelConsumption  "Average fuel consumption (%)" <sewerage> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelConsumption"}
-Switch   VehicleFuelAlert           "Fuel alert" <sewerage> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelAlert"}
-Number   VehicleFuelRange           "Fuel Range" <motion> {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:fuel#fuelRange"}
+Number   VehicleFuelLevel           "Fuel level (%)" <sewerage> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:fuel#fuelLevel"}
+Number   VehicleAvgFuelConsumption  "Average fuel consumption (%)" <sewerage> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:fuel#fuelConsumption"}
+Switch   VehicleFuelAlert           "Fuel alert" <sewerage>  {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:fuel#fuelAlert"}
+Number   VehicleFuelRange           "Fuel Range" <motion> (gFuelInfo) {channel="vwweconnect:vehicle:WVGZZZ5NZLW806713:fuel#fuelRange"}
 
 // Door status
 Contact  VehicleTrunk               "Trunk [%s]" <door> (gDoorStatus) {channel="vwweconnect:vehicle:WVGZZZ5XAPQ834262:doors#trunk"}
