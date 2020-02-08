@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.srvrecycling.internal;
 
-import static org.openhab.binding.srvrecycling.internal.SrvRecyclingBindingConstants.THING_TYPE_SAMPLE;
+import static org.openhab.binding.srvrecycling.internal.SrvRecyclingBindingConstants.THING_TYPE_PICKUPS;
 
 import java.util.Collections;
 import java.util.Set;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 @Component(configurationPid = "binding.srvrecycling", service = ThingHandlerFactory.class)
 public class SrvRecyclingHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_SAMPLE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_PICKUPS);
     private final Logger logger = LoggerFactory.getLogger(SrvRecyclingHandlerFactory.class);
 
     private @NonNullByDefault({}) HttpClient httpClient;
@@ -55,7 +55,7 @@ public class SrvRecyclingHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_SAMPLE.equals(thingTypeUID)) {
+        if (THING_TYPE_PICKUPS.equals(thingTypeUID)) {
             return new SrvRecyclingHandler(thing, httpClient);
         }
 

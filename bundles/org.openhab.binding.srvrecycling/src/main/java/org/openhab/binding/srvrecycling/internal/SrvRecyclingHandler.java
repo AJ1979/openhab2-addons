@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 public class SrvRecyclingHandler extends BaseThingHandler {
-
     private static final int REQUEST_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(20);
     private final Logger logger = LoggerFactory.getLogger(SrvRecyclingHandler.class);
     private final Properties httpHeader = new Properties();
@@ -112,7 +111,7 @@ public class SrvRecyclingHandler extends BaseThingHandler {
     }
 
     private void startAutomaticRefresh() {
-        logger.warn("Start automatic refresh {}", refreshJob);
+        logger.debug("Start automatic refresh {}", refreshJob);
         if (refreshJob == null || refreshJob.isCancelled()) {
             try {
                 refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,

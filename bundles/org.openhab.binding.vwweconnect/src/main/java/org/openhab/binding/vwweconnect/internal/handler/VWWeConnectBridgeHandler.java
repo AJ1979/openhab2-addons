@@ -53,6 +53,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
     private static final int REFRESH_DELAY_SECONDS = 30;
 
     private final Logger logger = LoggerFactory.getLogger(VWWeConnectBridgeHandler.class);
+    private final ReentrantLock refreshJobLock = new ReentrantLock();
     private final ReentrantLock immediateRefreshJobLock = new ReentrantLock();
 
     private @Nullable String securePIN;
@@ -92,6 +93,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
 
     @Override
     protected void updateConfiguration(Configuration configuration) {
+        logger.debug("Configuration updated {}", configuration);
         stopAutomaticRefresh();
         stopImmediateRefresh();
         super.updateConfiguration(configuration);
@@ -116,7 +118,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
 
             scheduler.execute(() -> {
                 if (session == null) {
-                    logger.debug("Session is null, let's create a new one");
+                    logger.debug("Session is null, config change probably, then let's create a new one");
                     session = new VWWeConnectSession(this.httpClient);
                 }
                 if (!session.initialize(config.username, config.password, securePIN)) {
@@ -124,8 +126,9 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
                             "Failed to login to VW We Connect portal, please check your credentials!");
                     return;
                 }
-                startAutomaticRefresh();
             });
+
+            startAutomaticRefresh();
         }
     }
 
@@ -183,7 +186,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
     }
 
     private void refreshAndUpdateStatus() {
-        logger.debug("VWWeConnectBridgeHandler - Refresh thread is up'n running!");
+        logger.debug("VWWeConnectBridgeHandler - Refresh thread is up'n running! job: {}", refreshJob);
         try {
             if (session != null) {
                 boolean success = session.refresh();
@@ -204,50 +207,55 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
     void scheduleImmediateRefresh(int refreshDelay) {
         logger.debug("VWWeConnectBridgeHandler - scheduleImmediateRefresh");
         immediateRefreshJobLock.lock();
+        logger.trace("immediateRefreshJobLock is locked");
         try {
-            // We schedule in 10 sec, to avoid multiple updates
             if (refreshJob != null) {
-                logger.debug("Current remaining delay {} for refresh job {}", refreshJob.getDelay(TimeUnit.SECONDS),
-                        refreshJob);
                 if (immediateRefreshJob != null) {
                     logger.debug("Current remaining delay {} for immediate refresh job {}",
                             immediateRefreshJob.getDelay(TimeUnit.SECONDS), immediateRefreshJob);
                 }
                 if (refreshJob.getDelay(TimeUnit.SECONDS) > refreshDelay) {
                     if (immediateRefreshJob == null || immediateRefreshJob.getDelay(TimeUnit.SECONDS) <= 0) {
-                        if (immediateRefreshJob != null) {
-                            logger.debug("Current remaining delay {} for immediate refresh job {}",
-                                    immediateRefreshJob.getDelay(TimeUnit.SECONDS), immediateRefreshJob);
-                        }
+                        logger.debug("Current remaining delay {} for refresh job {}",
+                                refreshJob.getDelay(TimeUnit.SECONDS), refreshJob);
                         // Note we are using getDelay() instead of isDone() as we want to allow Things to schedule a
                         // refresh if their status is pending. As the status update happens inside the
-                        // refreshAndUpdateStatus
-                        // execution the isDone() will return false and would not allow the rescheduling of the task.
+                        // refreshAndUpdateStatus execution the isDone() will return false and would not
+                        // allow the rescheduling of the task.
                         immediateRefreshJob = scheduler.schedule(this::refreshAndUpdateStatus, refreshDelay,
                                 TimeUnit.SECONDS);
                         logger.debug("Scheduling new immediate refresh job {}", immediateRefreshJob);
                     }
+                } else {
+                    logger.debug("No immediate refresh scheduled since resfresh job will run in {} s.",
+                            refreshJob.getDelay(TimeUnit.SECONDS));
                 }
             }
         } catch (RejectedExecutionException e) {
             logger.warn("Immediate refresh job cannot be scheduled!");
         } finally {
             immediateRefreshJobLock.unlock();
+            logger.trace("immediateRefreshJobLock is unlocked");
         }
     }
 
     private void startAutomaticRefresh() {
         logger.debug("Start automatic refresh {}", refreshJob);
-        if (refreshJob == null || refreshJob.isCancelled()) {
-            try {
+        refreshJobLock.lock();
+        logger.trace("refreshJobLock is locked");
+        try {
+            if (refreshJob == null || refreshJob.isCancelled()) {
                 refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,
                         TimeUnit.SECONDS);
                 logger.debug("Scheduling at fixed delay refreshjob {}", refreshJob);
-            } catch (IllegalArgumentException e) {
-                logger.warn("Refresh time value is invalid! Please change the refresh time configuration!", e);
-            } catch (RejectedExecutionException e) {
-                logger.warn("Automatic refresh job cannot be started!");
             }
+        } catch (IllegalArgumentException e) {
+            logger.warn("Refresh time value is invalid! Please change the refresh time configuration!", e);
+        } catch (RejectedExecutionException e) {
+            logger.warn("Automatic refresh job cannot be started!");
+        } finally {
+            refreshJobLock.unlock();
+            logger.trace("refreshJobLock is unlocked");
         }
     }
 

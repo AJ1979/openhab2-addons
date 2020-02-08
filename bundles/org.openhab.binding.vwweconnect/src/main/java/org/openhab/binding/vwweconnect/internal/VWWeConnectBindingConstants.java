@@ -30,12 +30,16 @@ public class VWWeConnectBindingConstants {
 
     public static final String BINDING_ID = "vwweconnect";
 
-    // Vehicle properties
-    public static final String VIN = "vin";
-
     // List of Thing Type UIDs
     public static final ThingTypeUID BRIDGE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vwweconnectapi");
     public static final ThingTypeUID VEHICLE_THING_TYPE = new ThingTypeUID(BINDING_ID, "vehicle");
+
+    // List of all addressable things in OH = SUPPORTED_DEVICE_THING_TYPES_UIDS + the virtual bridge
+    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream.of(BRIDGE_THING_TYPE, VEHICLE_THING_TYPE)
+            .collect(Collectors.toSet());
+
+    // Vehicle properties
+    public static final String VIN = "vin";
 
     // List of Channel ID's
     // Doors
@@ -166,10 +170,6 @@ public class VWWeConnectBindingConstants {
     public static final String VEHICLES_NOT_FULLY_LOADED = "$['fullyLoadedVehiclesResponse']['vehiclesNotFullyLoaded'][*]";
     public static final String COMPLETE_VEHICLES = "$['fullyLoadedVehiclesResponse']['completeVehicles'][*]";
     public static final String REQUEST_IN_PROGRESS = "REQUEST_IN_PROGRESS";
-
-    // List of all addressable things in OH = SUPPORTED_DEVICE_THING_TYPES_UIDS + the virtual bridge
-    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream.of(BRIDGE_THING_TYPE, VEHICLE_THING_TYPE)
-            .collect(Collectors.toSet());
 
     // REST URI constants
     public static final String USERNAME = "username";

@@ -19,6 +19,7 @@ import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +32,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.Fields;
@@ -364,9 +365,8 @@ public class VWWeConnectSession {
             request.header("x-csrf-token", xCsrf);
 
             if (!data.equals("empty")) {
-                request.content(new StringContentProvider(data, "application/json"));
-                // request.content(new BytesContentProvider(data.getBytes(StandardCharsets.UTF_8)),
-                // "application/x-www-form-urlencoded; charset=UTF-8");
+                request.content(new BytesContentProvider(data.getBytes(StandardCharsets.UTF_8)),
+                        "application/x-www-form-urlencoded; charset=UTF-8");
             }
             logger.debug("HTTP POST Request {}.", request.toString());
             httpResponse = request.send();
@@ -487,7 +487,8 @@ public class VWWeConnectSession {
                     if (checkHttpResponse302(httpResponse)) {
                         url = httpResponse.getHeaders().get("location");
                         logger.debug("Redirection to: {}", url);
-                        logger.debug("Most probably already logged in, but lets continue");
+                        logger.debug("Most probably already logged in, so lets continue");
+                        return true;
                     } else {
                         logger.debug("Login failed, HTTP response: {}", httpResponse);
                         return false;
@@ -499,6 +500,10 @@ public class VWWeConnectSession {
         // Parse csrf
         Document htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
         Element nameInput = htmlDocument.select("meta[name=_csrf]").first();
+        if (nameInput == null) {
+            logger.debug("Login failed, nameInput is null");
+            return false;
+        }
         String csrf = nameInput.attr("content");
         logger.debug("Found csrf {}", csrf);
 
@@ -673,30 +678,30 @@ public class VWWeConnectSession {
         if (httpResponse != null) {
             content = httpResponse.getContentAsString();
             if (isErrorCode(content)) {
-                logger.warn("Failed to update vehicle status.");
-                return false;
-            }
-            // Find all not loaded vehicles
-            DocumentContext context = JsonPath.parse(content);
-            String jsonpathVehiclesNotFullyLoadedPath = VEHICLES_NOT_FULLY_LOADED;
-            List<Object> vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
-            context = JsonPath.parse(vehicleList);
-            List<Object> vinList = context.read("$[*]['vin']");
-            List<Object> dashboardUrlList = context.read("$[*]['dashboardUrl']");
+                logger.warn("Failed to get fully loaded cars.");
+            } else {
+                // Find all not fully loaded vehicles
+                DocumentContext context = JsonPath.parse(content);
+                String jsonpathVehiclesNotFullyLoadedPath = VEHICLES_NOT_FULLY_LOADED;
+                List<Object> vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
+                context = JsonPath.parse(vehicleList);
+                List<Object> vinList = context.read("$[*]['vin']");
+                List<Object> dashboardUrlList = context.read("$[*]['dashboardUrl']");
 
-            if (vinList.size() == 0) {
-                logger.debug("No Not Fully loaded vehicle(s) found on VW We Connect portal! JSON: {}", content);
-            }
+                if (vinList.size() == 0) {
+                    logger.debug("No not fully loaded vehicle(s) found on VW We Connect portal! JSON: {}", content);
+                }
 
-            // Loop trough all found vehicles
-            for (int i = 0; i < vinList.size(); i++) {
-                String vin = (String) vinList.get(i);
-                String dashboardUrl = (String) dashboardUrlList.get(i);
+                // Loop trough all found vehicles
+                for (int i = 0; i < vinList.size(); i++) {
+                    String vin = (String) vinList.get(i);
+                    String dashboardUrl = (String) dashboardUrlList.get(i);
 
-                // Query API for vehicle details for this VIN
-                url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS + vin;
-                Vehicle vehicle = postJSONVWWeConnectAPI(url, fields, Vehicle.class);
-                logger.debug("API Response ({})", vehicle);
+                    // Query API for vehicle details for this VIN
+                    url = SESSION_BASE + dashboardUrl + VEHICLE_DETAILS + vin;
+                    Vehicle vehicle = postJSONVWWeConnectAPI(url, fields, Vehicle.class);
+                    logger.debug("API Response ({})", vehicle);
+                }
             }
 
             // Sleep, w8 for fully loaded cars
@@ -715,12 +720,12 @@ public class VWWeConnectSession {
                     logger.warn("Failed to update vehicle status.");
                     return false;
                 }
-                context = JsonPath.parse(content);
-                jsonpathVehiclesNotFullyLoadedPath = COMPLETE_VEHICLES;
-                vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
+                DocumentContext context = JsonPath.parse(content);
+                String jsonpathVehiclesNotFullyLoadedPath = COMPLETE_VEHICLES;
+                List<Object> vehicleList = context.read(jsonpathVehiclesNotFullyLoadedPath);
                 context = JsonPath.parse(vehicleList);
-                vinList = context.read("$[*]['vin']");
-                dashboardUrlList = context.read("$[*]['dashboardUrl']");
+                List<Object> vinList = context.read("$[*]['vin']");
+                List<Object> dashboardUrlList = context.read("$[*]['dashboardUrl']");
 
                 if (vinList.size() == 0) {
                     logger.warn("No Fully loaded vehicle(s) found on VW We Connect portal! JSON: {}", content);
