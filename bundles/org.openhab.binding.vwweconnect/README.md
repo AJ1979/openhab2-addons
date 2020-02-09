@@ -45,13 +45,13 @@ Any side effects using this binding is the responsibility of the person installi
 
 #### Configuration Options
 
-*   `username` - The username used to connect to VW We Connect Portal
+*   `username` - The username used to connect to VW We Connect Portal.
 
-*   `password` - The password used to connect to VW We Connect Portal
+*   `password` - The password used to connect to VW We Connect Portal.
 
-*   `refresh` - Specifies the refresh interval in seconds
+*   `spin` - The user's secure PIN code to lock/unlock doors and start/stop the heater, same as configured on VW We Connect Portal.
 
-*   `spin` - The user's secure PIN code to lock/unlock doors and start/stop the heater, same as configured on VW We Connect Portal
+*   `refresh` - Specifies the refresh interval in seconds (default 600).
 
 
 #### Channels

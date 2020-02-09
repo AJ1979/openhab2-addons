@@ -72,6 +72,12 @@ public class SrvRecyclingHandler extends BaseThingHandler {
     }
 
     @Override
+    public void dispose() {
+        logger.debug("Handler is disposed.");
+        stopAutomaticRefresh();
+    }
+
+    @Override
     public void initialize() {
         // logger.debug("Start initializing!");
         config = getConfigAs(SrvRecyclingConfiguration.class);
@@ -122,6 +128,14 @@ public class SrvRecyclingHandler extends BaseThingHandler {
             } catch (RejectedExecutionException e) {
                 logger.warn("Automatic refresh job cannot be started!");
             }
+        }
+    }
+
+    private void stopAutomaticRefresh() {
+        logger.debug("Stop automatic refresh for job {}", refreshJob);
+        if (refreshJob != null && !refreshJob.isCancelled()) {
+            refreshJob.cancel(true);
+            refreshJob = null;
         }
     }
 

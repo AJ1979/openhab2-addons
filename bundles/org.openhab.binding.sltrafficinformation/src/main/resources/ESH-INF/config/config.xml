@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
+
+	<config-description uri="thing-type:sltrafficinformation:deviations">
+		<parameter name="apiKeyDeviation" type="text" required="true">
+			<label>Your SL Deviation API Key</label>
+			<description>Your own SL API key for Deviation API.</description>
+		</parameter>
+
+		<parameter name="lineNumbers" type="text" required="true">
+			<label>Line Numbers Of Interest</label>
+			<description>Line numbers of interest (comma separated list).</description>
+		</parameter>
+
+		<parameter name="refresh" type="integer">
+			<label>Refresh Interval</label>
+			<description>Specifies the refresh interval in seconds.</description>
+			<default>600</default>
+		</parameter>
+
+	</config-description>
+
+	<config-description uri="thing-type:sltrafficinformation:realTimeInfo">
+		<parameter name="apiKeyRealTime" type="text" required="true">
+			<label>Your SL Real Time Information API Key</label>
+			<description>Your own SL real time information API key.</description>
+		</parameter>
+
+		<parameter name="siteId" type="text" required="true">
+			<label>SL Site ID</label>
+			<description>SL site ID of interest.</description>
+		</parameter>
+
+		<parameter name="timeWindow" type="text" required="true">
+			<label>Time Window</label>
+			<description>Time window in minutes (0-60).</description>
+		</parameter>
+
+		<parameter name="destinations" type="text" required="true">
+			<label>End Destinations</label>
+			<description>End destination(s) for line (comma separated list).</description>
+		</parameter>
+
+		<parameter name="refresh" type="integer">
+			<label>Refresh Interval</label>
+			<description>Specifies the refresh interval in seconds.</description>
+			<default>600</default>
+		</parameter>
+
+	</config-description>
+
+</config-description:config-descriptions>

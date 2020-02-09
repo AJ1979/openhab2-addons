@@ -34,6 +34,7 @@ import org.eclipse.smarthome.core.types.UnDefType;
 import org.eclipse.smarthome.io.net.http.HttpUtil;
 import org.openhab.binding.sltrafficinformation.internal.SLTrafficInformationConfiguration;
 import org.openhab.binding.sltrafficinformation.internal.model.SLTrafficDeviations;
+import org.openhab.binding.sltrafficinformation.internal.model.SLTrafficDeviations.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,9 +73,16 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
     }
 
     @Override
+    public void dispose() {
+        logger.debug("Handler is disposed.");
+        stopAutomaticRefresh();
+    }
+
+    @Override
     public void initialize() {
         // logger.debug("Start initializing!");
         config = getConfigAs(SLTrafficInformationConfiguration.class);
+        this.refresh = config.refresh;
 
         // set the thing status to UNKNOWN temporarily and let the background task decide for the real status.
         // the framework is then able to reuse the resources from the thing handler initialization.
@@ -117,6 +125,14 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
         }
     }
 
+    private void stopAutomaticRefresh() {
+        logger.debug("Stop automatic refresh for job {}", refreshJob);
+        if (refreshJob != null && !refreshJob.isCancelled()) {
+            refreshJob.cancel(true);
+            refreshJob = null;
+        }
+    }
+
     private void refreshAndUpdateStatus() {
         logger.debug("SLTrafficInformationHandler - Refresh thread is up'n running!");
 
@@ -141,17 +157,19 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
         }
     }
 
+    private void handleDeviations(ResponseData response, StringBuffer result) {
+        result.append("För ");
+        result.append(response.getScope());
+        result.append(" gäller ");
+        result.append(response.getHeader());
+        result.append(". ");
+    }
+
     public State getValue(String channelId, SLTrafficDeviations deviations) {
         switch (channelId) {
             case CHANNEL_DEVIATIONS:
                 StringBuffer result = new StringBuffer();
-                deviations.getResponseData().stream().forEach(r -> {
-                    result.append("För ");
-                    result.append(r.getScope());
-                    result.append(" gäller ");
-                    result.append(r.getHeader());
-                    result.append(" ");
-                });
+                deviations.getResponseData().stream().forEach(r -> handleDeviations(r, result));
                 return new StringType(result.toString());
         }
         return UnDefType.UNDEF;

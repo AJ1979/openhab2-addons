@@ -12,47 +12,21 @@
 			<channel id="deviations" typeId="deviations" />
 		</channels>
 
-		<config-description>
-			<parameter name="apiKeyDeviation" type="text" required="true">
-				<label>Your SL Deviation API Key</label>
-				<description>Your own SL API key for Deviation API.</description>
-			</parameter>
-			<parameter name="lineNumbers" type="text" required="true">
-				<label>Line Numbers Of Interest</label>
-				<description>Line numbers of interest (comma separated list).</description>
-			</parameter>
-		</config-description>
+		<config-description-ref uri="thing-type:sltrafficinformation:deviations" />
 
 	</thing-type>
-	
+
 	<thing-type id="realTimeInformation">
-        <label>SL Real time Traffic Information</label>
-        <description>SL real time traffic information for configured line numbers.</description>
+		<label>SL Real time Traffic Information</label>
+		<description>SL real time traffic information for configured line numbers.</description>
 
-        <channels>
-            <channel id="realTimeInformation" typeId="realTimeInformation" />
-        </channels>
+		<channels>
+			<channel id="realTimeInformation" typeId="realTimeInformation" />
+		</channels>
 
-        <config-description>
-            <parameter name="apiKeyRealTime" type="text" required="true">
-                <label>Your SL Real Time Information API Key</label>
-                <description>Your own SL real time information API key.</description>
-            </parameter>
-            <parameter name="siteId" type="text" required="true">
-                <label>SL Site ID</label>
-                <description>SL site ID of interest.</description>
-            </parameter>
-            <parameter name="timeWindow" type="text" required="true">
-                <label>Time Window</label>
-                <description>Time window in minutes (0-60).</description>
-            </parameter>
-            <parameter name="destination" type="text" required="true">
-                <label>Destination</label>
-                <description>End destination.</description>
-            </parameter>
-        </config-description>
+		<config-description-ref uri="thing-type:sltrafficinformation:realTimeInfo" />
 
-    </thing-type>
+	</thing-type>
 
 	<channel-type id="deviations">
 		<item-type>String</item-type>
@@ -60,12 +34,12 @@
 		<description>Information on current deviations for configured line numbers.</description>
 		<state readOnly="true" pattern="%s" />
 	</channel-type>
-	
+
 	<channel-type id="realTimeInformation">
-        <item-type>String</item-type>
-        <label>Current Real Time Information</label>
-        <description>Current real time information for configured line numbers.</description>
-        <state readOnly="true" pattern="%s" />
-    </channel-type>
+		<item-type>String</item-type>
+		<label>Current Real Time Information</label>
+		<description>Current real time information for configured line numbers.</description>
+		<state readOnly="true" pattern="%s" />
+	</channel-type>
 
 </thing:thing-descriptions>

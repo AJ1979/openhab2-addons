@@ -30,6 +30,7 @@ public class SLTrafficInformationConfiguration {
     public @Nullable String apiKeyRealTime;
     public @Nullable String siteId;
     public @Nullable String timeWindow;
-    public @Nullable String destination;
+    public @Nullable String destinations;
+    public int refresh;
 
 }

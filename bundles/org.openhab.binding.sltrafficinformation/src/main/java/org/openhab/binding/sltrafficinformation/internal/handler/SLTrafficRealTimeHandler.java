@@ -12,9 +12,10 @@
  */
 package org.openhab.binding.sltrafficinformation.internal.handler;
 
-import static org.openhab.binding.sltrafficinformation.internal.SLTrafficInformationBindingConstants.CHANNEL_DEVIATIONS;
+import static org.openhab.binding.sltrafficinformation.internal.SLTrafficInformationBindingConstants.CHANNEL_REAL_TIME_INFO;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,8 @@ import org.eclipse.smarthome.core.types.UnDefType;
 import org.eclipse.smarthome.io.net.http.HttpUtil;
 import org.openhab.binding.sltrafficinformation.internal.SLTrafficInformationConfiguration;
 import org.openhab.binding.sltrafficinformation.internal.model.SLTrafficRealTime;
+import org.openhab.binding.sltrafficinformation.internal.model.SLTrafficRealTime.TrafficType;
+import org.openhab.binding.sltrafficinformation.internal.util.Either;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +52,7 @@ import com.google.gson.GsonBuilder;
 @NonNullByDefault
 public class SLTrafficRealTimeHandler extends BaseThingHandler {
     private static final int REQUEST_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(20);
-    private final Logger logger = LoggerFactory.getLogger(SLTrafficDeviationHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(SLTrafficRealTimeHandler.class);
 
     private @Nullable SLTrafficInformationConfiguration config;
     private int refresh = 600;
@@ -68,6 +71,12 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         if (command instanceof RefreshType) {
             refreshAndUpdateStatus();
         }
+    }
+
+    @Override
+    public void dispose() {
+        logger.debug("Handler is disposed.");
+        stopAutomaticRefresh();
     }
 
     @Override
@@ -116,21 +125,29 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         }
     }
 
+    private void stopAutomaticRefresh() {
+        logger.debug("Stop automatic refresh for job {}", refreshJob);
+        if (refreshJob != null && !refreshJob.isCancelled()) {
+            refreshJob.cancel(true);
+            refreshJob = null;
+        }
+    }
+
     private void refreshAndUpdateStatus() {
         logger.debug("SLTrafficInformationHandler - Refresh thread is up'n running!");
 
         String url = SL_REAL_TIME_INFO_URL + "?key=" + config.apiKeyRealTime + "&siteid=" + config.siteId
                 + "&timewindow=" + config.timeWindow;
-        SLTrafficRealTime reaelTimeInfo;
+        SLTrafficRealTime realTimeInfo;
         try {
             String htmlJSON = HttpUtil.executeUrl("POST", url, null, null, null, REQUEST_TIMEOUT);
             logger.debug("Result: {}", htmlJSON);
-            reaelTimeInfo = gson.fromJson(htmlJSON, SLTrafficRealTime.class);
+            realTimeInfo = gson.fromJson(htmlJSON, SLTrafficRealTime.class);
 
-            if (reaelTimeInfo != null) {
+            if (realTimeInfo != null) {
                 getThing().getChannels().stream().map(Channel::getUID).filter(channelUID -> isLinked(channelUID))
                         .forEach(channelUID -> {
-                            State state = getValue(channelUID.getId(), reaelTimeInfo);
+                            State state = getValue(channelUID.getId(), realTimeInfo);
                             updateState(channelUID, state);
                         });
             } else {
@@ -141,19 +158,73 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         }
     }
 
+    private TrafficType mapHandleTraffic(TrafficType traffic) {
+        if (traffic != null) {
+            logger.debug("bus: {}", traffic.getDestination());
+        } else {
+            logger.debug("traffic is null");
+        }
+        return traffic;
+    }
+
+    private Boolean filterHandleTraffic(Either e) {
+        if (e.isLeft()) {
+            logger.debug("Exception caught: {}", e.getLeft());
+            return false;
+        } else {
+            Optional<TrafficType> o = e.getRight();
+            TrafficType traffic = o.get();
+            String destinations = config.destinations;
+            return destinations.toLowerCase().contains(traffic.getDestination().toLowerCase());
+        }
+    }
+
+    private void forHandleTraffic(Either e, StringBuffer result) {
+        if (e.isLeft()) {
+            logger.debug("Exception caught: {}", e.getLeft());
+        } else {
+            Optional<TrafficType> o = e.getRight();
+            TrafficType traffic = o.get();
+            logger.debug("b: {}", traffic);
+            result.append(traffic.getGroupOfLine() != null ? traffic.getGroupOfLine() : "Buss");
+            result.append(" ");
+            result.append(traffic.getLineNumber());
+            result.append(" till ");
+            result.append(traffic.getDestination());
+            if (traffic.getDisplayTime().contains(":")) {
+                result.append(" går klockan ");
+            } else {
+                result.append(" går om ");
+            }
+            result.append(traffic.getDisplayTime());
+            result.append(". ");
+        }
+    }
+
     public State getValue(String channelId, SLTrafficRealTime realTime) {
         switch (channelId) {
-            case CHANNEL_DEVIATIONS:
+            case CHANNEL_REAL_TIME_INFO:
                 StringBuffer result = new StringBuffer();
-                realTime.getResponseData().stream().forEach(r -> {
-                    result.append("För ");
-                    result.append(r.getScope());
-                    result.append(" gäller ");
-                    result.append(r.getHeader());
-                    result.append(" ");
-                });
+
+                // Handle buses
+                realTime.getResponseData().getBuses().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                        .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
+
+                // Handle trains
+                realTime.getResponseData().getTrains().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                        .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
+
+                // Handle trams
+                realTime.getResponseData().getTrams().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                        .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
+
+                // Handle metros
+                realTime.getResponseData().getMetros().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                        .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
+
                 return new StringType(result.toString());
         }
         return UnDefType.UNDEF;
     }
+
 }

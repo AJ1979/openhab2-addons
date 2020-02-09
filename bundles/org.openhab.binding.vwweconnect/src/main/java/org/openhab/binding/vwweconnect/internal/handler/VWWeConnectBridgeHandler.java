@@ -134,7 +134,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void dispose() {
-        logger.debug("Handler disposed.");
+        logger.debug("Handler is disposed.");
         stopAutomaticRefresh();
         stopImmediateRefresh();
         if (session != null) {

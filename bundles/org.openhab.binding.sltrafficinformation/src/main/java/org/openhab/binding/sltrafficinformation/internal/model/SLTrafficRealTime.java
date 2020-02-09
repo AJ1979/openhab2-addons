@@ -215,7 +215,7 @@ public class SLTrafficRealTime {
         @SerializedName("StopInfo")
         private @Nullable StopInfo stopInfo;
         @SerializedName("Deviation")
-        private @Nullable Deviation_ deviation;
+        private @Nullable Deviation deviation;
 
         public @Nullable StopInfo getStopInfo() {
             return stopInfo;
@@ -225,11 +225,11 @@ public class SLTrafficRealTime {
             this.stopInfo = stopInfo;
         }
 
-        public @Nullable Deviation_ getDeviation() {
+        public @Nullable Deviation getDeviation() {
             return deviation;
         }
 
-        public void setDeviation(Deviation_ deviation) {
+        public void setDeviation(Deviation deviation) {
             this.deviation = deviation;
         }
 
@@ -258,7 +258,21 @@ public class SLTrafficRealTime {
     }
 
     @NonNullByDefault
-    public class Bus {
+    public abstract class TrafficType {
+        public abstract @Nullable Object getGroupOfLine();
+
+        public abstract @Nullable String getTransportMode();
+
+        public abstract @Nullable String getLineNumber();
+
+        public abstract @Nullable String getDestination();
+
+        public abstract @Nullable String getDisplayTime();
+
+    }
+
+    @NonNullByDefault
+    public class Bus extends TrafficType {
 
         @SerializedName("GroupOfLine")
         private @Nullable Object groupOfLine;
@@ -289,6 +303,7 @@ public class SLTrafficRealTime {
         @SerializedName("Deviations")
         private @Nullable Object deviations;
 
+        @Override
         public @Nullable Object getGroupOfLine() {
             return groupOfLine;
         }
@@ -297,6 +312,7 @@ public class SLTrafficRealTime {
             this.groupOfLine = groupOfLine;
         }
 
+        @Override
         public @Nullable String getTransportMode() {
             return transportMode;
         }
@@ -305,6 +321,7 @@ public class SLTrafficRealTime {
             this.transportMode = transportMode;
         }
 
+        @Override
         public @Nullable String getLineNumber() {
             return lineNumber;
         }
@@ -313,6 +330,7 @@ public class SLTrafficRealTime {
             this.lineNumber = lineNumber;
         }
 
+        @Override
         public @Nullable String getDestination() {
             return destination;
         }
@@ -377,6 +395,7 @@ public class SLTrafficRealTime {
             this.expectedDateTime = expectedDateTime;
         }
 
+        @Override
         public @Nullable String getDisplayTime() {
             return displayTime;
         }
@@ -442,7 +461,7 @@ public class SLTrafficRealTime {
     }
 
     @NonNullByDefault
-    public class Train {
+    public class Train extends TrafficType {
 
         @SerializedName("SecondaryDestinationName")
         private @Nullable Object secondaryDestinationName;
@@ -483,6 +502,7 @@ public class SLTrafficRealTime {
             this.secondaryDestinationName = secondaryDestinationName;
         }
 
+        @Override
         public @Nullable String getGroupOfLine() {
             return groupOfLine;
         }
@@ -491,6 +511,7 @@ public class SLTrafficRealTime {
             this.groupOfLine = groupOfLine;
         }
 
+        @Override
         public @Nullable String getTransportMode() {
             return transportMode;
         }
@@ -499,6 +520,7 @@ public class SLTrafficRealTime {
             this.transportMode = transportMode;
         }
 
+        @Override
         public @Nullable String getLineNumber() {
             return lineNumber;
         }
@@ -507,6 +529,7 @@ public class SLTrafficRealTime {
             this.lineNumber = lineNumber;
         }
 
+        @Override
         public @Nullable String getDestination() {
             return destination;
         }
@@ -571,6 +594,7 @@ public class SLTrafficRealTime {
             this.expectedDateTime = expectedDateTime;
         }
 
+        @Override
         public @Nullable String getDisplayTime() {
             return displayTime;
         }
@@ -639,7 +663,7 @@ public class SLTrafficRealTime {
     }
 
     @NonNullByDefault
-    public class Tram {
+    public class Tram extends TrafficType {
 
         @SerializedName("TransportMode")
         private @Nullable String transportMode;
@@ -670,6 +694,7 @@ public class SLTrafficRealTime {
         @SerializedName("Deviations")
         private @Nullable Object deviations;
 
+        @Override
         public @Nullable String getTransportMode() {
             return transportMode;
         }
@@ -678,6 +703,7 @@ public class SLTrafficRealTime {
             this.transportMode = transportMode;
         }
 
+        @Override
         public @Nullable String getLineNumber() {
             return lineNumber;
         }
@@ -686,6 +712,7 @@ public class SLTrafficRealTime {
             this.lineNumber = lineNumber;
         }
 
+        @Override
         public @Nullable String getDestination() {
             return destination;
         }
@@ -702,6 +729,7 @@ public class SLTrafficRealTime {
             this.journeyDirection = journeyDirection;
         }
 
+        @Override
         public @Nullable String getGroupOfLine() {
             return groupOfLine;
         }
@@ -758,6 +786,7 @@ public class SLTrafficRealTime {
             this.expectedDateTime = expectedDateTime;
         }
 
+        @Override
         public @Nullable String getDisplayTime() {
             return displayTime;
         }
@@ -823,7 +852,7 @@ public class SLTrafficRealTime {
     }
 
     @NonNullByDefault
-    public class Metro {
+    public class Metro extends TrafficType {
 
         @SerializedName("GroupOfLine")
         private @Nullable String groupOfLine;
@@ -854,6 +883,7 @@ public class SLTrafficRealTime {
         @SerializedName("Deviations")
         private @Nullable Object deviations;
 
+        @Override
         public @Nullable String getGroupOfLine() {
             return groupOfLine;
         }
@@ -862,6 +892,7 @@ public class SLTrafficRealTime {
             this.groupOfLine = groupOfLine;
         }
 
+        @Override
         public @Nullable String getDisplayTime() {
             return displayTime;
         }
@@ -870,6 +901,7 @@ public class SLTrafficRealTime {
             this.displayTime = displayTime;
         }
 
+        @Override
         public @Nullable String getTransportMode() {
             return transportMode;
         }
@@ -878,6 +910,7 @@ public class SLTrafficRealTime {
             this.transportMode = transportMode;
         }
 
+        @Override
         public @Nullable String getLineNumber() {
             return lineNumber;
         }
@@ -886,6 +919,7 @@ public class SLTrafficRealTime {
             this.lineNumber = lineNumber;
         }
 
+        @Override
         public @Nullable String getDestination() {
             return destination;
         }
@@ -1063,65 +1097,6 @@ public class SLTrafficRealTime {
                     .append(importanceLevel, rhs.importanceLevel).isEquals();
         }
 
-    }
-
-    @NonNullByDefault
-    public class Deviation_ {
-
-        @SerializedName("Text")
-        private @Nullable String text;
-        @SerializedName("Consequence")
-        private @Nullable Object consequence;
-        @SerializedName("ImportanceLevel")
-        private int importanceLevel;
-
-        public @Nullable String getText() {
-            return text;
-        }
-
-        public void setText(String text) {
-            this.text = text;
-        }
-
-        public @Nullable Object getConsequence() {
-            return consequence;
-        }
-
-        public void setConsequence(Object consequence) {
-            this.consequence = consequence;
-        }
-
-        public int getImportanceLevel() {
-            return importanceLevel;
-        }
-
-        public void setImportanceLevel(int importanceLevel) {
-            this.importanceLevel = importanceLevel;
-        }
-
-        @Override
-        public String toString() {
-            return new ToStringBuilder(this).append("text", text).append("consequence", consequence)
-                    .append("importanceLevel", importanceLevel).toString();
-        }
-
-        @Override
-        public int hashCode() {
-            return new HashCodeBuilder().append(consequence).append(text).append(importanceLevel).toHashCode();
-        }
-
-        @Override
-        public boolean equals(@Nullable Object other) {
-            if (other == this) {
-                return true;
-            }
-            if (!(other instanceof Deviation_)) {
-                return false;
-            }
-            Deviation_ rhs = ((Deviation_) other);
-            return new EqualsBuilder().append(consequence, rhs.consequence).append(text, rhs.text)
-                    .append(importanceLevel, rhs.importanceLevel).isEquals();
-        }
     }
 
     @NonNullByDefault
