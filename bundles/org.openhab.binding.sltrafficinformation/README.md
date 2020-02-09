@@ -21,7 +21,9 @@ and creating a project that shall use the APIs:
 
 Then create your own API codes for those two APIs.
 
+To get correct siteid for a station, use this URL:
 
+https://www.trafiklab.se/api/sl-platsuppslag/konsol
 
 ## Discovery
 
@@ -48,7 +50,7 @@ You can configure the things preferably via things files or via the PapaerUI.
 
 *   `apiKeyRealTime` - Your API key from SL for real time information.
 
-*   `siteId` - SL site ID of interest.
+*   `siteId` - SL site ID of interest. See link above for getting correct siteid!
 
 *   `timeWindow` - Time window in minutes (0-60).
 
