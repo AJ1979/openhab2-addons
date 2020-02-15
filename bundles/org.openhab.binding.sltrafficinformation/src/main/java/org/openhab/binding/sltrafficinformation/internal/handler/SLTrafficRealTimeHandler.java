@@ -12,17 +12,26 @@
  */
 package org.openhab.binding.sltrafficinformation.internal.handler;
 
-import static org.openhab.binding.sltrafficinformation.internal.SLTrafficInformationBindingConstants.CHANNEL_REAL_TIME_INFO;
+import static org.openhab.binding.sltrafficinformation.internal.SLTrafficInformationBindingConstants.*;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.measure.quantity.Time;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.library.types.StringType;
+import org.eclipse.smarthome.core.library.unit.SmartHomeUnits;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -59,6 +68,8 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
     private @Nullable ScheduledFuture<?> refreshJob;
 
     private static final String SL_REAL_TIME_INFO_URL = "https://api.sl.se/api2/realtimedeparturesV4.json";
+    private static final long SECONDS_PER_MINUTE = 60;
+    private static final long SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
 
     private Gson gson = new GsonBuilder().create();
 
@@ -95,7 +106,9 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
             // when done do:
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
-                startAutomaticRefresh();
+                if (refresh != 0) {
+                    startAutomaticRefresh();
+                }
             } else {
                 updateStatus(ThingStatus.OFFLINE);
             }
@@ -201,11 +214,62 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         }
     }
 
+    private void forHandleDepartures(Either e, StringBuffer result) {
+        if (e.isLeft()) {
+            logger.debug("Exception caught: {}", e.getLeft());
+        } else {
+            Optional<TrafficType> o = e.getRight();
+            TrafficType traffic = o.get();
+            logger.debug("b: {}", traffic);
+            result.append(traffic.getDisplayTime());
+            result.append(" ");
+        }
+    }
+
+    private void getDepartures(SLTrafficRealTime realTime, StringBuffer result) {
+        // Handle buses
+        realTime.getResponseData().getBuses().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleDepartures(eitherBus, result));
+
+        // Handle trains
+        realTime.getResponseData().getTrains().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleDepartures(eitherBus, result));
+
+        // Handle trams
+        realTime.getResponseData().getTrams().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleDepartures(eitherBus, result));
+
+        // Handle metros
+        realTime.getResponseData().getMetros().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleDepartures(eitherBus, result));
+    }
+
+    private String convertToMinutes(String time) {
+        if (time.contains(":")) {
+            LocalTime timeForDeparture = LocalTime.parse(time);
+            LocalTime now = LocalTime.now();
+            Duration duration = Duration.between(now, timeForDeparture);
+
+            long seconds = duration.getSeconds();
+            long minutes = ((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+            return String.valueOf(minutes);
+        } else if (time.equals("Nu")) {
+            return "0";
+        }
+        return time;
+    }
+
+    private boolean filter(String s) {
+        boolean containsMin = s.equals("min");
+        boolean result = !containsMin;
+        return result;
+    }
+
     public State getValue(String channelId, SLTrafficRealTime realTime) {
+        StringBuffer result = new StringBuffer();
+        int loop = 0;
         switch (channelId) {
             case CHANNEL_REAL_TIME_INFO:
-                StringBuffer result = new StringBuffer();
-
                 // Handle buses
                 realTime.getResponseData().getBuses().stream().map(Either.liftWithValue(this::mapHandleTraffic))
                         .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
@@ -223,6 +287,31 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
                         .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
 
                 return new StringType(result.toString());
+            case CHANNEL_NEXT_DEPARTURE:
+            case CHANNEL_SECOND_DEPARTURE:
+            case CHANNEL_THIRD_DEPARTURE:
+                if (channelId.equals(CHANNEL_SECOND_DEPARTURE)) {
+                    loop = 1;
+                } else if (channelId.equals(CHANNEL_THIRD_DEPARTURE)) {
+                    loop = 2;
+                }
+                getDepartures(realTime, result);
+                String departureList = result.toString();
+                if (!departureList.equals("")) {
+                    String[] departures = departureList.split(" ");
+                    List<Integer> filteredDepartures = Stream.of(departures).map(this::convertToMinutes)
+                            .filter(this::filter).mapToInt(Integer::parseInt).mapToObj(i -> i)
+                            .collect(Collectors.toList());
+                    for (Integer integer : filteredDepartures) {
+                        if (integer.intValue() > config.offset) {
+                            if (loop == 0) {
+                                return new QuantityType<Time>(integer.intValue(), SmartHomeUnits.MINUTE);
+                            }
+                            loop--;
+                        }
+                    }
+
+                }
         }
         return UnDefType.UNDEF;
     }

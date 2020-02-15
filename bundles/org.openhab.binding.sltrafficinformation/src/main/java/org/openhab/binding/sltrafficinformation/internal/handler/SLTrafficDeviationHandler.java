@@ -95,7 +95,9 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
             // when done do:
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
-                startAutomaticRefresh();
+                if (refresh != 0) {
+                    startAutomaticRefresh();
+                }
             } else {
                 updateStatus(ThingStatus.OFFLINE);
             }

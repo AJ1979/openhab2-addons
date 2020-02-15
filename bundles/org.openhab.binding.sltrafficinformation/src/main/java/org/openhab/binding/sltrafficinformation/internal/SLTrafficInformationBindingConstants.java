@@ -33,5 +33,8 @@ public class SLTrafficInformationBindingConstants {
     // List of all Channel ids
     public static final String CHANNEL_DEVIATIONS = "deviations";
     public static final String CHANNEL_REAL_TIME_INFO = "realTimeInformation";
+    public static final String CHANNEL_NEXT_DEPARTURE = "nextDeparture";
+    public static final String CHANNEL_SECOND_DEPARTURE = "secondDeparture";
+    public static final String CHANNEL_THIRD_DEPARTURE = "thirdDeparture";
 
 }

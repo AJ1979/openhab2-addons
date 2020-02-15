@@ -56,6 +56,8 @@ You can configure the things preferably via things files or via the PapaerUI.
 
 *   `destinations` - End destination(s) for line (comma separated list).
 
+*   `offset` - Specifies the offset time in seconds (default 0). Used e.g. for setting a walk time to the station.
+
 *   `refresh` - Specifies the refresh interval in seconds (default 600).
 
 
@@ -69,9 +71,12 @@ You can configure the things preferably via things files or via the PapaerUI.
 
 ([realTimeInformation]) supports the following channel:
 
-| Channel Type ID     | Item Type | Description                                     |
-|------------|--------|-------------------------------------------------------------|
-| realTimeInformation | String | Found realtime information for configured  site ID.|
+| Channel Type ID     | Item Type | Description                                                          |
+|------------|--------|----------------------------------------------------------------------------------|
+| realTimeInformation | String | Found realtime information for configured  site ID and end destinations.|
+| nextDeparture       | String | Next departure after offset for configured site ID and end destinations.|
+| secondDeparture     | String | Second departure after offset for configured site ID and end destinations.|
+| thirdDeparture     | String | Third departure after offset for configured site ID and end destinations.|
 
 
 ## Full Example

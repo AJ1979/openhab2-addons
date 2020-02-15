@@ -44,6 +44,12 @@
 			<description>End destination(s) for line (comma separated list).</description>
 		</parameter>
 
+		<parameter name="offset" type="integer">
+			<label>Offset</label>
+			<description>Specifies the offset time that can be used to take account for walking time to station.</description>
+			<default>0</default>
+		</parameter>
+
 		<parameter name="refresh" type="integer">
 			<label>Refresh Interval</label>
 			<description>Specifies the refresh interval in seconds.</description>

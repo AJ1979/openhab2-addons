@@ -428,13 +428,42 @@ public class VehicleHandler extends VWWeConnectHandler {
         return UnDefType.UNDEF;
     }
 
+    private boolean filterLastTrip(TripStatistic tripStat, int tripId) {
+        if (tripStat != null) {
+            return (tripStat.getAggregatedStatistics().getTripId() == tripId);
+        }
+        return false;
+    }
+
     public void updateLastTrip(@Nullable Trips trips) {
         if (trips != null) {
+            // Find latest trip ID
+            int tripId;
             List<TripStatistic> tripsStat = trips.getRtsViewModel().getTripStatistics();
+            // Do a reverse of the trips
             Collections.reverse(tripsStat);
-            Optional<TripStatistic> lastTrip = tripsStat.stream()
-                    .filter(aggregatedStatistics -> aggregatedStatistics != null).findFirst();
-            int tripId = lastTrip.get().getAggregatedStatistics().getTripId();
+            logger.trace("Last trip stats reversed: {}", tripsStat);
+            Optional<TripStatistic> lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null)
+                    .findFirst();
+            int tripId1 = lastTrip.get().getAggregatedStatistics().getTripId();
+            logger.trace("Last trip ID1: {}", tripId1);
+            // Do another reverse of the trips
+            Collections.reverse(tripsStat);
+            logger.trace("Last trip stats reversed: {}", tripsStat);
+            lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null).findFirst();
+            int tripId2 = lastTrip.get().getAggregatedStatistics().getTripId();
+            logger.trace("Last trip ID2: {}", tripId1);
+
+            // Find latest trip ID
+            if (tripId2 >= tripId1) {
+                tripId = tripId2;
+            } else {
+                tripId = tripId1;
+            }
+            logger.trace("Last trip ID: {}", tripId);
+
+            lastTrip = tripsStat.stream().filter(tripStat -> filterLastTrip(tripStat, tripId)).findFirst();
+
             Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
                     .filter(t -> t.getTripId() == tripId).findFirst();
             logger.debug("Last trip: {}", lastTrip);

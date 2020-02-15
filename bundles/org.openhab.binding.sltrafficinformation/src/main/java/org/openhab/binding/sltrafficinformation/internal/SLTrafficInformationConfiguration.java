@@ -31,6 +31,7 @@ public class SLTrafficInformationConfiguration {
     public @Nullable String siteId;
     public @Nullable String timeWindow;
     public @Nullable String destinations;
+    public int offset;
     public int refresh;
 
 }
