@@ -1,4 +1,4 @@
-# VW Car Net Binding
+# VW We Connect Binding
 
 This is an OpenHAB binding for VW We Connect Portal.
 
