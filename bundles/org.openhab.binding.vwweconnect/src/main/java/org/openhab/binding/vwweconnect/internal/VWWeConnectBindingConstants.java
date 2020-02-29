@@ -170,6 +170,7 @@ public class VWWeConnectBindingConstants {
     public static final String VEHICLES_NOT_FULLY_LOADED = "$['fullyLoadedVehiclesResponse']['vehiclesNotFullyLoaded'][*]";
     public static final String COMPLETE_VEHICLES = "$['fullyLoadedVehiclesResponse']['completeVehicles'][*]";
     public static final String REQUEST_IN_PROGRESS = "REQUEST_IN_PROGRESS";
+    public static final String REQUEST_SUCCESSFUL = "REQUEST_SUCCESSFUL";
 
     // REST URI constants
     public static final String USERNAME = "username";

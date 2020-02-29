@@ -74,13 +74,18 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
         logger.debug("VWWeConnectBridgeHandler Handle command {} on channelUID: {}", command, channelUID);
         if (command instanceof RefreshType) {
             if (channelUID.getId().equals(CHANNEL_STATUS) && channelUID.getThingUID().equals(getThing().getUID())) {
-                logger.debug("Refresh command on status channel {} will trigger instant refresh", channelUID);
-                scheduleImmediateRefresh(0);
-            } else {
-                logger.debug("Refresh command on channel {} will trigger refresh in {} seconds", channelUID,
-                        REFRESH_DELAY_SECONDS);
-                scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                logger.debug("Refresh command on status channel {} will trigger a vehicle status request", channelUID);
+                scheduler.execute(() -> {
+                    if (session != null) {
+                        session.requestVehicleStatus();
+                    } else {
+                        logger.debug("Failed to handle refresh on status channel since session is null!");
+                    }
+                });
             }
+            logger.debug("Refresh command on channel {} will trigger refresh in {} seconds", channelUID,
+                    REFRESH_DELAY_SECONDS);
+            scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
         } else {
             logger.warn("unknown command! {}", command);
         }
@@ -121,11 +126,7 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
                     logger.debug("Session is null, config change probably, then let's create a new one");
                     session = new VWWeConnectSession(this.httpClient);
                 }
-                if (!session.initialize(config.username, config.password, securePIN)) {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_REGISTERING_ERROR,
-                            "Failed to login to VW We Connect portal, please check your credentials!");
-                    return;
-                }
+                session.initialize(config.username, config.password, securePIN);
             });
 
             startAutomaticRefresh();
@@ -196,7 +197,12 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
                 } else {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
                     logger.warn("Refresh failed!");
+                    session = null;
                 }
+            } else {
+                logger.debug("VWWeConnectBridgeHandler - Refresh thread session is null, let's re-initialize!");
+                dispose();
+                initialize();
             }
         } catch (Exception e) {
             logger.debug("Exception occurred during execution: {}", e.getMessage(), e);

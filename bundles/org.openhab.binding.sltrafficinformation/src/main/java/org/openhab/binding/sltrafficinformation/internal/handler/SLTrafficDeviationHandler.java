@@ -67,6 +67,7 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+        logger.debug("Handle command {} on channel {}.", command, channelUID);
         if (command instanceof RefreshType) {
             refreshAndUpdateStatus();
         }

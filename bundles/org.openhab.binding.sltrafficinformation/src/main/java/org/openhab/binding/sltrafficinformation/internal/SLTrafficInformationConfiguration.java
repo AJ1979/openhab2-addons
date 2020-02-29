@@ -25,13 +25,15 @@ public class SLTrafficInformationConfiguration {
 
     // Deviation
     public @Nullable String apiKeyDeviation;
-    public @Nullable String lineNumbers;
     // Real Time
     public @Nullable String apiKeyRealTime;
     public @Nullable String siteId;
     public @Nullable String timeWindow;
+    public int journeyDirection;
     public @Nullable String destinations;
     public int offset;
     public int refresh;
+    // Both
+    public @Nullable String lineNumbers;
 
 }

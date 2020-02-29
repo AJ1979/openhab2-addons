@@ -44,6 +44,11 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class TellstickBindingConstants {
 
+    public static final Unit<Temperature> TEMPERATURE_UNIT = SIUnits.CELSIUS;
+    public static final Unit<Pressure> PRESSURE_UNIT = HECTO(SIUnits.PASCAL);
+    public static final Unit<Speed> WIND_SPEED_UNIT_MS = SmartHomeUnits.METRE_PER_SECOND;
+    public static final Unit<Angle> WIND_DIRECTION_UNIT = SmartHomeUnits.DEGREE_ANGLE;
+
     public static final String BINDING_ID = "tellstick";
 
     public static final Unit<Dimensionless> HUMIDITY_UNIT = SmartHomeUnits.PERCENT;

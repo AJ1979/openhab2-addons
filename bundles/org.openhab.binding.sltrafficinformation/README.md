@@ -46,15 +46,33 @@ You can configure the things preferably via things files or via the PapaerUI.
 
 ### Realtime Information
 
+Journey direction can be either 1 or 2 and is used to filter all traffic in one direction. 
+Since different site IDs can have different meaning for 1 and 2, you have to try out which direction to configure for your site ID.
+
+If direction is not configured, destinations will be used for filtering traffic.
+**NOTE**: This must be the end destination for the traffic, not a destination on route.
+
+If neither journeyDirection nor destinations is configured, no traffic will be presented.
+
+Line numbers can be used to filter on one or many lines.
+
+Offset can be used to filter out departures that are too close in time to be able to catch.
+
+
+
 #### Configuration Options 
 
 *   `apiKeyRealTime` - Your API key from SL for real time information.
 
-*   `siteId` - SL site ID of interest. See link above for getting correct siteid!
+*   `siteId` - SL site ID of interest. See link above for getting correct site ID!
 
 *   `timeWindow` - Time window in minutes (0-60).
 
-*   `destinations` - End destination(s) for line (comma separated list).
+*   `journeyDirection` - Journey direction (1 or 2).
+
+*   `destinations` - End destination(s) of interest (comma separated list).
+
+*   `lineNUmbers` - Line number(s) of interest (comma separated list).
 
 *   `offset` - Specifies the offset time in seconds (default 0). Used e.g. for setting a walk time to the station.
 
@@ -73,10 +91,10 @@ You can configure the things preferably via things files or via the PapaerUI.
 
 | Channel Type ID     | Item Type | Description                                                          |
 |------------|--------|----------------------------------------------------------------------------------|
-| realTimeInformation | String | Found realtime information for configured  site ID and end destinations.|
-| nextDeparture       | String | Next departure after offset for configured site ID and end destinations.|
-| secondDeparture     | String | Second departure after offset for configured site ID and end destinations.|
-| thirdDeparture     | String | Third departure after offset for configured site ID and end destinations.|
+| realTimeInformation | String | Found realtime information for configured site ID and filters.          |
+| nextDeparture       | String | Next departure after offset for configured site ID and filters.         |
+| secondDeparture     | String | Second departure after offset for configured site ID and filters.       |
+| thirdDeparture      | String | Third departure after offset for configured site ID and filters.        |
 
 
 ## Full Example

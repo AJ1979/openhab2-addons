@@ -44,6 +44,7 @@ import org.eclipse.smarthome.core.types.UnDefType;
 import org.eclipse.smarthome.io.net.http.HttpUtil;
 import org.openhab.binding.sltrafficinformation.internal.SLTrafficInformationConfiguration;
 import org.openhab.binding.sltrafficinformation.internal.model.SLTrafficRealTime;
+import org.openhab.binding.sltrafficinformation.internal.model.SLTrafficRealTime.Deviation;
 import org.openhab.binding.sltrafficinformation.internal.model.SLTrafficRealTime.TrafficType;
 import org.openhab.binding.sltrafficinformation.internal.util.Either;
 import org.slf4j.Logger;
@@ -79,6 +80,7 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+        logger.debug("Handle command {} on channel {}.", command, channelUID);
         if (command instanceof RefreshType) {
             refreshAndUpdateStatus();
         }
@@ -187,9 +189,29 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         } else {
             Optional<TrafficType> o = e.getRight();
             TrafficType traffic = o.get();
+            int journeyDirection = config.journeyDirection;
             String destinations = config.destinations;
-            return destinations.toLowerCase().contains(traffic.getDestination().toLowerCase());
+            String lineNumbers = config.lineNumbers;
+            if (journeyDirection == 1 || journeyDirection == 2) {
+                if (lineNumbers != null) {
+                    return lineNumbers.toLowerCase().contains(traffic.getLineNumber().toLowerCase())
+                            && (journeyDirection == traffic.getJourneyDirection());
+                } else {
+                    return journeyDirection == traffic.getJourneyDirection();
+                }
+            } else if (destinations != null) {
+                if (lineNumbers != null) {
+                    return lineNumbers.toLowerCase().contains(traffic.getLineNumber().toLowerCase())
+                            && (journeyDirection == traffic.getJourneyDirection());
+                } else {
+                    return destinations.toLowerCase().contains(traffic.getDestination().toLowerCase());
+                }
+            } else {
+                logger.warn("Neither direction {} or destination {} is configured!", journeyDirection, destinations);
+                return false;
+            }
         }
+
     }
 
     private void forHandleTraffic(Either e, StringBuffer result) {
@@ -206,11 +228,20 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
             result.append(traffic.getDestination());
             if (traffic.getDisplayTime().contains(":")) {
                 result.append(" går klockan ");
+            } else if (traffic.getDisplayTime().contains("Nu")) {
+                result.append(" går ");
             } else {
                 result.append(" går om ");
             }
             result.append(traffic.getDisplayTime());
             result.append(". ");
+            List<Deviation> deviations = traffic.getDeviations();
+            if (deviations != null) {
+                deviations.stream().forEach(deviation -> {
+                    result.append(deviation.getText() + " ");
+                });
+            }
+
         }
     }
 
@@ -233,15 +264,15 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
 
         // Handle trains
         realTime.getResponseData().getTrains().stream().map(Either.liftWithValue(this::mapHandleTraffic))
-                .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleDepartures(eitherBus, result));
+                .filter(this::filterHandleTraffic).forEach(eitherTrain -> forHandleDepartures(eitherTrain, result));
 
         // Handle trams
         realTime.getResponseData().getTrams().stream().map(Either.liftWithValue(this::mapHandleTraffic))
-                .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleDepartures(eitherBus, result));
+                .filter(this::filterHandleTraffic).forEach(eitherTram -> forHandleDepartures(eitherTram, result));
 
         // Handle metros
         realTime.getResponseData().getMetros().stream().map(Either.liftWithValue(this::mapHandleTraffic))
-                .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleDepartures(eitherBus, result));
+                .filter(this::filterHandleTraffic).forEach(eitherMetro -> forHandleDepartures(eitherMetro, result));
     }
 
     private String convertToMinutes(String time) {
@@ -310,7 +341,6 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
                             loop--;
                         }
                     }
-
                 }
         }
         return UnDefType.UNDEF;

@@ -265,9 +265,13 @@ public class SLTrafficRealTime {
 
         public abstract @Nullable String getLineNumber();
 
+        public abstract int getJourneyDirection();
+
         public abstract @Nullable String getDestination();
 
         public abstract @Nullable String getDisplayTime();
+
+        public abstract @Nullable List<Deviation> getDeviations();
 
     }
 
@@ -301,7 +305,7 @@ public class SLTrafficRealTime {
         @SerializedName("JourneyNumber")
         private int journeyNumber;
         @SerializedName("Deviations")
-        private @Nullable Object deviations;
+        private @Nullable List<Deviation> deviations;
 
         @Override
         public @Nullable Object getGroupOfLine() {
@@ -339,6 +343,7 @@ public class SLTrafficRealTime {
             this.destination = destination;
         }
 
+        @Override
         public int getJourneyDirection() {
             return journeyDirection;
         }
@@ -412,11 +417,12 @@ public class SLTrafficRealTime {
             this.journeyNumber = journeyNumber;
         }
 
-        public @Nullable Object getDeviations() {
+        @Override
+        public @Nullable List<Deviation> getDeviations() {
             return deviations;
         }
 
-        public void setDeviations(Object deviations) {
+        public void setDeviations(List<Deviation> deviations) {
             this.deviations = deviations;
         }
 
@@ -492,7 +498,7 @@ public class SLTrafficRealTime {
         @SerializedName("JourneyNumber")
         private int journeyNumber;
         @SerializedName("Deviations")
-        private @Nullable List<Deviation> deviations = null;
+        private @Nullable List<Deviation> deviations;
 
         public @Nullable Object getSecondaryDestinationName() {
             return secondaryDestinationName;
@@ -538,6 +544,7 @@ public class SLTrafficRealTime {
             this.destination = destination;
         }
 
+        @Override
         public int getJourneyDirection() {
             return journeyDirection;
         }
@@ -611,6 +618,7 @@ public class SLTrafficRealTime {
             this.journeyNumber = journeyNumber;
         }
 
+        @Override
         public @Nullable List<Deviation> getDeviations() {
             return deviations;
         }
@@ -692,7 +700,7 @@ public class SLTrafficRealTime {
         @SerializedName("JourneyNumber")
         private int journeyNumber;
         @SerializedName("Deviations")
-        private @Nullable Object deviations;
+        private @Nullable List<Deviation> deviations;
 
         @Override
         public @Nullable String getTransportMode() {
@@ -721,6 +729,7 @@ public class SLTrafficRealTime {
             this.destination = destination;
         }
 
+        @Override
         public int getJourneyDirection() {
             return journeyDirection;
         }
@@ -803,11 +812,12 @@ public class SLTrafficRealTime {
             this.journeyNumber = journeyNumber;
         }
 
-        public @Nullable Object getDeviations() {
+        @Override
+        public @Nullable List<Deviation> getDeviations() {
             return deviations;
         }
 
-        public void setDeviations(Object deviations) {
+        public void setDeviations(List<Deviation> deviations) {
             this.deviations = deviations;
         }
 
@@ -881,7 +891,7 @@ public class SLTrafficRealTime {
         @SerializedName("JourneyNumber")
         private int journeyNumber;
         @SerializedName("Deviations")
-        private @Nullable Object deviations;
+        private @Nullable List<Deviation> deviations;
 
         @Override
         public @Nullable String getGroupOfLine() {
@@ -928,6 +938,7 @@ public class SLTrafficRealTime {
             this.destination = destination;
         }
 
+        @Override
         public int getJourneyDirection() {
             return journeyDirection;
         }
@@ -992,11 +1003,12 @@ public class SLTrafficRealTime {
             this.journeyNumber = journeyNumber;
         }
 
-        public @Nullable Object getDeviations() {
+        @Override
+        public @Nullable List<Deviation> getDeviations() {
             return deviations;
         }
 
-        public void setDeviations(Object deviations) {
+        public void setDeviations(List<Deviation> deviations) {
             this.deviations = deviations;
         }
 
