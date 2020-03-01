@@ -68,13 +68,13 @@
 		<description>Third departure for configured site ID and direction or end destination(s).</description>
 		<state readOnly="true" pattern="%d min" />
 	</channel-type>
-	
+
 	<channel-type id="nextDepartureDeviations">
-        <item-type>String</item-type>
-        <label>Next Departure Deviations</label>
-        <description>Information on current deviations for next departure</description>
-        <state readOnly="true" pattern="%s" />
-    </channel-type>
+		<item-type>String</item-type>
+		<label>Next Departure Deviations</label>
+		<description>Information on current deviations for next departure</description>
+		<state readOnly="true" pattern="%s" />
+	</channel-type>
 
 	<channel-type id="secondDepartureDeviations">
 		<item-type>String</item-type>
