@@ -29,10 +29,15 @@ https://www.trafiklab.se/api/sl-platsuppslag/konsol
 
 NA
 
+## Enable Debugging
+
+To enable DEBUG logging for the binding, login to Karaf console and enter:
+
+`openhab> log:set DEBUG org.openhab.binding.sltrafficinformation`
 
 ## Thing Configuration
 
-You can configure the things preferably via things files or via the PapaerUI.
+You can configure the things preferably via things files or via the PaperUI.
 
 ### Deviations
 
@@ -57,7 +62,6 @@ If neither journeyDirection nor destinations is configured, no traffic will be p
 Line numbers can be used to filter on one or many lines.
 
 Offset can be used to filter out departures that are too close in time to be able to catch.
-
 
 
 #### Configuration Options 
@@ -89,21 +93,48 @@ Offset can be used to filter out departures that are too close in time to be abl
 
 ([realTimeInformation]) supports the following channel:
 
-| Channel Type ID     | Item Type | Description                                                          |
-|------------|--------|----------------------------------------------------------------------------------|
-| realTimeInformation | String | Found realtime information for configured site ID and filters.          |
-| nextDeparture       | String | Next departure after offset for configured site ID and filters.         |
-| secondDeparture     | String | Second departure after offset for configured site ID and filters.       |
-| thirdDeparture      | String | Third departure after offset for configured site ID and filters.        |
+| Channel Type ID           | Item Type | Description                                                          |
+|---------------------------|--------|-------------------------------------------------------------------------|
+| realTimeInformation       | String | Found realtime information for configured site ID and filters.          |
+| nextDeparture             | String | Next departure after offset and filters for configured site ID.         |
+| secondDeparture           | String | Second departure after offset and filters for configured site ID.       |
+| thirdDeparture            | String | Third departure after offset and filters for configured site ID.        |
+| nextDepartureDeviations   | String | Next departure deviations.                                              |
+| secondDepartureDeviations | String | Second departure deviations.                                            |
+| thirdDepartureDeviations  | String | Third departure deviations.                                             |
 
 
 ## Full Example
 
-
 ```
-sltrafficinformation:realTimeInformation:balingsnas "Balingsnäs" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7030", timeWindow="45", destinations="Högdalen, Skärholmen" refresh=3600 ]
-sltrafficinformation:realTimeInformation:blacksvampsvagen "Bläcksvampsvägen" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7021", timeWindow="45", destinations="Fruängen, Skärholmen" refresh=1800 ]
+# Things file
 sltrafficinformation:deviations:minaavvikelser "Avvikelser" [ apiKeyDeviation="d5gffb2cc7834bd2b242d936cfd45afg", lineNumbers="703,710,744,40,41,41X" ]
+sltrafficinformation:realTimeInformation:blacksvampsvagen "Bläcksvampsvägen" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7021", timeWindow="45", destinations="Fruängen, Skärholmen" refresh=1800 ]
+sltrafficinformation:realTimeInformation:balingsnas "Balingsnäs" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7030", timeWindow="60", offset="10", destinations="Högdalen, Skärholmen", refresh=600 ]
+sltrafficinformation:realTimeInformation:mellansjo "Mellansjö" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7031", timeWindow="60", offset="10", destinations="Högdalen, Skärholmen", refresh=600 ]
+sltrafficinformation:realTimeInformation:huddingestation "Huddinge Station" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="9527", timeWindow="60", journeyDirection="2", lineNumbers="40,41", refresh=600 ]
+
+# Item for refresh
+Switch SL_REFRESH_BLACKSVAMPSVAGEN "Refresh SL Realtime Bläcksvampsvägen"
+
+# Rule to trigger refresh
+import org.eclipse.smarthome.core.types.RefreshType
+rule "Handle Refresh of SL Traffic Information Bläcksvampsvägen"
+when
+    Item SL_REFRESH_BLACKSVAMPSVAGEN received command
+then
+    var String command = SL_REFRESH_BLACKSVAMPSVAGEN.state.toString.toLowerCase
+    logDebug("RULES","Refresh SL Traffic Information Bläcksvampsvägen Rule command: " + command)
+    if (command.contains("on")) {
+        sendCommand(SL_BLACKSVAMPSVAGEN, RefreshType.REFRESH)
+        SL_BLACKSVAMPSVAGEN.sendCommand(RefreshType.REFRESH)
+    }
+    else if (command.contains("off")) {
+        sendCommand(SL_BLACKSVAMPSVAGEN, RefreshType.REFRESH)
+        SL_BLACKSVAMPSVAGEN.sendCommand(RefreshType.REFRESH)
+    }
+end
+
 
 ```
 

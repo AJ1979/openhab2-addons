@@ -17,6 +17,7 @@ import static org.openhab.binding.sltrafficinformation.internal.SLTrafficInforma
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.RejectedExecutionException;
@@ -192,6 +193,7 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
             int journeyDirection = config.journeyDirection;
             String destinations = config.destinations;
             String lineNumbers = config.lineNumbers;
+
             if (journeyDirection == 1 || journeyDirection == 2) {
                 if (lineNumbers != null) {
                     return lineNumbers.toLowerCase().contains(traffic.getLineNumber().toLowerCase())
@@ -207,7 +209,7 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
                     return destinations.toLowerCase().contains(traffic.getDestination().toLowerCase());
                 }
             } else {
-                logger.warn("Neither direction {} or destination {} is configured!", journeyDirection, destinations);
+                logger.warn("Neither direction {} nor destination {} is configured!", journeyDirection, destinations);
                 return false;
             }
         }
@@ -275,6 +277,40 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
                 .filter(this::filterHandleTraffic).forEach(eitherMetro -> forHandleDepartures(eitherMetro, result));
     }
 
+    private void forHandleDeparturesDeviations(Either e, List<TrafficType> trafficList) {
+        if (e.isLeft()) {
+            logger.debug("Exception caught: {}", e.getLeft());
+        } else {
+            Optional<TrafficType> o = e.getRight();
+            TrafficType traffic = o.get();
+            trafficList.add(traffic);
+        }
+    }
+
+    private List<TrafficType> getDeparturesDeviations(SLTrafficRealTime realTime) {
+        List<TrafficType> traffic = new ArrayList<TrafficType>();
+        // Handle buses
+        realTime.getResponseData().getBuses().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                .filter(this::filterHandleTraffic)
+                .forEach(eitherBus -> forHandleDeparturesDeviations(eitherBus, traffic));
+
+        // Handle trains
+        realTime.getResponseData().getTrains().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                .filter(this::filterHandleTraffic)
+                .forEach(eitherTrain -> forHandleDeparturesDeviations(eitherTrain, traffic));
+
+        // Handle trams
+        realTime.getResponseData().getTrams().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                .filter(this::filterHandleTraffic)
+                .forEach(eitherTram -> forHandleDeparturesDeviations(eitherTram, traffic));
+
+        // Handle metros
+        realTime.getResponseData().getMetros().stream().map(Either.liftWithValue(this::mapHandleTraffic))
+                .filter(this::filterHandleTraffic)
+                .forEach(eitherMetro -> forHandleDeparturesDeviations(eitherMetro, traffic));
+        return traffic;
+    }
+
     private String convertToMinutes(String time) {
         if (time.contains(":")) {
             LocalTime timeForDeparture = LocalTime.parse(time);
@@ -307,15 +343,17 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
 
                 // Handle trains
                 realTime.getResponseData().getTrains().stream().map(Either.liftWithValue(this::mapHandleTraffic))
-                        .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
+                        .filter(this::filterHandleTraffic)
+                        .forEach(eitherTrain -> forHandleTraffic(eitherTrain, result));
 
                 // Handle trams
                 realTime.getResponseData().getTrams().stream().map(Either.liftWithValue(this::mapHandleTraffic))
-                        .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
+                        .filter(this::filterHandleTraffic).forEach(eitherTram -> forHandleTraffic(eitherTram, result));
 
                 // Handle metros
                 realTime.getResponseData().getMetros().stream().map(Either.liftWithValue(this::mapHandleTraffic))
-                        .filter(this::filterHandleTraffic).forEach(eitherBus -> forHandleTraffic(eitherBus, result));
+                        .filter(this::filterHandleTraffic)
+                        .forEach(eitherMetro -> forHandleTraffic(eitherMetro, result));
 
                 return new StringType(result.toString());
             case CHANNEL_NEXT_DEPARTURE:
@@ -342,6 +380,45 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
                         }
                     }
                 }
+                break;
+            case CHANNEL_NEXT_DEPARTURE_DEVIATIONS:
+            case CHANNEL_SECOND_DEPARTURE_DEVIATIONS:
+            case CHANNEL_THIRD_DEPARTURE_DEVIATIONS:
+                if (channelId.equals(CHANNEL_SECOND_DEPARTURE_DEVIATIONS)) {
+                    loop = 1;
+                } else if (channelId.equals(CHANNEL_THIRD_DEPARTURE_DEVIATIONS)) {
+                    loop = 2;
+                }
+                List<TrafficType> traffic = getDeparturesDeviations(realTime);
+                if (traffic.size() != 0) {
+                    for (TrafficType t : traffic) {
+                        logger.debug("Traffic: {}", t);
+                        String displayTime = t.getDisplayTime();
+                        int timeInMin = 0;
+                        if (displayTime.equals("Nu")) {
+                            timeInMin = 0;
+                        } else if (displayTime.contains("min")) {
+                            displayTime = displayTime.replace(" min", "");
+                            timeInMin = Integer.valueOf(displayTime);
+                        } else if (displayTime.contains(":")) {
+                            displayTime = convertToMinutes(displayTime);
+                            timeInMin = Integer.valueOf(displayTime);
+                        }
+                        if (timeInMin > config.offset) {
+                            if (loop == 0) {
+                                if (t.getDeviations() != null) {
+                                    StringBuffer deviations = new StringBuffer();
+                                    t.getDeviations().stream().forEach(deviation -> {
+                                        deviations.append(deviation.getText() + " ");
+                                    });
+                                    return new StringType(deviations.toString());
+                                }
+                            }
+                            loop--;
+                        }
+                    }
+                }
+                break;
         }
         return UnDefType.UNDEF;
     }

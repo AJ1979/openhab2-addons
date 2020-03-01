@@ -36,5 +36,8 @@ public class SLTrafficInformationBindingConstants {
     public static final String CHANNEL_NEXT_DEPARTURE = "nextDeparture";
     public static final String CHANNEL_SECOND_DEPARTURE = "secondDeparture";
     public static final String CHANNEL_THIRD_DEPARTURE = "thirdDeparture";
+    public static final String CHANNEL_NEXT_DEPARTURE_DEVIATIONS = "nextDepartureDeviations";
+    public static final String CHANNEL_SECOND_DEPARTURE_DEVIATIONS = "secondDepartureDeviations";
+    public static final String CHANNEL_THIRD_DEPARTURE_DEVIATIONS = "thirdDepartureDeviations";
 
 }

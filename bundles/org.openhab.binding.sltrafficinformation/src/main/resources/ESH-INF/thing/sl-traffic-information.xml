@@ -25,6 +25,9 @@
 			<channel id="nextDeparture" typeId="nextDeparture" />
 			<channel id="secondDeparture" typeId="secondDeparture" />
 			<channel id="thirdDeparture" typeId="thirdDeparture" />
+			<channel id="nextDepartureDeviations" typeId="nextDepartureDeviations" />
+			<channel id="secondDepartureDeviations" typeId="secondDepartureDeviations" />
+			<channel id="thirdDepartureDeviations" typeId="thirdDepartureDeviations" />
 		</channels>
 
 		<config-description-ref uri="thing-type:sltrafficinformation:realTimeInfo" />
@@ -64,6 +67,27 @@
 		<label>Third Departure</label>
 		<description>Third departure for configured site ID and direction or end destination(s).</description>
 		<state readOnly="true" pattern="%d min" />
+	</channel-type>
+	
+	<channel-type id="nextDepartureDeviations">
+        <item-type>String</item-type>
+        <label>Next Departure Deviations</label>
+        <description>Information on current deviations for next departure</description>
+        <state readOnly="true" pattern="%s" />
+    </channel-type>
+
+	<channel-type id="secondDepartureDeviations">
+		<item-type>String</item-type>
+		<label>Second Departure Deviations</label>
+		<description>Information on current deviations for second departure</description>
+		<state readOnly="true" pattern="%s" />
+	</channel-type>
+
+	<channel-type id="thirdDepartureDeviations">
+		<item-type>String</item-type>
+		<label>Third Departure Deviations</label>
+		<description>Information on current deviations for third departure</description>
+		<state readOnly="true" pattern="%s" />
 	</channel-type>
 
 </thing:thing-descriptions>

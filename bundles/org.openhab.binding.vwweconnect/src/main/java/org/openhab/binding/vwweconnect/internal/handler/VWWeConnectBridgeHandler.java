@@ -138,6 +138,11 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
         logger.debug("Handler is disposed.");
         stopAutomaticRefresh();
         stopImmediateRefresh();
+        try {
+            httpClient.stop();
+        } catch (Exception e) {
+            logger.error("Exception: {}", e.getMessage());
+        }
         if (session != null) {
             session.dispose();
             session = null;
@@ -202,6 +207,11 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             } else {
                 logger.debug("VWWeConnectBridgeHandler - Refresh thread session is null, let's re-initialize!");
                 dispose();
+                try {
+                    httpClient.start();
+                } catch (Exception e) {
+                    logger.error("Exception: {}", e.getMessage());
+                }
                 initialize();
             }
         } catch (Exception e) {
