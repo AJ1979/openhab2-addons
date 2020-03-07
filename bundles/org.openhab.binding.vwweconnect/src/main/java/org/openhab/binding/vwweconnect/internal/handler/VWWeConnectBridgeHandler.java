@@ -24,6 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -207,8 +208,11 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             } else {
                 logger.debug("VWWeConnectBridgeHandler - Refresh thread session is null, let's re-initialize!");
                 dispose();
+                SslContextFactory sslFactory = new SslContextFactory(true);
+                this.httpClient = new HttpClient(sslFactory);
+                this.httpClient.setFollowRedirects(false);
                 try {
-                    httpClient.start();
+                    this.httpClient.start();
                 } catch (Exception e) {
                     logger.error("Exception: {}", e.getMessage());
                 }

@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * The {@link SLTrafficRealTimeHandler} is responsible for handling commands, which are
@@ -74,9 +75,12 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
     private static final long SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
 
     private Gson gson = new GsonBuilder().create();
+    private @Nullable Thing thing;
 
     public SLTrafficRealTimeHandler(Thing thing) {
         super(thing);
+        this.thing = thing;
+        logger.debug("SLTrafficRealTimeHandler created for thing {}.", thing);
     }
 
     @Override
@@ -89,7 +93,7 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
 
     @Override
     public void dispose() {
-        logger.debug("Handler is disposed.");
+        logger.debug("Handler for thing {} disposed.", thing);
         stopAutomaticRefresh();
     }
 
@@ -150,7 +154,7 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
     }
 
     private void refreshAndUpdateStatus() {
-        logger.debug("SLTrafficInformationHandler - Refresh thread is up'n running!");
+        logger.debug("SLTrafficInformationHandler - Refresh thread is up'n running! {}", refreshJob);
 
         String url = SL_REAL_TIME_INFO_URL + "?key=" + config.apiKeyRealTime + "&siteid=" + config.siteId
                 + "&timewindow=" + config.timeWindow;
@@ -169,8 +173,8 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
             } else {
                 logger.warn("Update real time status failes!");
             }
-        } catch (IOException e) {
-            logger.warn("Exception caught: {}", e.getMessage(), e);
+        } catch (IOException | JsonSyntaxException e) {
+            logger.warn("API request failed, exception caught: {}", e.getMessage(), e);
         }
     }
 
@@ -412,6 +416,8 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
                                         deviations.append(deviation.getText() + " ");
                                     });
                                     return new StringType(deviations.toString());
+                                } else {
+                                    return new StringType("Inga avvikelser.");
                                 }
                             }
                             loop--;

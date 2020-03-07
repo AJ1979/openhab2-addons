@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * The {@link SLTrafficDeviationHandler} is responsible for handling commands, which are
@@ -137,7 +138,7 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
     }
 
     private void refreshAndUpdateStatus() {
-        logger.debug("SLTrafficInformationHandler - Refresh thread is up'n running!");
+        logger.debug("SLTrafficInformationHandler - Refresh thread is up'n running! {}", refreshJob);
 
         String url = SL_DEVIATIONS_URL + "?key=" + config.apiKeyDeviation + "&lineNumber=" + config.lineNumbers;
         SLTrafficDeviations deviations;
@@ -155,8 +156,8 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
             } else {
                 logger.warn("Update Deviation status failes!");
             }
-        } catch (IOException e) {
-            logger.warn("Exception caught: {}", e.getMessage(), e);
+        } catch (IOException | JsonSyntaxException e) {
+            logger.warn("API request failed, exception caught: {}", e.getMessage(), e);
         }
     }
 
