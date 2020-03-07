@@ -28,8 +28,8 @@ public class SLTrafficInformationConfiguration {
     // Real Time
     public @Nullable String apiKeyRealTime;
     public @Nullable String siteId;
-    public @Nullable String timeWindow;
-    public int journeyDirection;
+    public int timeWindow;
+    public @Nullable String journeyDirection;
     public @Nullable String destinations;
     public int offset;
     public int refresh;

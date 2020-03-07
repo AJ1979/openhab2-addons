@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 
 /**
  * The {@link SLTrafficRealTimeHandler} is responsible for handling commands, which are
@@ -67,12 +66,12 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(SLTrafficRealTimeHandler.class);
 
     private @Nullable SLTrafficInformationConfiguration config;
-    private int refresh = 600;
+    private int refresh = 10;
     private @Nullable ScheduledFuture<?> refreshJob;
 
     private static final String SL_REAL_TIME_INFO_URL = "https://api.sl.se/api2/realtimedeparturesV4.json";
-    private static final long SECONDS_PER_MINUTE = 60;
-    private static final long SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
+    private static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1);
+    private static final long SECONDS_PER_HOUR = TimeUnit.HOURS.toSeconds(1);
 
     private Gson gson = new GsonBuilder().create();
     private @Nullable Thing thing;
@@ -101,6 +100,7 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
     public void initialize() {
         // logger.debug("Start initializing!");
         config = getConfigAs(SLTrafficInformationConfiguration.class);
+        refresh = config.refresh;
 
         // set the thing status to UNKNOWN temporarily and let the background task decide for the real status.
         // the framework is then able to reuse the resources from the thing handler initialization.
@@ -135,7 +135,7 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         if (refreshJob == null || refreshJob.isCancelled()) {
             try {
                 refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,
-                        TimeUnit.SECONDS);
+                        TimeUnit.MINUTES);
                 logger.debug("Scheduling at fixed delay refreshjob {}", refreshJob);
             } catch (IllegalArgumentException e) {
                 logger.warn("Refresh time value is invalid! Please change the refresh time configuration!", e);
@@ -153,28 +153,43 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         }
     }
 
+    private @Nullable SLTrafficRealTime sendAPIQuery(String url) {
+        try {
+            String htmlJSON = HttpUtil.executeUrl("POST", url, null, null, null, REQUEST_TIMEOUT);
+            logger.debug("sendAPIQuery result: {}", htmlJSON);
+            return gson.fromJson(htmlJSON, SLTrafficRealTime.class);
+        } catch (RuntimeException | IOException e) {
+            logger.warn("API request failed, exception caught: {}", e.getMessage(), e);
+        }
+        return null;
+    }
+
     private void refreshAndUpdateStatus() {
         logger.debug("SLTrafficInformationHandler - Refresh thread is up'n running! {}", refreshJob);
 
         String url = SL_REAL_TIME_INFO_URL + "?key=" + config.apiKeyRealTime + "&siteid=" + config.siteId
                 + "&timewindow=" + config.timeWindow;
-        SLTrafficRealTime realTimeInfo;
-        try {
-            String htmlJSON = HttpUtil.executeUrl("POST", url, null, null, null, REQUEST_TIMEOUT);
-            logger.debug("Result: {}", htmlJSON);
-            realTimeInfo = gson.fromJson(htmlJSON, SLTrafficRealTime.class);
-
-            if (realTimeInfo != null) {
+        SLTrafficRealTime realTimeInfo = sendAPIQuery(url);
+        if (realTimeInfo != null && realTimeInfo.getMessage() == null) {
+            getThing().getChannels().stream().map(Channel::getUID).filter(channelUID -> isLinked(channelUID))
+                    .forEach(channelUID -> {
+                        State state = getValue(channelUID.getId(), realTimeInfo);
+                        updateState(channelUID, state);
+                    });
+        } else {
+            logger.warn("Update real time status failed! Message: {}", realTimeInfo.getMessage());
+            logger.debug("Let's try once more");
+            SLTrafficRealTime realTimeInfo2 = sendAPIQuery(url);
+            if (realTimeInfo2 != null && realTimeInfo.getMessage() == null) {
                 getThing().getChannels().stream().map(Channel::getUID).filter(channelUID -> isLinked(channelUID))
                         .forEach(channelUID -> {
-                            State state = getValue(channelUID.getId(), realTimeInfo);
+                            State state = getValue(channelUID.getId(), realTimeInfo2);
                             updateState(channelUID, state);
                         });
             } else {
-                logger.warn("Update real time status failes!");
+                logger.warn("Update real time status failed again! Message: {}", realTimeInfo2.getMessage());
+                logger.debug("Let's wait to next refresh period");
             }
-        } catch (IOException | JsonSyntaxException e) {
-            logger.warn("API request failed, exception caught: {}", e.getMessage(), e);
         }
     }
 
@@ -194,21 +209,21 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         } else {
             Optional<TrafficType> o = e.getRight();
             TrafficType traffic = o.get();
-            int journeyDirection = config.journeyDirection;
+            String journeyDirection = config.journeyDirection;
             String destinations = config.destinations;
             String lineNumbers = config.lineNumbers;
 
-            if (journeyDirection == 1 || journeyDirection == 2) {
+            if (journeyDirection != null && (journeyDirection.equals("1") || journeyDirection.equals("2"))) {
                 if (lineNumbers != null) {
                     return lineNumbers.toLowerCase().contains(traffic.getLineNumber().toLowerCase())
-                            && (journeyDirection == traffic.getJourneyDirection());
+                            && journeyDirection.equals(traffic.getJourneyDirection());
                 } else {
-                    return journeyDirection == traffic.getJourneyDirection();
+                    return journeyDirection.equals(traffic.getJourneyDirection());
                 }
             } else if (destinations != null) {
-                if (lineNumbers != null) {
+                if (lineNumbers != null && journeyDirection != null) {
                     return lineNumbers.toLowerCase().contains(traffic.getLineNumber().toLowerCase())
-                            && (journeyDirection == traffic.getJourneyDirection());
+                            && journeyDirection.equals(traffic.getJourneyDirection());
                 } else {
                     return destinations.toLowerCase().contains(traffic.getDestination().toLowerCase());
                 }

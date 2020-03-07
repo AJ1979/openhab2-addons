@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 
 /**
  * The {@link SLTrafficDeviationHandler} is responsible for handling commands, which are
@@ -54,7 +53,7 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(SLTrafficDeviationHandler.class);
 
     private @Nullable SLTrafficInformationConfiguration config;
-    private int refresh = 600;
+    private int refresh = 10;
     private @Nullable ScheduledFuture<?> refreshJob;
 
     private static final String SL_DEVIATIONS_URL = "https://api.sl.se/api2/deviations.json";
@@ -91,10 +90,10 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
         // we set this upfront to reliably check status updates in unit tests.
         updateStatus(ThingStatus.UNKNOWN);
 
-        // Example for background initialization:
+        // background initialization:
         scheduler.execute(() -> {
-            boolean thingReachable = true; // <background task with long running initialization here>
-            // when done do:
+            boolean thingReachable = true;
+
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
                 if (refresh != 0) {
@@ -119,7 +118,7 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
         if (refreshJob == null || refreshJob.isCancelled()) {
             try {
                 refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,
-                        TimeUnit.SECONDS);
+                        TimeUnit.MINUTES);
                 logger.debug("Scheduling at fixed delay refreshjob {}", refreshJob);
             } catch (IllegalArgumentException e) {
                 logger.warn("Refresh time value is invalid! Please change the refresh time configuration!", e);
@@ -147,16 +146,16 @@ public class SLTrafficDeviationHandler extends BaseThingHandler {
             logger.debug("Result: {}", htmlJSON);
             deviations = gson.fromJson(htmlJSON, SLTrafficDeviations.class);
 
-            if (deviations != null) {
+            if (deviations != null && deviations.getMessage() == null) {
                 getThing().getChannels().stream().map(Channel::getUID).filter(channelUID -> isLinked(channelUID))
                         .forEach(channelUID -> {
                             State state = getValue(channelUID.getId(), deviations);
                             updateState(channelUID, state);
                         });
             } else {
-                logger.warn("Update Deviation status failes!");
+                logger.warn("Update Deviation status failed! Message: {}", deviations.getMessage());
             }
-        } catch (IOException | JsonSyntaxException e) {
+        } catch (RuntimeException | IOException e) {
             logger.warn("API request failed, exception caught: {}", e.getMessage(), e);
         }
     }

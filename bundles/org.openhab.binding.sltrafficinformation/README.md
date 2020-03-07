@@ -47,7 +47,7 @@ You can configure the things preferably via things files or via the PaperUI.
 
 *   `lineNumbers` - Line numbers of interest (comma separated list).
 
-*   `refresh` - Specifies the refresh interval in seconds (defalt 600)
+*   `refresh` - Specifies the refresh interval in minutes (defalt 10)
 
 ### Realtime Information
 
@@ -76,11 +76,11 @@ Offset can be used to filter out departures that are too close in time to be abl
 
 *   `destinations` - End destination(s) of interest (comma separated list).
 
-*   `lineNUmbers` - Line number(s) of interest (comma separated list).
+*   `lineNumbers` - Line number(s) of interest (comma separated list).
 
 *   `offset` - Specifies the offset time in minutes (default 0). Used e.g. for setting a walk time to the station.
 
-*   `refresh` - Specifies the refresh interval in seconds (default 600).
+*   `refresh` - Specifies the refresh interval in minutes (default 10).
 
 
 ## Channels
@@ -109,10 +109,10 @@ Offset can be used to filter out departures that are too close in time to be abl
 ```
 # Things file
 sltrafficinformation:deviations:minaavvikelser "Avvikelser" [ apiKeyDeviation="d5gffb2cc7834bd2b242d936cfd45afg", lineNumbers="703,710,744,40,41,41X" ]
-sltrafficinformation:realTimeInformation:blacksvampsvagen "Bläcksvampsvägen" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7021", timeWindow="45", destinations="Fruängen, Skärholmen", refresh=1800 ]
-sltrafficinformation:realTimeInformation:balingsnas "Balingsnäs" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7030", timeWindow="60", offset="10", destinations="Högdalen, Skärholmen", refresh=600 ]
-sltrafficinformation:realTimeInformation:mellansjo "Mellansjö" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7031", timeWindow="60", offset="10", destinations="Högdalen, Skärholmen", refresh=600 ]
-sltrafficinformation:realTimeInformation:huddingestation "Huddinge Station" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="9527", timeWindow="60", journeyDirection="2", lineNumbers="40,41", refresh=600 ]
+sltrafficinformation:realTimeInformation:blacksvampsvagen "Bläcksvampsvägen" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7021", timeWindow=45, destinations="Fruängen, Skärholmen", refresh=10 ]
+sltrafficinformation:realTimeInformation:balingsnas "Balingsnäs" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7030", timeWindow=60, offset=10, destinations="Högdalen, Skärholmen", refresh=5 ]
+sltrafficinformation:realTimeInformation:mellansjo "Mellansjö" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="7031", timeWindow=60, offset=10, destinations="Högdalen, Skärholmen", refresh=5 ]
+sltrafficinformation:realTimeInformation:huddingestation "Huddinge Station" [ apiKeyRealTime="569ce4711f444b73dfg32ffefe7f0007", siteId="9527", timeWindow=60, journeyDirection="2", lineNumbers="40,41", refresh=10 ]
 
 # Item for refresh
 Switch SL_REFRESH_BLACKSVAMPSVAGEN "Refresh SL Realtime Bläcksvampsvägen"

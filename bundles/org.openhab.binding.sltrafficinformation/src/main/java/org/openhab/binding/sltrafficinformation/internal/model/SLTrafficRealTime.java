@@ -265,7 +265,7 @@ public class SLTrafficRealTime {
 
         public abstract @Nullable String getLineNumber();
 
-        public abstract int getJourneyDirection();
+        public abstract @Nullable String getJourneyDirection();
 
         public abstract @Nullable String getDestination();
 
@@ -287,7 +287,7 @@ public class SLTrafficRealTime {
         @SerializedName("Destination")
         private @Nullable String destination;
         @SerializedName("JourneyDirection")
-        private int journeyDirection;
+        private @Nullable String journeyDirection;
         @SerializedName("StopAreaName")
         private @Nullable String stopAreaName;
         @SerializedName("StopAreaNumber")
@@ -344,11 +344,11 @@ public class SLTrafficRealTime {
         }
 
         @Override
-        public int getJourneyDirection() {
+        public @Nullable String getJourneyDirection() {
             return journeyDirection;
         }
 
-        public void setJourneyDirection(int journeyDirection) {
+        public void setJourneyDirection(String journeyDirection) {
             this.journeyDirection = journeyDirection;
         }
 
@@ -480,7 +480,7 @@ public class SLTrafficRealTime {
         @SerializedName("Destination")
         private @Nullable String destination;
         @SerializedName("JourneyDirection")
-        private int journeyDirection;
+        private @Nullable String journeyDirection;
         @SerializedName("StopAreaName")
         private @Nullable String stopAreaName;
         @SerializedName("StopAreaNumber")
@@ -545,11 +545,11 @@ public class SLTrafficRealTime {
         }
 
         @Override
-        public int getJourneyDirection() {
+        public @Nullable String getJourneyDirection() {
             return journeyDirection;
         }
 
-        public void setJourneyDirection(int journeyDirection) {
+        public void setJourneyDirection(String journeyDirection) {
             this.journeyDirection = journeyDirection;
         }
 
@@ -680,7 +680,7 @@ public class SLTrafficRealTime {
         @SerializedName("Destination")
         private @Nullable String destination;
         @SerializedName("JourneyDirection")
-        private int journeyDirection;
+        private @Nullable String journeyDirection;
         @SerializedName("GroupOfLine")
         private @Nullable String groupOfLine;
         @SerializedName("StopAreaName")
@@ -730,11 +730,11 @@ public class SLTrafficRealTime {
         }
 
         @Override
-        public int getJourneyDirection() {
+        public @Nullable String getJourneyDirection() {
             return journeyDirection;
         }
 
-        public void setJourneyDirection(int journeyDirection) {
+        public void setJourneyDirection(String journeyDirection) {
             this.journeyDirection = journeyDirection;
         }
 
@@ -875,7 +875,7 @@ public class SLTrafficRealTime {
         @SerializedName("Destination")
         private @Nullable String destination;
         @SerializedName("JourneyDirection")
-        private int journeyDirection;
+        private @Nullable String journeyDirection;
         @SerializedName("StopAreaName")
         private @Nullable String stopAreaName;
         @SerializedName("StopAreaNumber")
@@ -939,11 +939,11 @@ public class SLTrafficRealTime {
         }
 
         @Override
-        public int getJourneyDirection() {
+        public @Nullable String getJourneyDirection() {
             return journeyDirection;
         }
 
-        public void setJourneyDirection(int journeyDirection) {
+        public void setJourneyDirection(String journeyDirection) {
             this.journeyDirection = journeyDirection;
         }
 

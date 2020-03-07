@@ -17,8 +17,8 @@
 
 		<parameter name="refresh" type="integer">
 			<label>Refresh Interval</label>
-			<description>Specifies the refresh interval in seconds.</description>
-			<default>600</default>
+			<description>Specifies the refresh interval in minutes.</description>
+			<default>10</default>
 		</parameter>
 
 	</config-description>
@@ -34,7 +34,7 @@
 			<description>SL site ID of interest.</description>
 		</parameter>
 
-		<parameter name="timeWindow" type="text" required="true">
+		<parameter name="timeWindow" type="integer" required="true">
 			<label>Time Window</label>
 			<description>Time window in minutes (0-60).</description>
 		</parameter>
@@ -56,14 +56,14 @@
 
 		<parameter name="offset" type="integer">
 			<label>Offset</label>
-			<description>Specifies the offset time that can be used to take account for walking time to station.</description>
+			<description>Specifies the offset time in minutes that can be used to take account for walking time to station.</description>
 			<default>0</default>
 		</parameter>
 
 		<parameter name="refresh" type="integer">
 			<label>Refresh Interval</label>
-			<description>Specifies the refresh interval in seconds.</description>
-			<default>600</default>
+			<description>Specifies the refresh interval in minutes.</description>
+			<default>10</default>
 		</parameter>
 
 	</config-description>
