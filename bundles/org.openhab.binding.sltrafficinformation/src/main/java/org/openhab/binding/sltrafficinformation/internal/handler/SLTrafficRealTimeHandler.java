@@ -334,10 +334,21 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
         if (time.contains(":")) {
             LocalTime timeForDeparture = LocalTime.parse(time);
             LocalTime now = LocalTime.now();
-            Duration duration = Duration.between(now, timeForDeparture);
+            long seconds = 0;
 
-            long seconds = duration.getSeconds();
-            long minutes = ((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+            if (timeForDeparture.getHour() < now.getHour()) {
+                Duration duration1 = Duration.between(now, LocalTime.parse("23:59"));
+                Duration duration2 = Duration.between(LocalTime.parse("00:00"), timeForDeparture);
+                seconds = duration1.getSeconds() + duration2.getSeconds() + 60;
+
+            } else {
+                Duration duration = Duration.between(now, timeForDeparture);
+                seconds = duration.getSeconds();
+            }
+
+            long minutes = (seconds
+                    % (TimeUnit.DAYS.toHours(1) * TimeUnit.HOURS.toSeconds(1) * TimeUnit.HOURS.toSeconds(1)))
+                    / TimeUnit.HOURS.toMinutes(1);
             return String.valueOf(minutes);
         } else if (time.equals("Nu")) {
             return "0";
