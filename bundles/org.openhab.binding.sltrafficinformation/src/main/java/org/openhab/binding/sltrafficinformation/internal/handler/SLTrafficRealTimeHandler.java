@@ -177,17 +177,21 @@ public class SLTrafficRealTimeHandler extends BaseThingHandler {
                         updateState(channelUID, state);
                     });
         } else {
-            logger.warn("Update real time status failed! Message: {}", realTimeInfo.getMessage());
+            if (realTimeInfo != null) {
+                logger.warn("Update real time status failed! Message: {}", realTimeInfo.getMessage());
+            }
             logger.debug("Let's try once more");
             SLTrafficRealTime realTimeInfo2 = sendAPIQuery(url);
-            if (realTimeInfo2 != null && realTimeInfo.getMessage() == null) {
+            if (realTimeInfo2 != null && realTimeInfo2.getMessage() == null) {
                 getThing().getChannels().stream().map(Channel::getUID).filter(channelUID -> isLinked(channelUID))
                         .forEach(channelUID -> {
                             State state = getValue(channelUID.getId(), realTimeInfo2);
                             updateState(channelUID, state);
                         });
             } else {
-                logger.warn("Update real time status failed again! Message: {}", realTimeInfo2.getMessage());
+                if (realTimeInfo2 != null) {
+                    logger.warn("Update real time status failed again! Message: {}", realTimeInfo2.getMessage());
+                }
                 logger.debug("Let's wait to next refresh period");
             }
         }
