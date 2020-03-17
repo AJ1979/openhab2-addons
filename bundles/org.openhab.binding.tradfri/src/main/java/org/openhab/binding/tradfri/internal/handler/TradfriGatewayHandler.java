@@ -15,7 +15,6 @@ package org.openhab.binding.tradfri.internal.handler;
 import static org.openhab.binding.tradfri.internal.TradfriBindingConstants.*;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -97,6 +96,7 @@ public class TradfriGatewayHandler extends BaseBridgeHandler implements CoapCall
 
     @Override
     public void initialize() {
+        logger.debug("In initialize()");
         TradfriGatewayConfig configuration = getConfigAs(TradfriGatewayConfig.class);
 
         if (isNullOrEmpty(configuration.host)) {
@@ -262,6 +262,7 @@ public class TradfriGatewayHandler extends BaseBridgeHandler implements CoapCall
 
     @Override
     public void dispose() {
+        logger.debug("In dispose()");
         if (scanJob != null) {
             scanJob.cancel(true);
             scanJob = null;
@@ -352,10 +353,9 @@ public class TradfriGatewayHandler extends BaseBridgeHandler implements CoapCall
     public void setStatus(ThingStatus status, ThingStatusDetail statusDetail) {
         // to fix connection issues after a gateway reboot, a session resume is forced for the next command
         if (status == ThingStatus.OFFLINE && statusDetail == ThingStatusDetail.COMMUNICATION_ERROR) {
-            logger.debug("Gateway communication error. Forcing session resume on next command.");
-            TradfriGatewayConfig configuration = getConfigAs(TradfriGatewayConfig.class);
-            InetSocketAddress peerAddress = new InetSocketAddress(configuration.host, configuration.port);
-            this.dtlsConnector.forceResumeSessionFor(peerAddress);
+            logger.debug("Gateway communication error. Forcing a re-initialization!");
+            dispose();
+            initialize();
         }
 
         // are we still connected at all?
