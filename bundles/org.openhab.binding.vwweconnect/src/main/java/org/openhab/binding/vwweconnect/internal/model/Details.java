@@ -76,8 +76,8 @@ public class Details {
     public class VehicleDetails {
 
         private @Nullable List<String> lastConnectionTimeStamp;
-        private @Nullable String distanceCovered;
-        private int range = BaseVehicle.UNDEFINED;
+        private double distanceCovered = BaseVehicle.UNDEFINED;
+        private double range = BaseVehicle.UNDEFINED;
         private @Nullable String serviceInspectionData;
         private @Nullable String oilInspectionData;
         private @Nullable Boolean showOil;
@@ -92,19 +92,19 @@ public class Details {
             this.lastConnectionTimeStamp = lastConnectionTimeStamp;
         }
 
-        public @Nullable String getDistanceCovered() {
+        public double getDistanceCovered() {
             return distanceCovered;
         }
 
-        public void setDistanceCovered(String distanceCovered) {
+        public void setDistanceCovered(double distanceCovered) {
             this.distanceCovered = distanceCovered;
         }
 
-        public int getRange() {
+        public double getRange() {
             return range;
         }
 
-        public void setRange(int range) {
+        public void setRange(double range) {
             this.range = range;
         }
 

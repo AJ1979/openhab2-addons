@@ -90,11 +90,11 @@ public class Status {
         private @Nullable String adBlueLevel;
         private @Nullable Boolean showAdBlueNotification;
         private @Nullable Boolean rluMibDeactivated;
-        private int totalRange = BaseVehicle.UNDEFINED;
-        private int primaryEngineRange = BaseVehicle.UNDEFINED;
-        private int fuelRange = BaseVehicle.UNDEFINED;
-        private int cngRange = BaseVehicle.UNDEFINED;
-        private int batteryRange = BaseVehicle.UNDEFINED;
+        private double totalRange = BaseVehicle.UNDEFINED;
+        private double primaryEngineRange = BaseVehicle.UNDEFINED;
+        private double fuelRange = BaseVehicle.UNDEFINED;
+        private double cngRange = BaseVehicle.UNDEFINED;
+        private double batteryRange = BaseVehicle.UNDEFINED;
         private int fuelLevel = BaseVehicle.UNDEFINED;
         private int cngFuelLevel = BaseVehicle.UNDEFINED;
         private int batteryLevel = BaseVehicle.UNDEFINED;
@@ -204,43 +204,43 @@ public class Status {
             this.rluMibDeactivated = rluMibDeactivated;
         }
 
-        public int getTotalRange() {
+        public double getTotalRange() {
             return totalRange;
         }
 
-        public void setTotalRange(int totalRange) {
+        public void setTotalRange(double totalRange) {
             this.totalRange = totalRange;
         }
 
-        public int getPrimaryEngineRange() {
+        public double getPrimaryEngineRange() {
             return primaryEngineRange;
         }
 
-        public void setPrimaryEngineRange(int primaryEngineRange) {
+        public void setPrimaryEngineRange(double primaryEngineRange) {
             this.primaryEngineRange = primaryEngineRange;
         }
 
-        public int getFuelRange() {
+        public double getFuelRange() {
             return fuelRange;
         }
 
-        public void setFuelRange(int fuelRange) {
+        public void setFuelRange(double fuelRange) {
             this.fuelRange = fuelRange;
         }
 
-        public int getCngRange() {
+        public double getCngRange() {
             return cngRange;
         }
 
-        public void setCngRange(int cngRange) {
+        public void setCngRange(double cngRange) {
             this.cngRange = cngRange;
         }
 
-        public int getBatteryRange() {
+        public double getBatteryRange() {
             return batteryRange;
         }
 
-        public void setBatteryRange(int batteryRange) {
+        public void setBatteryRange(double batteryRange) {
             this.batteryRange = batteryRange;
         }
 
