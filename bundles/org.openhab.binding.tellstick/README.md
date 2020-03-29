@@ -155,7 +155,7 @@ RainSensors ([rainsensor]) support the following channels:
 ### Switchbased sensor workaround
 
 All switchbased sensors are binary and the goal is to represent them as a `contact` item in openHAB. Eg. a door is open or closed and can't be altered by sending a radio signal.
-To achieve that we will create a proxy item which is updated by a rule.
+To achive that we will create a proxy item which is updated by a rule.
 
 First create another proxy item for every sensor:
 

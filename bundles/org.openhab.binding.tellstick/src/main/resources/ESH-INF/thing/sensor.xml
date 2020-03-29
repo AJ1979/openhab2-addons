@@ -20,7 +20,6 @@
 		</channels>
 		<config-description-ref uri="thing-type:tellstick:sensor-config" />
 	</thing-type>
-
 	<thing-type id="rainsensor">
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="telldus-core" />
@@ -36,7 +35,6 @@
 		</channels>
 		<config-description-ref uri="thing-type:tellstick:sensor-config" />
 	</thing-type>
-
 	<thing-type id="powersensor">
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="telldus-live" />
@@ -51,15 +49,14 @@
 		</channels>
 		<config-description-ref uri="thing-type:tellstick:sensor-config" />
 	</thing-type>
-
 	<thing-type id="windsensor">
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="telldus-core" />
 			<bridge-type-ref id="telldus-live" />
 		</supported-bridge-type-refs>
 
-		<label>WindSensor</label>
-		<description>This Thing defines a Wind Sensor</description>
+		<label>RainSensor</label>
+		<description>This Thing defines a Rain Sensor</description>
 		<channels>
 			<channel id="timestamp" typeId="timestamp" />
 			<channel id="windgust" typeId="windgust" />
@@ -68,16 +65,15 @@
 		</channels>
 		<config-description-ref uri="thing-type:tellstick:sensor-config" />
 	</thing-type>
-
 	<channel-type id="temperature">
-		<item-type>Number:Temperature</item-type>
-		<label>Temperature</label>
+		<item-type>Number</item-type>
+		<label>Actual Temperature</label>
 		<description>Actual measured room temperature</description>
 		<category>Temperature</category>
 		<state pattern="%.1f %unit%" readOnly="true">
 		</state>
-	</channel-type>
 
+	</channel-type>
 	<channel-type id="humidity">
 		<item-type>Number:Dimensionless</item-type>
 		<label>Humidity</label>
@@ -103,7 +99,7 @@
 	</channel-type>
 
 	<channel-type id="windgust">
-		<item-type>Number:Speed</item-type>
+		<item-type>Number</item-type>
 		<label>Wind Gust</label>
 		<description>Current wind gust</description>
 		<state pattern="%.1f %unit%" readOnly="true"></state>
@@ -125,22 +121,21 @@
 	</channel-type>
 
 	<channel-type id="watt">
-		<item-type>Number:Power</item-type>
+		<item-type>Number</item-type>
 		<label>Watt</label>
 		<description>Current kWatt</description>
-		<state readOnly="true" pattern="%f %unit%">
+		<state pattern="%d" readOnly="true">
 		</state>
 	</channel-type>
-
 	<channel-type id="lux">
-		<item-type>Number:Illuminance</item-type>
+		<item-type>Number</item-type>
 		<label>Lux</label>
 		<description>Current lumination</description>
-		<state readOnly="true" pattern="%f %unit%" />
+		<state pattern="%d" readOnly="true">
+		</state>
 	</channel-type>
-
 	<channel-type id="ampere">
-		<item-type>Number:ElectricCurrent</item-type>
+		<item-type>Number</item-type>
 		<label>Ampere</label>
 		<description>Current ampere</description>
 		<state pattern="%.1f %unit%" readOnly="true"></state>
@@ -148,7 +143,7 @@
 
 	<channel-type id="timestamp">
 		<item-type>DateTime</item-type>
-		<label>Last Device Update</label>
+		<label>Last device update</label>
 		<description>Last device update</description>
 		<state readOnly="true">
 		</state>
