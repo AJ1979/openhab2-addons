@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,17 +13,18 @@
 package org.openhab.binding.verisure.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.verisure.internal.model.VerisureThingJSON;
+import org.openhab.binding.verisure.internal.model.VerisureThing;
 
 /**
  * The {@link DeviceStatusListener} is notified when a device status has changed
  * or a device has been removed or added.
  *
  * @author Jarle Hjortland - Initial contribution
+ * @author Jan Gustafsson - Updated after code review comments
  *
  */
 @NonNullByDefault
-public interface DeviceStatusListener {
+public interface DeviceStatusListener<T extends VerisureThing> {
 
     /**
      * This method is called whenever the state of the given device has changed.
@@ -31,7 +32,7 @@ public interface DeviceStatusListener {
      * @param thing
      *            The thing that was changed.
      */
-    void onDeviceStateChanged(VerisureThingJSON thing);
+    void onDeviceStateChanged(T thing);
 
     /**
      * This method us called whenever a device is removed.
@@ -39,7 +40,7 @@ public interface DeviceStatusListener {
      * @param thing
      *            The thing that is removed
      */
-    void onDeviceRemoved(VerisureThingJSON thing);
+    void onDeviceRemoved(T thing);
 
     /**
      * This method us called whenever a device is added.
@@ -47,6 +48,11 @@ public interface DeviceStatusListener {
      * @param thing
      *            The thing which is added.
      */
-    void onDeviceAdded(VerisureThingJSON thing);
+    void onDeviceAdded(T thing);
+
+    /**
+     * This method returns the thing's class
+     */
+    public Class<T> getVerisureThingClass();
 
 }

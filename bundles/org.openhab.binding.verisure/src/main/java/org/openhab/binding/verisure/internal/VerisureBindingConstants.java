@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -20,6 +20,7 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
  * used across the whole binding.
  *
  * @author l3rum - Initial contribution
+ * @author Jan Gustafsson - Furher development
  */
 @NonNullByDefault
 public class VerisureBindingConstants {
@@ -39,6 +40,7 @@ public class VerisureBindingConstants {
     public static final ThingTypeUID THING_TYPE_BROADBAND_CONNECTION = new ThingTypeUID(BINDING_ID,
             "broadbandConnection");
     public static final ThingTypeUID THING_TYPE_NIGHT_CONTROL = new ThingTypeUID(BINDING_ID, "nightControl");
+    public static final ThingTypeUID THING_TYPE_MICE_DETECTION = new ThingTypeUID(BINDING_ID, "miceDetection");
 
     // List of all Channel ids
     public static final String CHANNEL_NUMERIC_STATUS = "numericStatus";
@@ -63,10 +65,15 @@ public class VerisureBindingConstants {
     public static final String CHANNEL_CHANGED_BY_USER = "changedByUser";
     public static final String CHANNEL_CHANGED_VIA = "changedVia";
     public static final String CHANNEL_TIMESTAMP = "timestamp";
+    public static final String CHANNEL_TEMPERATURE_TIMESTAMP = "temperatureTimestamp";
     public static final String CHANNEL_HAZARDOUS = "hazardous";
     public static final String CHANNEL_MOTOR_JAM = "motorJam";
     public static final String CHANNEL_INSTALLATION_NAME = "installationName";
     public static final String CHANNEL_INSTALLATION_ID = "installationId";
+    public static final String CHANNEL_COUNT_LATEST_DETECTION = "countLatestDetection";
+    public static final String CHANNEL_COUNT_LAST_24_HOURS = "countLast24Hours";
+    public static final String CHANNEL_DURATION_LATEST_DETECTION = "durationLatestDetection";
+    public static final String CHANNEL_DURATION_LAST_24_HOURS = "durationLast24Hours";
 
     // REST URI constants
     public static final String USERNAME = "username";

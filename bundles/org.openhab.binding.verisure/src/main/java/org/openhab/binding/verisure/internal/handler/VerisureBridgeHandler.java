@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -16,6 +16,8 @@ import static org.openhab.binding.verisure.internal.VerisureBindingConstants.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
@@ -33,12 +35,16 @@ import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandlerService;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.verisure.internal.DeviceStatusListener;
 import org.openhab.binding.verisure.internal.VerisureBridgeConfiguration;
 import org.openhab.binding.verisure.internal.VerisureSession;
+import org.openhab.binding.verisure.internal.discovery.VerisureThingDiscoveryService;
+import org.openhab.binding.verisure.internal.model.VerisureThing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,42 +53,28 @@ import org.slf4j.LoggerFactory;
  * sent to one of the channels.
  *
  * @author l3rum - Initial contribution
+ * @author Jan Gustafsson - Furher development
  */
 @NonNullByDefault
 public class VerisureBridgeHandler extends BaseBridgeHandler {
 
-    private static final int REFRESH_DELAY_SECONDS = 30;
-
-    @Override
-    protected void updateThing(Thing thing) {
-        super.updateThing(thing);
-    }
-
-    @Override
-    protected void updateConfiguration(Configuration configuration) {
-        stopAutomaticRefresh();
-        stopImmediateRefresh();
-        super.updateConfiguration(configuration);
-        initialize();
-    }
-
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.singleton(THING_TYPE_BRIDGE);
 
+    private static final int REFRESH_DELAY_SECONDS = 30;
     private final Logger logger = LoggerFactory.getLogger(VerisureBridgeHandler.class);
     private final ReentrantLock immediateRefreshJobLock = new ReentrantLock();
 
     private String authstring = "";
     private @Nullable String pinCode;
-    private int refresh = 600;
+    private static int refresh = 600;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable ScheduledFuture<?> immediateRefreshJob;
     private @Nullable VerisureSession session;
-    private HttpClient httpClient;
+    private final HttpClient httpClient;
 
     public VerisureBridgeHandler(Bridge bridge, HttpClient httpClient) {
         super(bridge);
         this.httpClient = httpClient;
-        session = new VerisureSession(this.httpClient);
     }
 
     @Override
@@ -102,34 +94,69 @@ public class VerisureBridgeHandler extends BaseBridgeHandler {
         }
     }
 
+    @Override
+    public void channelLinked(ChannelUID channelUID) {
+        // Do not do a refresh since that will refresh all things as well
+        logger.debug("Channel linked {}.", channelUID);
+    }
+
+    @Override
+    protected void updateThing(Thing thing) {
+        super.updateThing(thing);
+    }
+
+    @Override
+    protected void updateConfiguration(Configuration configuration) {
+        stopAutomaticRefresh();
+        stopImmediateRefresh();
+        super.updateConfiguration(configuration);
+        initialize();
+    }
+
     public @Nullable VerisureSession getSession() {
         return session;
+    }
+
+    public @Nullable ThingUID getUID() {
+        return getThing().getUID();
     }
 
     @Override
     public void initialize() {
         logger.debug("Initializing Verisure Binding");
         VerisureBridgeConfiguration config = getConfigAs(VerisureBridgeConfiguration.class);
-        this.refresh = config.refresh;
+        refresh = config.refresh;
         this.pinCode = config.pin;
         if (config.username == null || config.password == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "Configuration of username and password is mandatory");
+        } else if (refresh < 0) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Refresh time cannot negative!");
         } else {
             try {
                 authstring = "j_username=" + config.username + "&j_password="
-                        + URLEncoder.encode(config.password, "UTF-8") + "&spring-security-redirect=" + START_REDIRECT;
-                if (session == null) {
-                    // Configuration change
-                    session = new VerisureSession(this.httpClient);
-                }
-                session.initialize(authstring, pinCode, config.username);
-                startAutomaticRefresh();
-            } catch (RuntimeException e) {
-                logger.warn("Failed to initialize! Exception caught: {}", e.getMessage(), e);
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
-            } catch (UnsupportedEncodingException e) {
-                logger.warn("Failed to URL Encode password, exception caught: {} ", e);
+                        + URLEncoder.encode(config.password, StandardCharsets.UTF_8.toString())
+                        + "&spring-security-redirect=" + START_REDIRECT;
+                updateStatus(ThingStatus.UNKNOWN);
+                scheduler.execute(() -> {
+
+                    if (session == null) {
+                        logger.debug("Session is null, let's create a new one");
+                        session = new VerisureSession(this.httpClient);
+                    }
+                    VerisureSession session = this.session;
+                    if (session != null) {
+                        if (!session.initialize(authstring, pinCode, config.username)) {
+                            logger.warn("Failed to initialize bridge, please check your credentials!");
+                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_REGISTERING_ERROR,
+                                    "Failed to login to Verisure, please check your credentials!");
+                            return;
+                        }
+                        startAutomaticRefresh();
+                    }
+                });
+            } catch (RuntimeException | UnsupportedEncodingException e) {
+                logger.warn("Exception caught: {}", e.getMessage(), e);
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
             }
         }
@@ -141,23 +168,26 @@ public class VerisureBridgeHandler extends BaseBridgeHandler {
         stopAutomaticRefresh();
         stopImmediateRefresh();
         if (session != null) {
-            session.dispose();
             session = null;
         }
     }
 
-    public boolean registerObjectStatusListener(DeviceStatusListener deviceStatusListener) {
-        if (session != null) {
+    public <T extends VerisureThing> boolean registerObjectStatusListener(
+            DeviceStatusListener<T> deviceStatusListener) {
+        VerisureSession mySession = session;
+        if (mySession != null) {
             logger.debug("registerObjectStatusListener for listener {}", deviceStatusListener);
-            return session.registerDeviceStatusListener(deviceStatusListener);
+            return mySession.registerDeviceStatusListener(deviceStatusListener);
         }
         return false;
     }
 
-    public boolean unregisterObjectStatusListener(DeviceStatusListener deviceStatusListener) {
-        if (session != null) {
+    public <T extends VerisureThing> boolean unregisterObjectStatusListener(
+            DeviceStatusListener<T> deviceStatusListener) {
+        VerisureSession mySession = session;
+        if (mySession != null) {
             logger.debug("unregisterObjectStatusListener for listener {}", deviceStatusListener);
-            return session.unregisterDeviceStatusListener(deviceStatusListener);
+            return mySession.unregisterDeviceStatusListener(deviceStatusListener);
         }
         return false;
     }
@@ -168,14 +198,19 @@ public class VerisureBridgeHandler extends BaseBridgeHandler {
         stopAutomaticRefresh();
         stopImmediateRefresh();
         if (session != null) {
-            session.dispose();
             session = null;
         }
+    }
+
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return Collections.singleton(VerisureThingDiscoveryService.class);
     }
 
     private void refreshAndUpdateStatus() {
         logger.debug("VerisureBridgeHandler - Polling thread is up'n running!");
         try {
+            VerisureSession session = this.session;
             if (session != null) {
                 boolean success = session.refresh();
                 if (success) {
@@ -184,7 +219,7 @@ public class VerisureBridgeHandler extends BaseBridgeHandler {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
                 }
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             logger.debug("Exception occurred during execution: {}", e.getMessage(), e);
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
         }
@@ -193,6 +228,8 @@ public class VerisureBridgeHandler extends BaseBridgeHandler {
     void scheduleImmediateRefresh(int refreshDelay) {
         logger.debug("VerisureBridgeHandler - scheduleImmediateRefresh");
         immediateRefreshJobLock.lock();
+        ScheduledFuture<?> refreshJob = this.refreshJob;
+        ScheduledFuture<?> immediateRefreshJob = this.immediateRefreshJob;
         try {
             // We schedule in 10 sec, to avoid multiple updates
             if (refreshJob != null) {
@@ -202,6 +239,7 @@ public class VerisureBridgeHandler extends BaseBridgeHandler {
                     logger.debug("Current remaining delay {} for immediate refresh job {}",
                             immediateRefreshJob.getDelay(TimeUnit.SECONDS), immediateRefreshJob);
                 }
+
                 if (refreshJob.getDelay(TimeUnit.SECONDS) > refreshDelay) {
                     if (immediateRefreshJob == null || immediateRefreshJob.getDelay(TimeUnit.SECONDS) <= 0) {
                         if (immediateRefreshJob != null) {
@@ -212,7 +250,7 @@ public class VerisureBridgeHandler extends BaseBridgeHandler {
                         // refresh if their status is pending. As the status update happens inside the
                         // refreshAndUpdateStatus
                         // execution the isDone() will return false and would not allow the rescheduling of the task.
-                        immediateRefreshJob = scheduler.schedule(this::refreshAndUpdateStatus, refreshDelay,
+                        this.immediateRefreshJob = scheduler.schedule(this::refreshAndUpdateStatus, refreshDelay,
                                 TimeUnit.SECONDS);
                         logger.debug("Scheduling new immediate refresh job {}", immediateRefreshJob);
                     }
@@ -226,40 +264,41 @@ public class VerisureBridgeHandler extends BaseBridgeHandler {
     }
 
     private void startAutomaticRefresh() {
+        ScheduledFuture<?> refreshJob = this.refreshJob;
         logger.debug("Start automatic refresh {}", refreshJob);
         if (refreshJob == null || refreshJob.isCancelled()) {
             try {
-                refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,
+                this.refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refresh,
                         TimeUnit.SECONDS);
-                logger.debug("Scheduling at fixed delay refreshjob {}", refreshJob);
-            } catch (IllegalArgumentException e) {
-                logger.warn("Refresh time value is invalid! Please change the refresh time configuration!", e);
+                logger.debug("Scheduling at fixed delay refreshjob {}", this.refreshJob);
             } catch (RejectedExecutionException e) {
                 logger.warn("Automatic refresh job cannot be started!");
             }
         }
     }
 
+    private void stopAutomaticRefresh() {
+        ScheduledFuture<?> refreshJob = this.refreshJob;
+        logger.debug("Stop automatic refresh for job {}", refreshJob);
+        if (refreshJob != null && !refreshJob.isCancelled()) {
+            refreshJob.cancel(true);
+            this.refreshJob = null;
+        }
+    }
+
     private void stopImmediateRefresh() {
         immediateRefreshJobLock.lock();
+        ScheduledFuture<?> immediateRefreshJob = this.immediateRefreshJob;
         try {
             logger.debug("Stop immediate refresh for job {}", immediateRefreshJob);
             if (immediateRefreshJob != null && !immediateRefreshJob.isCancelled()) {
                 immediateRefreshJob.cancel(true);
-                immediateRefreshJob = null;
+                this.immediateRefreshJob = null;
             }
         } catch (RejectedExecutionException e) {
             logger.warn("Immediate refresh job cannot be scheduled!");
         } finally {
             immediateRefreshJobLock.unlock();
-        }
-    }
-
-    private void stopAutomaticRefresh() {
-        logger.debug("Stop automatic refresh for job {}", refreshJob);
-        if (refreshJob != null && !refreshJob.isCancelled()) {
-            refreshJob.cancel(true);
-            refreshJob = null;
         }
     }
 }

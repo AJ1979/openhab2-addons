@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.verisure.internal.discovery;
 
-import static org.openhab.binding.verisure.internal.VerisureBindingConstants.*;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,19 +20,15 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
 import org.eclipse.smarthome.config.discovery.DiscoveryResult;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
+import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.ThingUID;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandlerService;
 import org.openhab.binding.verisure.internal.VerisureHandlerFactory;
 import org.openhab.binding.verisure.internal.VerisureSession;
 import org.openhab.binding.verisure.internal.VerisureThingConfiguration;
 import org.openhab.binding.verisure.internal.handler.VerisureBridgeHandler;
-import org.openhab.binding.verisure.internal.model.VerisureAlarmsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureBroadbandConnectionsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureClimatesJSON;
-import org.openhab.binding.verisure.internal.model.VerisureDoorWindowsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureSmartLocksJSON;
-import org.openhab.binding.verisure.internal.model.VerisureSmartPlugsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureThingJSON;
-import org.openhab.binding.verisure.internal.model.VerisureUserPresencesJSON;
+import org.openhab.binding.verisure.internal.model.VerisureThing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,50 +36,45 @@ import org.slf4j.LoggerFactory;
  * The discovery service, notified by a listener on the VerisureSession.
  *
  * @author Jarle Hjortland - Initial contribution
+ * @author Jan Gustafsson - Further development
  *
  */
 @NonNullByDefault
-public class VerisureThingDiscoveryService extends AbstractDiscoveryService {
+public class VerisureThingDiscoveryService extends AbstractDiscoveryService
+        implements DiscoveryService, ThingHandlerService {
 
     private static final int SEARCH_TIME_SECONDS = 60;
     private final Logger logger = LoggerFactory.getLogger(VerisureThingDiscoveryService.class);
 
-    private @Nullable VerisureBridgeHandler verisureBridgeHandler;
+    private @NonNullByDefault({}) VerisureBridgeHandler verisureBridgeHandler;
+    private @NonNullByDefault({}) ThingUID bridgeUID;
 
-    public VerisureThingDiscoveryService(VerisureBridgeHandler bridgeHandler) throws IllegalArgumentException {
+    public VerisureThingDiscoveryService() {
         super(VerisureHandlerFactory.SUPPORTED_THING_TYPES, SEARCH_TIME_SECONDS);
-
-        this.verisureBridgeHandler = bridgeHandler;
-
     }
 
     @Override
     public void startScan() {
-        removeOlderResults(getTimestampOfLastScan());
         logger.debug("VerisureThingDiscoveryService:startScan");
-
+        removeOlderResults(getTimestampOfLastScan());
         if (verisureBridgeHandler != null) {
             VerisureSession session = verisureBridgeHandler.getSession();
             if (session != null) {
-                HashMap<String, VerisureThingJSON> verisureThings = session.getVerisureThings();
-                for (Map.Entry<String, VerisureThingJSON> entry : verisureThings.entrySet()) {
-                    VerisureThingJSON thing = entry.getValue();
-                    if (thing != null) {
-                        logger.info("Thing: {}", thing);
-                        onThingAddedInternal(thing);
-                    }
-                }
+                HashMap<String, VerisureThing> verisureThings = session.getVerisureThings();
+                verisureThings.forEach((deviceId, thing) -> {
+                    logger.debug("Discovered thing: {}", thing);
+                    onThingAddedInternal(thing);
+                });
             }
         }
     }
 
-    private void onThingAddedInternal(VerisureThingJSON thing) {
+    private void onThingAddedInternal(VerisureThing thing) {
         logger.debug("VerisureThingDiscoveryService:OnThingAddedInternal");
         ThingUID thingUID = getThingUID(thing);
         String deviceId = thing.getDeviceId();
-        if (thingUID != null && deviceId != null) {
+        if (thingUID != null) {
             if (verisureBridgeHandler != null) {
-                ThingUID bridgeUID = verisureBridgeHandler.getThing().getUID();
                 String label = "Device Id: " + deviceId;
                 if (thing.getLocation() != null) {
                     label += ", Location: " + thing.getLocation();
@@ -105,45 +94,40 @@ public class VerisureThingDiscoveryService extends AbstractDiscoveryService {
 
     }
 
-    private @Nullable ThingUID getThingUID(VerisureThingJSON thing) {
+    private @Nullable ThingUID getThingUID(VerisureThing thing) {
         ThingUID thingUID = null;
         if (verisureBridgeHandler != null) {
-            ThingUID bridgeUID = verisureBridgeHandler.getThing().getUID();
             String deviceId = thing.getDeviceId();
-            if (deviceId != null) {
-                // Make sure device id is normalized, i.e. replace all non character/digits with empty string
-                deviceId.replaceAll("[^a-zA-Z0-9]+", "");
-                if (thing instanceof VerisureAlarmsJSON) {
-                    thingUID = new ThingUID(THING_TYPE_ALARM, bridgeUID, deviceId);
-                } else if (thing instanceof VerisureSmartLocksJSON) {
-                    thingUID = new ThingUID(THING_TYPE_SMARTLOCK, bridgeUID, deviceId);
-                } else if (thing instanceof VerisureUserPresencesJSON) {
-                    thingUID = new ThingUID(THING_TYPE_USERPRESENCE, bridgeUID, deviceId);
-                } else if (thing instanceof VerisureDoorWindowsJSON) {
-                    thingUID = new ThingUID(THING_TYPE_DOORWINDOW, bridgeUID, deviceId);
-                } else if (thing instanceof VerisureSmartPlugsJSON) {
-                    thingUID = new ThingUID(THING_TYPE_SMARTPLUG, bridgeUID, deviceId);
-                } else if (thing instanceof VerisureClimatesJSON) {
-                    String type = ((VerisureClimatesJSON) thing).getData().getInstallation().getClimates().get(0)
-                            .getDevice().getGui().getLabel();
-                    if ("SMOKE".equals(type)) {
-                        thingUID = new ThingUID(THING_TYPE_SMOKEDETECTOR, bridgeUID, deviceId);
-                    } else if ("WATER".equals(type)) {
-                        thingUID = new ThingUID(THING_TYPE_WATERDETECTOR, bridgeUID, deviceId);
-                    } else if ("HOMEPAD".equals(type)) {
-                        thingUID = new ThingUID(THING_TYPE_NIGHT_CONTROL, bridgeUID, deviceId);
-                    } else if ("SIREN".equals(type)) {
-                        thingUID = new ThingUID(THING_TYPE_SIREN, bridgeUID, deviceId);
-                    } else {
-                        logger.warn("Unknown climate device {}.", type);
-                    }
-                } else if (thing instanceof VerisureBroadbandConnectionsJSON) {
-                    thingUID = new ThingUID(THING_TYPE_BROADBAND_CONNECTION, bridgeUID, deviceId);
-                } else {
-                    logger.warn("Unsupported JSON! thing {}", thing.toString());
-                }
-            }
+            // Make sure device id is normalized, i.e. replace all non character/digits with empty string
+            deviceId = deviceId.replaceAll("[^a-zA-Z0-9]+", "");
+            thingUID = new ThingUID(thing.getThingTypeUID(), bridgeUID, deviceId);
         }
         return thingUID;
     }
+
+    @Override
+    public void activate() {
+        Map<String, @Nullable Object> properties = new HashMap<>();
+        properties.put(DiscoveryService.CONFIG_PROPERTY_BACKGROUND_DISCOVERY, Boolean.TRUE);
+        super.activate(properties);
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+    }
+
+    @Override
+    public void setThingHandler(@Nullable ThingHandler handler) {
+        if (handler instanceof VerisureBridgeHandler) {
+            verisureBridgeHandler = (VerisureBridgeHandler) handler;
+            bridgeUID = verisureBridgeHandler.getUID();
+        }
+    }
+
+    @Override
+    public @Nullable ThingHandler getThingHandler() {
+        return verisureBridgeHandler;
+    }
+
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -21,9 +21,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
@@ -33,82 +31,52 @@ import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpResponseException;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
-import org.openhab.binding.verisure.internal.model.VerisureAlarmsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureBroadbandConnectionsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureClimatesJSON;
-import org.openhab.binding.verisure.internal.model.VerisureDoorWindowsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureInstallationsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureInstallationsJSON.Owainstallation;
-import org.openhab.binding.verisure.internal.model.VerisureSmartLockJSON;
-import org.openhab.binding.verisure.internal.model.VerisureSmartLocksJSON;
-import org.openhab.binding.verisure.internal.model.VerisureSmartPlugsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureThingJSON;
-import org.openhab.binding.verisure.internal.model.VerisureUserPresencesJSON;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.openhab.binding.verisure.internal.model.VerisureAlarms;
+import org.openhab.binding.verisure.internal.model.VerisureBroadbandConnections;
+import org.openhab.binding.verisure.internal.model.VerisureClimates;
+import org.openhab.binding.verisure.internal.model.VerisureDoorWindows;
+import org.openhab.binding.verisure.internal.model.VerisureInstallations;
+import org.openhab.binding.verisure.internal.model.VerisureInstallations.Owainstallation;
+import org.openhab.binding.verisure.internal.model.VerisureMiceDetection;
+import org.openhab.binding.verisure.internal.model.VerisureSmartLock;
+import org.openhab.binding.verisure.internal.model.VerisureSmartLocks;
+import org.openhab.binding.verisure.internal.model.VerisureSmartPlugs;
+import org.openhab.binding.verisure.internal.model.VerisureThing;
+import org.openhab.binding.verisure.internal.model.VerisureUserPresences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * This class performs the communication with Verisure My Pages.
  *
  * @author Jarle Hjortland - Initial contribution
  * @author Jan Gustafsson - Re-design and support for several sites and update to new Verisure API
+ * @param <T>
  *
  */
 @NonNullByDefault
 public class VerisureSession {
 
-    @NonNullByDefault
-    private final class VerisureInstallation {
-        private @Nullable String installationName;
-        private @Nullable BigDecimal installationId;
-        private @Nullable String pinCode;
-
-        public @Nullable String getPinCode() {
-            return pinCode;
-        }
-
-        public void setPinCode(@Nullable String pinCode) {
-            this.pinCode = pinCode;
-        }
-
-        public VerisureInstallation() {
-        }
-
-        public @Nullable BigDecimal getInstallationId() {
-            return installationId;
-        }
-
-        public @Nullable String getInstallationName() {
-            return installationName;
-        }
-
-        public void setInstallationId(@Nullable BigDecimal installationId) {
-            this.installationId = installationId;
-        }
-
-        public void setInstallationName(@Nullable String installationName) {
-            this.installationName = installationName;
-        }
-    }
-
-    private final HashMap<String, VerisureThingJSON> verisureThings = new HashMap<String, VerisureThingJSON>();
+    private final HashMap<String, VerisureThing> verisureThings = new HashMap<String, VerisureThing>();
     private final Logger logger = LoggerFactory.getLogger(VerisureSession.class);
-    private final Gson gson = new GsonBuilder().create();
-    private final List<DeviceStatusListener> deviceStatusListeners = new CopyOnWriteArrayList<>();
-    private final Hashtable<@Nullable BigDecimal, @Nullable VerisureInstallation> verisureInstallations = new Hashtable<@Nullable BigDecimal, @Nullable VerisureInstallation>();
-    private static final List<String> APISERVERLIST = new ArrayList<>(
-            Arrays.asList("https://m-api01.verisure.com", "https://m-api02.verisure.com"));
+    private final Gson gson = new Gson();
+    private final List<DeviceStatusListener<VerisureThing>> deviceStatusListeners = new CopyOnWriteArrayList<>();
+    private final HashMap<BigDecimal, VerisureInstallation> verisureInstallations = new HashMap<>();
+    private static final List<String> APISERVERLIST = Arrays.asList("https://m-api01.verisure.com",
+            "https://m-api02.verisure.com");
     private int apiServerInUseIndex = 0;
     private String apiServerInUse = APISERVERLIST.get(apiServerInUseIndex);
-    private boolean areWeLoggedOut = true;
     private String authstring = "";
     private @Nullable String csrf;
     private @Nullable String pinCode;
@@ -121,7 +89,7 @@ public class VerisureSession {
         this.httpClient = httpClient;
     }
 
-    public void initialize(@Nullable String authstring, @Nullable String pinCode, @Nullable String userName) {
+    public boolean initialize(@Nullable String authstring, @Nullable String pinCode, @Nullable String userName) {
         logger.debug("VerisureSession:initialize");
         if (authstring != null) {
             this.authstring = authstring.substring(0);
@@ -129,34 +97,31 @@ public class VerisureSession {
             this.userName = userName;
             // Try to login to Verisure
             if (logIn()) {
-                getInstallations();
+                return getInstallations();
             } else {
                 logger.warn("Failed to login to Verisure!");
+                return false;
             }
         }
+        return false;
     }
 
     public boolean refresh() {
         logger.debug("VerisureSession:refresh");
-        int statusCode = areWeLoggedIn();
-        if (statusCode == 503) {
-            return false;
-        } else if (!areWeLoggedOut && (statusCode == 1)) {
-            updateStatus();
-            return true;
-        } else {
+        try {
             if (logIn()) {
                 updateStatus();
-                areWeLoggedOut = false;
                 return true;
             } else {
-                areWeLoggedOut = true;
                 return false;
             }
+        } catch (HttpResponseException e) {
+            logger.warn("Caught an HttpResponseException {}", e.getMessage(), e);
+            return false;
         }
     }
 
-    public int sendCommand(String url, String data, @Nullable BigDecimal installationId) {
+    public int sendCommand(String url, String data, BigDecimal installationId) {
         logger.debug("Sending command with URL {} and data {}", url, data);
         configureInstallationInstance(installationId);
         int httpResultCode = setSessionCookieAuthLogin();
@@ -167,24 +132,27 @@ public class VerisureSession {
         }
     }
 
-    public boolean unregisterDeviceStatusListener(DeviceStatusListener deviceStatusListener) {
+    public boolean unregisterDeviceStatusListener(DeviceStatusListener<? extends VerisureThing> deviceStatusListener) {
         logger.debug("unregisterDeviceStatusListener for listener {}", deviceStatusListener);
         return deviceStatusListeners.remove(deviceStatusListener);
     }
 
-    public boolean registerDeviceStatusListener(DeviceStatusListener deviceStatusListener) {
+    @SuppressWarnings("unchecked")
+    public boolean registerDeviceStatusListener(DeviceStatusListener<? extends VerisureThing> deviceStatusListener) {
         logger.debug("registerDeviceStatusListener for listener {}", deviceStatusListener);
-        return deviceStatusListeners.add(deviceStatusListener);
+        return deviceStatusListeners.add((DeviceStatusListener<VerisureThing>) deviceStatusListener);
     }
 
-    public void dispose() {
+    @SuppressWarnings({ "unchecked", "null" })
+    public <T extends VerisureThing> @Nullable T getVerisureThing(String deviceId, Class<T> thingType) {
+        VerisureThing thing = verisureThings.get(deviceId);
+        if (thing != null && thingType.isInstance(thing)) {
+            return (T) thing;
+        }
+        return null;
     }
 
-    public @Nullable VerisureThingJSON getVerisureThing(String deviceId) {
-        return verisureThings.get(deviceId);
-    }
-
-    public HashMap<String, VerisureThingJSON> getVerisureThings() {
+    public HashMap<String, VerisureThing> getVerisureThings() {
         return verisureThings;
     }
 
@@ -212,7 +180,7 @@ public class VerisureSession {
         return APISERVERLIST.get(apiServerInUseIndex);
     }
 
-    public void configureInstallationInstance(@Nullable BigDecimal installationId) {
+    public void configureInstallationInstance(BigDecimal installationId) {
         logger.debug("Attempting to fetch CSRF and configure installation instance");
         try {
             csrf = getCsrfToken(installationId);
@@ -221,50 +189,35 @@ public class VerisureSession {
             String url = SET_INSTALLATION + installationId.toString();
             logger.debug("Set installation URL: {}", url);
             httpClient.GET(url);
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            logger.warn("Caught an Exception {}", e.getMessage(), e);
         }
     }
 
-    public @Nullable String getCsrfToken(@Nullable BigDecimal installationId) {
-        String subString = null;
-        String source = null;
+    public @Nullable String getCsrfToken(BigDecimal installationId) {
+        String html = null;
         String url = SETTINGS + installationId.toString();
         logger.debug("Settings URL: {}", url);
+
         try {
             ContentResponse resp = httpClient.GET(url);
-            source = resp.getContentAsString();
-            logger.trace("{} html: {}", url, source);
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
-            return null;
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
-            return null;
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
+            html = resp.getContentAsString();
+            logger.trace("{} html: {}", url, html);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            logger.warn("Caught an Exception {}", e.getMessage(), e);
             return null;
         }
 
-        try {
-            int labelIndex = source.indexOf("_csrf\" value=");
-            subString = source.substring(labelIndex + 14, labelIndex + 78);
-            logger.debug("csrf-token: {}", subString);
-        } catch (IndexOutOfBoundsException e) {
-            logger.debug("Exception caught when parsing csrf {}", e);
-        }
-        return subString;
+        Document htmlDocument = Jsoup.parse(html);
+        Element nameInput = htmlDocument.select("input[name=_csrf]").first();
+        return nameInput.attr("value");
     }
 
-    public @Nullable String getPinCode(@Nullable BigDecimal installationId) {
+    public @Nullable String getPinCode(BigDecimal installationId) {
         return verisureInstallations.get(installationId).getPinCode();
     }
 
-    private void setPasswordFromCookieList() {
+    private void setPasswordFromCookie() {
         CookieStore c = httpClient.getCookieStore();
         List<HttpCookie> cookies = c.get(URI.create("http://verisure.com"));
         cookies.forEach(cookie -> {
@@ -276,66 +229,70 @@ public class VerisureSession {
         });
     }
 
-    private int areWeLoggedIn() {
+    private void logTraceWithPattern(int responseStatus, String content) {
+        if (logger.isTraceEnabled()) {
+            String pattern = "(?m)^\\s*\\r?\\n|\\r?\\n\\s*(?!.*\\r?\\n)";
+            String replacement = "";
+            logger.trace("HTTP Response ({}) Body:{}", responseStatus, content.replaceAll(pattern, replacement));
+        }
+    }
+
+    private boolean areWeLoggedIn() {
         logger.debug("areWeLoggedIn() - Checking if we are logged in");
         String url = STATUS;
         try {
             logger.debug("Check for login status, url: {}", url);
             ContentResponse response = httpClient.newRequest(url).method(HttpMethod.GET).send();
-            logger.trace("HTTP status response: {}", response.getContentAsString());
+            String content = response.getContentAsString();
+            String error = "";
+            logTraceWithPattern(response.getStatus(), content);
+
             switch (response.getStatus()) {
                 case HttpStatus.OK_200:
-                    if (response.getContentAsString().contains("<title>MyPages</title>")) {
+                    if (content.contains("<title>MyPages</title>")) {
                         logger.debug("Status code 200 and on MyPages!");
-                        setPasswordFromCookieList();
-                        return 1;
+                        setPasswordFromCookie();
+                        return true;
                     } else {
                         logger.debug("Not on MyPages, we need to login again!");
-                        return 0;
+                        return false;
                     }
                 case HttpStatus.MOVED_TEMPORARILY_302:
                     // Redirection
                     logger.debug("Status code 302. Redirected. Probably not logged in");
-                    return 0;
+                    return false;
                 case HttpStatus.INTERNAL_SERVER_ERROR_500:
                     // Verisure service temporarily down
-                    logger.debug("Status code 500. Verisure service temporarily down");
-                    return HttpStatus.INTERNAL_SERVER_ERROR_500;
+                    error = "Status code 500. Verisure service temporarily down";
+                    logger.debug(error);
+                    throw new HttpResponseException(error, response);
                 case HttpStatus.SERVICE_UNAVAILABLE_503:
                     // Verisure service temporarily down
-                    logger.debug("Status code 503. Verisure service temporarily down");
-                    return HttpStatus.SERVICE_UNAVAILABLE_503;
+                    error = "Status code 503. Verisure service temporarily down";
+                    logger.debug(error);
+                    throw new HttpResponseException(error, response);
                 default:
-                    logger.info("Status code {} body {}", response.getStatus(), response.getContentAsString());
+                    logger.info("Status code {} body {}", response.getStatus(), content);
                     break;
             }
-        } catch (ExecutionException e) {
-            logger.warn("ExecutionException: {}", e);
-        } catch (InterruptedException e) {
-            logger.warn("InterruptedException: {}", e);
-        } catch (TimeoutException e) {
-            logger.warn("TimeoutException: {}", e);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            logger.warn("Caught an Exception {}", e.getMessage(), e);
         }
-        return 0;
+        return false;
     }
 
     private @Nullable <T> T getJSONVerisureAPI(String url, Class<T> jsonClass) {
-        T result = null;
         logger.debug("HTTP GET: {}", BASEURL + url);
         try {
-            ContentResponse httpResult = httpClient.GET(BASEURL + url + "?_=" + System.currentTimeMillis());
-            logger.debug("HTTP Response ({}) Body:{}", httpResult.getStatus(),
-                    httpResult.getContentAsString().replaceAll("\n+", "\n"));
-            if (httpResult.getStatus() == HttpStatus.OK_200) {
-                result = gson.fromJson(httpResult.getContentAsString(), jsonClass);
+            ContentResponse response = httpClient.GET(BASEURL + url + "?_=" + System.currentTimeMillis());
+            String content = response.getContentAsString();
+            logTraceWithPattern(response.getStatus(), content);
+
+            if (response.getStatus() == HttpStatus.OK_200) {
+                return gson.fromJson(content, jsonClass);
             }
-            return result;
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {} for URL string {}", e, url);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {} for URL string {}", e, url);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {} for URL string {}", e, url);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            logger.warn("Caught an Exception {}", e.getMessage(), e);
         }
         return null;
     }
@@ -362,14 +319,8 @@ public class VerisureSession {
             }
             logger.debug("HTTP POST Request {}.", request.toString());
             return request.send();
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e);
-        } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e);
+        } catch (ExecutionException | InterruptedException | TimeoutException | RuntimeException e) {
+            logger.warn("Caught an Exception {}", e.getMessage(), e);
         }
         return null;
     }
@@ -382,7 +333,8 @@ public class VerisureSession {
                 if (response.getStatus() == HttpStatus.OK_200) {
                     String content = response.getContentAsString();
                     if (content.contains("\"message\":\"Request Failed") && content.contains("503")) {
-                        // Maybe Verisure has switched PAI server in use
+                        // Maybe Verisure has switched API server in use
+                        logger.debug("Changed API server! Response: {}", content);
                         setApiServerInUse(getNextApiServer());
                     } else {
                         String contentChomped = StringUtils.chomp(content);
@@ -409,7 +361,8 @@ public class VerisureSession {
             ContentResponse response = postVerisureAPI(url, data, Boolean.FALSE);
             if (response != null) {
                 logger.debug("HTTP Response ({})", response.getStatus());
-                if (response.getStatus() == HttpStatus.OK_200) {
+                int httpStatus = response.getStatus();
+                if (httpStatus == HttpStatus.OK_200) {
                     String content = response.getContentAsString();
                     if (content.contains("\"message\":\"Request Failed. Code 503 from")) {
                         if (url.contains("https://mypages")) {
@@ -421,15 +374,15 @@ public class VerisureSession {
                             url = apiServerInUse + urlString;
                         }
                     } else {
-                        logger.trace("Response body: {}", content);
-                        return response.getStatus();
+                        logTraceWithPattern(httpStatus, content);
+                        return httpStatus;
                     }
                 } else {
                     logger.debug("Failed to send POST, Http status code: {}", response.getStatus());
                 }
             }
         }
-        return 999;
+        return HttpStatus.SERVICE_UNAVAILABLE_503;
     }
 
     private int setSessionCookieAuthLogin() {
@@ -438,22 +391,22 @@ public class VerisureSession {
 
         try {
             ContentResponse response = httpClient.GET(url);
-            logger.trace("HTTP Response ({}) Body:{}", response.getStatus(),
-                    response.getContentAsString().replaceAll("\n+", "\n"));
-            setPasswordFromCookieList();
-        } catch (ExecutionException e) {
-            logger.warn("ExecutionException: {}", e);
-        } catch (InterruptedException e) {
-            logger.warn("InterruptedException: {}", e);
-        } catch (TimeoutException e) {
-            logger.warn("TimeoutException: {}", e);
+            if (logger.isTraceEnabled()) {
+                String pattern = "(?m)^\\s*\\r?\\n|\\r?\\n\\s*(?!.*\\r?\\n)";
+                String replacement = "";
+                logger.trace("HTTP Response ({}) Body:{}", response.getStatus(),
+                        response.getContentAsString().replaceAll(pattern, replacement));
+            }
+            setPasswordFromCookie();
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            logger.warn("Caught an Exception {}", e.getMessage(), e);
         }
 
         url = AUTH_LOGIN;
         return postVerisureAPI(url, "empty");
     }
 
-    private void getInstallations() {
+    private boolean getInstallations() {
         logger.debug("Attempting to get all installations");
 
         int httpResultCode = setSessionCookieAuthLogin();
@@ -463,389 +416,496 @@ public class VerisureSession {
             String queryQLAccountInstallations = "[{\"operationName\":\"AccountInstallations\",\"variables\":{\"email\":\""
                     + userName
                     + "\"},\"query\":\"query AccountInstallations($email: String!) {\\n  account(email: $email) {\\n    owainstallations {\\n      giid\\n      alias\\n      type\\n      subsidiary\\n      dealerId\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}]";
-            Class<VerisureInstallationsJSON> jsonClass = VerisureInstallationsJSON.class;
-            VerisureInstallationsJSON installations = postJSONVerisureAPI(url, queryQLAccountInstallations, jsonClass);
+            Class<VerisureInstallations> jsonClass = VerisureInstallations.class;
+            VerisureInstallations installations = postJSONVerisureAPI(url, queryQLAccountInstallations, jsonClass);
 
             if (installations == null) {
                 logger.debug("Failed to get installations");
             } else {
                 logger.debug("Installation: {}", installations.toString());
-                if (installations.getData() != null) {
-                    List<Owainstallation> owaInstList = installations.getData().getAccount().getOwainstallations();
-                    Boolean pinCodesMatchInstallations = true;
-                    List<String> pinCodes = null;
-                    if (pinCode != null) {
-                        pinCodes = Arrays.asList(pinCode.split(","));
-                        if (owaInstList != null && owaInstList.size() != pinCodes.size()) {
-                            logger.debug("Number of installations {} does not match number of pin codes configured {}",
-                                    owaInstList.size(), pinCodes.size());
-                            pinCodesMatchInstallations = false;
-                        } else if (owaInstList == null) {
-                            logger.warn("Failed to get Verisure installations");
-                            return;
-                        }
-                    } else {
-                        logger.debug("No pin-code defined for user {}", userName);
-                    }
-                    for (int i = 0; i < owaInstList.size(); i++) {
-                        VerisureInstallation vInst = new VerisureInstallation();
-                        if (owaInstList.get(i).getAlias() != null && owaInstList.get(i).getGiid() != null) {
-                            vInst.setInstallationId(new BigDecimal(owaInstList.get(i).getGiid()));
-                            vInst.setInstallationName(owaInstList.get(i).getAlias());
-                            if (pinCode != null) {
-                                if (pinCodesMatchInstallations) {
-                                    vInst.setPinCode(pinCodes.get(i));
-                                    logger.debug("Setting pincode {} to installation ID {}", pinCodes.get(i),
-                                            owaInstList.get(i).getGiid());
-                                } else {
-                                    vInst.setPinCode(pinCodes.get(0));
-                                    logger.debug("Setting pincode {} to installation ID {}", pinCodes.get(0),
-                                            owaInstList.get(i).getGiid());
-                                }
-                            }
-                            verisureInstallations.put(new BigDecimal(owaInstList.get(i).getGiid()), vInst);
-                        } else {
-                            logger.warn("Failed to get alias and/or giid");
-                        }
+                List<Owainstallation> owaInstList = installations.getData().getAccount().getOwainstallations();
+                Boolean pinCodesMatchInstallations = true;
+                List<String> pinCodes = new ArrayList<>();
+                String pinCode = this.pinCode;
+                if (pinCode != null) {
+                    pinCodes = Arrays.asList(pinCode.split(","));
+                    if (owaInstList.size() != pinCodes.size()) {
+                        logger.debug("Number of installations {} does not match number of pin codes configured {}",
+                                owaInstList.size(), pinCodes.size());
+                        pinCodesMatchInstallations = false;
                     }
                 } else {
-                    logger.warn("Failed to fetch installations: {}", installations.toString());
+                    logger.debug("No pin-code defined for user {}", userName);
+                }
+
+                for (int i = 0; i < owaInstList.size(); i++) {
+                    VerisureInstallation vInst = new VerisureInstallation();
+                    Owainstallation owaInstallation = owaInstList.get(i);
+                    if (owaInstallation.getAlias() != null && owaInstallation.getGiid() != null) {
+                        vInst.setInstallationId(new BigDecimal(owaInstallation.getGiid()));
+                        vInst.setInstallationName(owaInstallation.getAlias());
+                        if (pinCode != null) {
+                            if (pinCodesMatchInstallations) {
+                                vInst.setPinCode(pinCodes.get(i));
+                                logger.debug("Setting pincode {} to installation ID {}", pinCodes.get(i),
+                                        owaInstallation.getGiid());
+                            } else {
+                                vInst.setPinCode(pinCodes.get(0));
+                                logger.debug("Setting pincode {} to installation ID {}", pinCodes.get(0),
+                                        owaInstallation.getGiid());
+                            }
+                        }
+                        verisureInstallations.put(new BigDecimal(owaInstallation.getGiid()), vInst);
+                    } else {
+                        logger.warn("Failed to get alias and/or giid");
+                        return false;
+                    }
                 }
             }
         } else {
             logger.warn("Failed to set session cookie and auth login, HTTP result code: {}", httpResultCode);
-        }
-    }
-
-    private synchronized boolean logIn() {
-        logger.debug("Attempting to log in to mypages.verisure.com");
-        String url = LOGON_SUF;
-        logger.debug("Login URL: {}", url);
-        int httpStatusCode = postVerisureAPI(url, authstring);
-        if (httpStatusCode != HttpStatus.OK_200) {
-            logger.debug("Failed to login, HTTP status code: {}", httpStatusCode);
             return false;
         }
         return true;
     }
 
-    private void notifyListeners(VerisureThingJSON thing) {
-        for (DeviceStatusListener listener : deviceStatusListeners) {
-            listener.onDeviceStateChanged(thing);
+    private synchronized boolean logIn() {
+        if (!areWeLoggedIn()) {
+            logger.debug("Attempting to log in to mypages.verisure.com");
+            String url = LOGON_SUF;
+            logger.debug("Login URL: {}", url);
+            int httpStatusCode = postVerisureAPI(url, authstring);
+            if (httpStatusCode != HttpStatus.OK_200) {
+                logger.debug("Failed to login, HTTP status code: {}", httpStatusCode);
+                return false;
+            }
+            return true;
+        } else {
+            return true;
+        }
+    }
+
+    private <T extends VerisureThing> void notifyListeners(T thing) {
+        deviceStatusListeners.stream().forEach(listener -> {
+            if (listener.getVerisureThingClass().equals(thing.getClass())) {
+                listener.onDeviceStateChanged(thing);
+            }
+        });
+    }
+
+    private void notifyListenersIfChanged(VerisureThing thing, VerisureInstallation installation, String deviceId) {
+        String normalizedDeviceId = deviceId.replaceAll("[^a-zA-Z0-9]+", "");
+        thing.setDeviceId(normalizedDeviceId);
+        VerisureThing oldObj = verisureThings.get(normalizedDeviceId);
+        logger.trace("Old thing: {}", oldObj);
+        logger.trace("Updated thing: {}", thing);
+        if (oldObj == null || !oldObj.equals(thing)) {
+            thing.setSiteId(installation.getInstallationId());
+            thing.setSiteName(installation.getInstallationName());
+            verisureThings.put(thing.getDeviceId(), thing);
+            logger.trace("Notify listener of thing {}", thing);
+            notifyListeners(thing);
         }
     }
 
     private void updateStatus() {
         logger.debug("VerisureSession:updateStatus");
-
-        VerisureInstallation vInst = null;
-        for (Enumeration<@Nullable VerisureInstallation> num = verisureInstallations.elements(); num
-                .hasMoreElements();) {
-            vInst = num.nextElement();
-            if (vInst != null) {
-                configureInstallationInstance(vInst.getInstallationId());
-                int httpResultCode = setSessionCookieAuthLogin();
-                if (httpResultCode == HttpStatus.OK_200) {
-                    updateAlarmStatus(VerisureAlarmsJSON.class, vInst);
-                    updateSmartLockStatus(VerisureSmartLocksJSON.class, vInst);
-                    updateClimateStatus(VerisureClimatesJSON.class, vInst);
-                    updateDoorWindowStatus(VerisureDoorWindowsJSON.class, vInst);
-                    updateUserPresenceStatus(VerisureUserPresencesJSON.class, vInst);
-                    updateSmartPlugStatus(VerisureSmartPlugsJSON.class, vInst);
-                    updateBroadbandConnectionStatus(VerisureBroadbandConnectionsJSON.class, vInst);
-                } else {
-                    logger.warn("Failed to set session cookie and auth login, HTTP result code: {}", httpResultCode);
-                }
+        verisureInstallations.forEach((installationId, installation) -> {
+            configureInstallationInstance(installation.getInstallationId());
+            int httpResultCode = setSessionCookieAuthLogin();
+            if (httpResultCode == HttpStatus.OK_200) {
+                updateAlarmStatus(VerisureAlarms.class, installation);
+                updateSmartLockStatus(VerisureSmartLocks.class, installation);
+                updateMiceDetectionStatus(VerisureMiceDetection.class, installation);
+                updateClimateStatus(VerisureClimates.class, installation);
+                updateDoorWindowStatus(VerisureDoorWindows.class, installation);
+                updateUserPresenceStatus(VerisureUserPresences.class, installation);
+                updateSmartPlugStatus(VerisureSmartPlugs.class, installation);
+                updateBroadbandConnectionStatus(VerisureBroadbandConnections.class, installation);
+            } else {
+                logger.warn("Failed to set session cookie and auth login, HTTP result code: {}", httpResultCode);
             }
+        });
+    }
+
+    private String createOperationJSON(String operation, BigDecimal installationId, String query) {
+        ArrayList<Operation> list = new ArrayList<>();
+        Operation operationJSON = new Operation();
+        Variables variables = new Variables();
+
+        variables.setGiid(installationId.toString());
+        operationJSON.setOperationName(operation);
+        operationJSON.setVariables(variables);
+        operationJSON.setQuery(query);
+        list.add(operationJSON);
+
+        return gson.toJson(list);
+    }
+
+    private synchronized void updateAlarmStatus(Class<? extends VerisureThing> jsonClass,
+            VerisureInstallation installation) {
+        BigDecimal installationId = installation.getInstallationId();
+        String url = START_GRAPHQL;
+        String operation = "ArmState";
+        String query = "query " + operation
+                + "($giid: String!) {\n  installation(giid: $giid) {\n armState {\n type\n statusType\n date\n name\n changedVia\n allowedForFirstLine\n allowed\n errorCodes {\n value\n message\n __typename\n}\n __typename\n}\n __typename\n}\n}\n";
+
+        String queryQLAlarmStatus = createOperationJSON(operation, installationId, query);
+        logger.debug("Quering API for alarm status!");
+
+        VerisureThing thing = postJSONVerisureAPI(url, queryQLAlarmStatus, jsonClass);
+        logger.debug("REST Response ({})", thing);
+
+        if (thing != null) {
+            // Set unique deviceID
+            String deviceId = "alarm" + installationId.toString();
+            thing.setDeviceId(deviceId);
+            notifyListenersIfChanged(thing, installation, deviceId);
+        } else {
+            logger.debug("Failed to update alarm status, thing is null!");
         }
     }
 
-    private synchronized void updateAlarmStatus(Class<? extends VerisureThingJSON> jsonClass,
-            @Nullable VerisureInstallation installation) {
-        if (installation != null) {
-            BigDecimal installationId = installation.getInstallationId();
-            String url = START_GRAPHQL;
+    private synchronized void updateSmartLockStatus(Class<? extends VerisureThing> jsonClass,
+            VerisureInstallation installation) {
+        BigDecimal installationId = installation.getInstallationId();
+        String url = START_GRAPHQL;
+        String operation = "DoorLock";
+        String query = "query " + operation
+                + "($giid: String!) {\n  installation(giid: $giid) {\n doorlocks {\n device {\n deviceLabel\n area\n __typename\n}\n currentLockState\n eventTime\n secureModeActive\n motorJam\n userString\n method\n __typename\n}\n __typename\n}\n}\n";
 
-            String queryQLAlarmStatus = "[{\"operationName\":\"ArmState\",\"variables\":{\"giid\":\"" + installationId
-                    + "\"},\"query\":\"query ArmState($giid: String!) {\\n  installation(giid: $giid) {\\n    armState {\\n      type\\n      statusType\\n      date\\n      name\\n      changedVia\\n      allowedForFirstLine\\n      allowed\\n      errorCodes {\\n        value\\n        message\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}]";
-            logger.debug("Trying to get alarm status with URL {} and data {}", url, queryQLAlarmStatus);
-            VerisureThingJSON thing = postJSONVerisureAPI(url, queryQLAlarmStatus, jsonClass);
-            logger.debug("REST Response ({})", thing);
+        String queryQLSmartLock = createOperationJSON(operation, installationId, query);
+        logger.debug("Quering API for smart lock status");
 
-            if (thing != null) {
+        VerisureSmartLocks thing = (VerisureSmartLocks) postJSONVerisureAPI(url, queryQLSmartLock, jsonClass);
+        logger.debug("REST Response ({})", thing);
+
+        if (thing != null) {
+            List<VerisureSmartLocks.Doorlock> doorLockList = thing.getData().getInstallation().getDoorlocks();
+            doorLockList.forEach(doorLock -> {
+                VerisureSmartLocks slThing = new VerisureSmartLocks();
+                VerisureSmartLocks.Installation inst = new VerisureSmartLocks.Installation();
+                List<VerisureSmartLocks.Doorlock> list = new ArrayList<VerisureSmartLocks.Doorlock>();
+                list.add(doorLock);
+                inst.setDoorlocks(list);
+                VerisureSmartLocks.Data data = new VerisureSmartLocks.Data();
+                data.setInstallation(inst);
+                slThing.setData(data);
                 // Set unique deviceID
-                String deviceId = "alarm" + installationId.toString();
-                thing.setDeviceId(deviceId);
-                VerisureThingJSON oldObj = verisureThings.get(thing.getDeviceId());
-                if (oldObj == null || !oldObj.equals(thing)) {
-                    thing.setSiteId(installation.getInstallationId());
-                    thing.setSiteName(installation.getInstallationName());
-                    verisureThings.put(deviceId, thing);
-                    notifyListeners(thing);
+                String deviceId = doorLock.getDevice().getDeviceLabel();
+                if (deviceId != null) {
+                    // Set location
+                    slThing.setLocation(doorLock.getDevice().getArea());
+                    slThing.setDeviceId(deviceId);
+                    // Fetch more info from old endpoint
+                    VerisureSmartLock smartLockThing = getJSONVerisureAPI(SMARTLOCK_PATH + slThing.getDeviceId(),
+                            VerisureSmartLock.class);
+                    logger.debug("REST Response ({})", smartLockThing);
+                    slThing.setSmartLockJSON(smartLockThing);
+                    notifyListenersIfChanged(slThing, installation, deviceId);
                 }
-            } else {
-                logger.warn("Failed to update alarm status!");
-            }
+            });
+        } else {
+            logger.debug("Failed to update SmartLockStatus, thing is null!");
         }
     }
 
-    private synchronized void updateSmartLockStatus(Class<? extends VerisureThingJSON> jsonClass,
-            @Nullable VerisureInstallation installation) {
-        if (installation != null) {
-            BigDecimal installationId = installation.getInstallationId();
-            String url = START_GRAPHQL;
+    private synchronized void updateSmartPlugStatus(Class<? extends VerisureThing> jsonClass,
+            VerisureInstallation installation) {
+        BigDecimal installationId = installation.getInstallationId();
+        String url = START_GRAPHQL;
+        String operation = "SmartPlug";
+        String query = "query " + operation
+                + "($giid: String!) {\n  installation(giid: $giid) {\n smartplugs {\n device {\n deviceLabel\n area\n gui {\n support\n label\n __typename\n}\n __typename\n}\n currentState\n icon\n isHazardous\n __typename\n}\n __typename\n}\n}\n";
+        String queryQLSmartPlug = createOperationJSON(operation, installationId, query);
+        logger.debug("Quering API for smart plug status");
 
-            String queryQLSmartLock = "[{\"operationName\":\"DoorLock\",\"variables\":{\"giid\":\"" + installationId
-                    + "\"},\"query\":\"query DoorLock($giid: String!) {\\n  installation(giid: $giid) {\\n    doorlocks {\\n      device {\\n        deviceLabel\\n        area\\n        __typename\\n      }\\n      currentLockState\\n      eventTime\\n      secureModeActive\\n      motorJam\\n      userString\\n      method\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}]\n"
-                    + "";
-            logger.debug("Trying to get smart lock status with URL {} and data {}", url, queryQLSmartLock);
-            VerisureSmartLocksJSON thing = (VerisureSmartLocksJSON) postJSONVerisureAPI(url, queryQLSmartLock,
-                    jsonClass);
-            logger.debug("REST Response ({})", thing);
+        VerisureSmartPlugs thing = (VerisureSmartPlugs) postJSONVerisureAPI(url, queryQLSmartPlug, jsonClass);
+        logger.debug("REST Response ({})", thing);
 
-            if (thing != null && thing.getData() != null) {
-                List<VerisureSmartLocksJSON.Doorlock> doorLockList = thing.getData().getInstallation().getDoorlocks();
-                for (VerisureSmartLocksJSON.Doorlock doorLock : doorLockList) {
-                    VerisureSmartLocksJSON slThing = new VerisureSmartLocksJSON();
-                    VerisureSmartLocksJSON.Installation inst = new VerisureSmartLocksJSON.Installation();
-                    List<VerisureSmartLocksJSON.Doorlock> list = new ArrayList<VerisureSmartLocksJSON.Doorlock>();
-                    list.add(doorLock);
-                    inst.setDoorlocks(list);
-                    VerisureSmartLocksJSON.Data data = new VerisureSmartLocksJSON.Data();
-                    data.setInstallation(inst);
-                    slThing.setData(data);
-                    // Set unique deviceID
-                    String deviceId = doorLock.getDevice().getDeviceLabel();
-                    if (deviceId != null) {
-                        slThing.setDeviceId(deviceId);
-                        // Set location
-                        slThing.setLocation(doorLock.getDevice().getArea());
-                        // Fetch more info from old endpoint
-                        VerisureSmartLockJSON smartLockThing = getJSONVerisureAPI(
-                                SMARTLOCK_PATH + slThing.getDeviceId(), VerisureSmartLockJSON.class);
-                        logger.debug("REST Response ({})", smartLockThing);
-                        slThing.setSmartLockJSON(smartLockThing);
-                        VerisureThingJSON oldObj = verisureThings.get(slThing.getDeviceId());
-                        if (oldObj == null || !oldObj.equals(slThing)) {
-                            slThing.setSiteId(installation.getInstallationId());
-                            slThing.setSiteName(installation.getInstallationName());
-                            verisureThings.put(slThing.getDeviceId(), slThing);
-                            notifyListeners(slThing);
-                        }
-                    }
+        if (thing != null) {
+            List<VerisureSmartPlugs.Smartplug> smartPlugList = thing.getData().getInstallation().getSmartplugs();
+            smartPlugList.forEach(smartPlug -> {
+                VerisureSmartPlugs spThing = new VerisureSmartPlugs();
+                VerisureSmartPlugs.Installation inst = new VerisureSmartPlugs.Installation();
+                List<VerisureSmartPlugs.Smartplug> list = new ArrayList<VerisureSmartPlugs.Smartplug>();
+                list.add(smartPlug);
+                inst.setSmartplugs(list);
+                VerisureSmartPlugs.Data data = new VerisureSmartPlugs.Data();
+                data.setInstallation(inst);
+                spThing.setData(data);
+                // Set unique deviceID
+                String deviceId = smartPlug.getDevice().getDeviceLabel();
+                if (deviceId != null) {
+                    // Set location
+                    spThing.setLocation(smartPlug.getDevice().getArea());
+                    notifyListenersIfChanged(spThing, installation, deviceId);
                 }
-            } else {
-                logger.warn("Failed to update SmartLockStatus thing: {}, thing.getData: {}", thing, thing.getData());
-            }
+            });
+        } else {
+            logger.debug("Failed to update SmartPlug, thing is null");
         }
     }
 
-    private synchronized void updateSmartPlugStatus(Class<? extends VerisureThingJSON> jsonClass,
-            @Nullable VerisureInstallation installation) {
-        if (installation != null) {
-            BigDecimal installationId = installation.getInstallationId();
-            String url = START_GRAPHQL;
+    private synchronized void updateClimateStatus(Class<? extends VerisureThing> jsonClass,
+            VerisureInstallation installation) {
+        BigDecimal installationId = installation.getInstallationId();
+        String url = START_GRAPHQL;
+        String operation = "Climate";
+        String query = "query " + operation
+                + "($giid: String!) {\n installation(giid: $giid) {\n climates {\n device {\n deviceLabel\n area\n gui {\n label\n __typename\n }\n __typename\n }\n humidityEnabled\n humidityTimestamp\n humidityValue\n temperatureTimestamp\n temperatureValue\n __typename\n }\n __typename\n}\n}\n";
 
-            String queryQLSmartPlug = "{\"operationName\":\"SmartPlug\",\"variables\":{\"giid\":\"" + installationId
-                    + "\"},\"query\":\"query SmartPlug($giid: String!) {\\n installation(giid: $giid) {\\n smartplugs {\\n device {\\n deviceLabel\\n area\\n __typename\\n }\\n currentState\\n icon\\n isHazardous\\n __typename\\n }\\n __typename\\n }\\n}\\n\"}";
-            logger.debug("Trying to get smart plug status with URL {} and data {}", url, queryQLSmartPlug);
-            VerisureSmartPlugsJSON thing = (VerisureSmartPlugsJSON) postJSONVerisureAPI(url, queryQLSmartPlug,
-                    jsonClass);
-            logger.debug("REST Response ({})", thing);
+        String queryQLClimates = createOperationJSON(operation, installationId, query);
+        logger.debug("Quering API for climate status");
 
-            if (thing != null && thing.getData() != null) {
-                List<VerisureSmartPlugsJSON.Smartplug> smartPlugList = thing.getData().getInstallation()
-                        .getSmartplugs();
-                for (VerisureSmartPlugsJSON.Smartplug smartPlug : smartPlugList) {
-                    VerisureSmartPlugsJSON slThing = new VerisureSmartPlugsJSON();
-                    VerisureSmartPlugsJSON.Installation inst = new VerisureSmartPlugsJSON.Installation();
-                    List<VerisureSmartPlugsJSON.Smartplug> list = new ArrayList<VerisureSmartPlugsJSON.Smartplug>();
-                    list.add(smartPlug);
-                    inst.setSmartplugs(list);
-                    VerisureSmartPlugsJSON.Data data = new VerisureSmartPlugsJSON.Data();
-                    data.setInstallation(inst);
-                    slThing.setData(data);
-                    // Set unique deviceID
-                    String deviceId = smartPlug.getDevice().getDeviceLabel();
-                    if (deviceId != null) {
-                        slThing.setDeviceId(deviceId);
-                        // Set location
-                        slThing.setLocation(smartPlug.getDevice().getArea());
-                        VerisureThingJSON oldObj = verisureThings.get(slThing.getDeviceId());
-                        if (oldObj == null || !oldObj.equals(slThing)) {
-                            slThing.setSiteId(installation.getInstallationId());
-                            slThing.setSiteName(installation.getInstallationName());
-                            verisureThings.put(slThing.getDeviceId(), slThing);
-                            notifyListeners(slThing);
-                        }
-                    }
-                }
-            } else {
-                logger.warn("Failed to update SmartPlugStatus thing: {}, thing.getData: {}", thing, thing.getData());
-            }
-        }
-    }
+        VerisureClimates thing = (VerisureClimates) postJSONVerisureAPI(url, queryQLClimates, jsonClass);
+        logger.debug("REST Response ({})", thing);
 
-    private synchronized void updateClimateStatus(Class<? extends VerisureThingJSON> jsonClass,
-            @Nullable VerisureInstallation installation) {
-        if (installation != null) {
-            BigDecimal installationId = installation.getInstallationId();
-            String url = START_GRAPHQL;
-
-            String queryQLClimates = "{\"operationName\":\"Climate\",\"variables\":{\"giid\":\"" + installationId
-                    + "\"},\"query\":\"query Climate($giid: String!) {\\n installation(giid: $giid) {\\n climates {\\n device {\\n deviceLabel\\n area\\n gui {\\n label\\n __typename\\n }\\n __typename\\n }\\n humidityEnabled\\n humidityTimestamp\\n humidityValue\\n temperatureTimestamp\\n temperatureValue\\n __typename\\n }\\n __typename\\n }\\n}\\n\"}";
-            logger.debug("Trying to get climate status with URL {} and data {}", url, queryQLClimates);
-            VerisureClimatesJSON thing = (VerisureClimatesJSON) postJSONVerisureAPI(url, queryQLClimates, jsonClass);
-            logger.debug("REST Response ({})", thing);
-
-            if (thing != null && thing.getData() != null) {
-                List<VerisureClimatesJSON.Climate> climateList = thing.getData().getInstallation().getClimates();
-                for (VerisureClimatesJSON.Climate climate : climateList) {
-                    VerisureClimatesJSON cThing = new VerisureClimatesJSON();
-                    VerisureClimatesJSON.Installation inst = new VerisureClimatesJSON.Installation();
-                    List<VerisureClimatesJSON.Climate> list = new ArrayList<VerisureClimatesJSON.Climate>();
-                    list.add(climate);
-                    inst.setClimates(list);
-                    VerisureClimatesJSON.Data data = new VerisureClimatesJSON.Data();
-                    data.setInstallation(inst);
-                    cThing.setData(data);
-                    // Set unique deviceID
+        if (thing != null) {
+            List<VerisureClimates.Climate> climateList = thing.getData().getInstallation().getClimates();
+            climateList.forEach(climate -> {
+                // If thing is Mouse detection device, then skip it, but fetch temperature from it
+                String type = climate.getDevice().getGui().getLabel();
+                if ("MOUSE".equals(type)) {
+                    logger.debug("Mouse detection device!");
                     String deviceId = climate.getDevice().getDeviceLabel();
                     if (deviceId != null) {
-                        cThing.setDeviceId(deviceId);
-                        // Set location
-                        cThing.setLocation(climate.getDevice().getArea());
-                        VerisureThingJSON oldObj = verisureThings.get(cThing.getDeviceId());
-                        if (oldObj == null || !oldObj.equals(cThing)) {
-                            cThing.setSiteId(installation.getInstallationId());
-                            cThing.setSiteName(installation.getInstallationName());
-                            verisureThings.put(cThing.getDeviceId(), cThing);
-                            notifyListeners(cThing);
+                        deviceId = deviceId.replaceAll("[^a-zA-Z0-9]+", "");
+                        VerisureThing mouseThing = verisureThings.get(deviceId);
+                        if (mouseThing != null && mouseThing instanceof VerisureMiceDetection) {
+                            VerisureMiceDetection miceDetectorThing = (VerisureMiceDetection) mouseThing;
+                            miceDetectorThing.setTemperatureValue(climate.getTemperatureValue());
+                            miceDetectorThing.setTemperatureTime(climate.getTemperatureTimestamp());
+                            notifyListeners(miceDetectorThing);
+                            logger.debug("Found climate thing for a Verisure Mouse Detector");
                         }
                     }
+                    return;
                 }
-            } else {
-                logger.warn("Failed to update ClimateStatus thing: {}, thing.getData: {}", thing, thing.getData());
-            }
-        }
-    }
-
-    private synchronized void updateDoorWindowStatus(Class<? extends VerisureThingJSON> jsonClass,
-            @Nullable VerisureInstallation installation) {
-        if (installation != null) {
-            BigDecimal installationId = installation.getInstallationId();
-            String url = START_GRAPHQL;
-
-            String queryQLDoorWindow = "{\"operationName\":\"DoorWindow\",\"variables\":{\"giid\":\"" + installationId
-                    + "\"},\"query\":\"query DoorWindow($giid: String!) {\\n installation(giid: $giid) {\\n doorWindows {\\n device {\\n deviceLabel\\n area\\n __typename\\n }\\n type\\n state\\n wired\\n reportTime\\n __typename\\n }\\n __typename\\n }\\n}\\n\"}";
-            logger.debug("Trying to get climate status with URL {} and data {}", url, queryQLDoorWindow);
-            VerisureDoorWindowsJSON thing = (VerisureDoorWindowsJSON) postJSONVerisureAPI(url, queryQLDoorWindow,
-                    jsonClass);
-            logger.debug("REST Response ({})", thing);
-
-            if (thing != null && thing.getData() != null) {
-                List<VerisureDoorWindowsJSON.DoorWindow> doorWindowList = thing.getData().getInstallation()
-                        .getDoorWindows();
-                for (VerisureDoorWindowsJSON.DoorWindow doorWindow : doorWindowList) {
-                    VerisureDoorWindowsJSON dThing = new VerisureDoorWindowsJSON();
-                    VerisureDoorWindowsJSON.Installation inst = new VerisureDoorWindowsJSON.Installation();
-                    List<VerisureDoorWindowsJSON.DoorWindow> list = new ArrayList<VerisureDoorWindowsJSON.DoorWindow>();
-                    list.add(doorWindow);
-                    inst.setDoorWindows(list);
-                    VerisureDoorWindowsJSON.Data data = new VerisureDoorWindowsJSON.Data();
-                    data.setInstallation(inst);
-                    dThing.setData(data);
-                    // Set unique deviceID
-                    String deviceId = doorWindow.getDevice().getDeviceLabel();
-                    if (deviceId != null) {
-                        dThing.setDeviceId(deviceId);
-                        // Set location
-                        dThing.setLocation(doorWindow.getDevice().getArea());
-                        VerisureThingJSON oldObj = verisureThings.get(dThing.getDeviceId());
-                        if (oldObj == null || !oldObj.equals(dThing)) {
-                            dThing.setSiteId(installation.getInstallationId());
-                            dThing.setSiteName(installation.getInstallationName());
-                            verisureThings.put(dThing.getDeviceId(), dThing);
-                            notifyListeners(dThing);
-                        }
-                    }
-                }
-            } else {
-                logger.warn("Failed to update DoorWindowStatus thing: {}, thing.getData: {}", thing, thing.getData());
-            }
-        }
-    }
-
-    private synchronized void updateBroadbandConnectionStatus(Class<? extends VerisureThingJSON> jsonClass,
-            @Nullable VerisureInstallation inst) {
-        if (inst != null) {
-            BigDecimal installationId = inst.getInstallationId();
-            String url = START_GRAPHQL;
-
-            String queryQLBroadbandConnection = "{\"operationName\":\"Broadband\",\"variables\":{\"giid\":\""
-                    + installationId
-                    + "\"},\"query\":\"query Broadband($giid: String!) {\\n installation(giid: $giid) {\\n broadband {\\n testDate\\n isBroadbandConnected\\n __typename\\n }\\n __typename\\n }\\n}\\n\"}";
-            logger.debug("Trying to get alarm status with URL {} and data {}", url, queryQLBroadbandConnection);
-            VerisureThingJSON thing = postJSONVerisureAPI(url, queryQLBroadbandConnection, jsonClass);
-            logger.debug("REST Response ({})", thing);
-
-            if (thing != null) {
+                VerisureClimates cThing = new VerisureClimates();
+                VerisureClimates.Installation inst = new VerisureClimates.Installation();
+                List<VerisureClimates.Climate> list = new ArrayList<VerisureClimates.Climate>();
+                list.add(climate);
+                inst.setClimates(list);
+                VerisureClimates.Data data = new VerisureClimates.Data();
+                data.setInstallation(inst);
+                cThing.setData(data);
                 // Set unique deviceID
-                String deviceId = "bc" + installationId.toString();
-                thing.setDeviceId(deviceId);
-                VerisureThingJSON oldObj = verisureThings.get(deviceId);
-                if (oldObj == null || !oldObj.equals(thing)) {
-                    thing.setSiteId(inst.getInstallationId());
-                    thing.setSiteName(inst.getInstallationName());
-                    verisureThings.put(deviceId, thing);
-                    notifyListeners(thing);
+                String deviceId = climate.getDevice().getDeviceLabel();
+                if (deviceId != null) {
+                    // Set location
+                    cThing.setLocation(climate.getDevice().getArea());
+                    notifyListenersIfChanged(cThing, installation, deviceId);
                 }
-            }
+            });
+        } else {
+            logger.debug("Failed to update ClimateStatus, thing is null");
         }
     }
 
-    private synchronized void updateUserPresenceStatus(Class<? extends VerisureThingJSON> jsonClass,
-            @Nullable VerisureInstallation installation) {
-        if (installation != null) {
-            BigDecimal installationId = installation.getInstallationId();
-            String url = START_GRAPHQL;
+    private synchronized void updateDoorWindowStatus(Class<? extends VerisureThing> jsonClass,
+            VerisureInstallation installation) {
+        BigDecimal installationId = installation.getInstallationId();
+        String url = START_GRAPHQL;
+        String operation = "DoorWindow";
+        String query = "query " + operation
+                + "($giid: String!) {\n installation(giid: $giid) {\n doorWindows {\n device {\n deviceLabel\n area\n __typename\n }\n type\n state\n wired\n reportTime\n __typename\n }\n __typename\n}\n}\n";
 
-            String queryQLUserPresence = "{\"operationName\":\"userTrackings\",\"variables\":{\"giid\":\""
-                    + installationId
-                    + "\"},\"query\":\"query userTrackings($giid: String!) {\\n  installation(giid: $giid) {\\n    userTrackings {\\n      isCallingUser\\n      webAccount\\n      status\\n      xbnContactId\\n      currentLocationName\\n      deviceId\\n      name\\n      currentLocationTimestamp\\n      deviceName\\n      currentLocationId\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}";
-            logger.debug("Trying to get user presence status with URL {} and data {}", url, queryQLUserPresence);
-            VerisureUserPresencesJSON thing = (VerisureUserPresencesJSON) postJSONVerisureAPI(url, queryQLUserPresence,
-                    jsonClass);
-            logger.debug("REST Response ({})", thing);
+        String queryQLDoorWindow = createOperationJSON(operation, installationId, query);
+        logger.debug("Quering API for door&window status");
 
-            if (thing != null && thing.getData() != null) {
-                List<VerisureUserPresencesJSON.UserTracking> userTrackingList = thing.getData().getInstallation()
-                        .getUserTrackings();
-                for (VerisureUserPresencesJSON.UserTracking userTracking : userTrackingList) {
-                    if (userTracking.getStatus().equals("ACTIVE")) {
-                        VerisureUserPresencesJSON upThing = new VerisureUserPresencesJSON();
-                        VerisureUserPresencesJSON.Installation inst = new VerisureUserPresencesJSON.Installation();
-                        List<VerisureUserPresencesJSON.UserTracking> list = new ArrayList<VerisureUserPresencesJSON.UserTracking>();
-                        list.add(userTracking);
-                        inst.setUserTrackings(list);
-                        VerisureUserPresencesJSON.Data data = new VerisureUserPresencesJSON.Data();
-                        data.setInstallation(inst);
-                        upThing.setData(data);
-                        // Set unique deviceID
-                        String deviceId = "up" + userTracking.getWebAccount() + installationId.toString();
-                        upThing.setDeviceId(deviceId);
-                        VerisureThingJSON oldObj = verisureThings.get(upThing.getDeviceId());
-                        if (oldObj == null || !oldObj.equals(upThing)) {
-                            upThing.setSiteId(installation.getInstallationId());
-                            upThing.setSiteName(installation.getInstallationName());
-                            verisureThings.put(upThing.getDeviceId(), upThing);
-                            notifyListeners(upThing);
-                        }
-                    }
+        VerisureDoorWindows thing = (VerisureDoorWindows) postJSONVerisureAPI(url, queryQLDoorWindow, jsonClass);
+        logger.debug("REST Response ({})", thing);
+
+        if (thing != null) {
+            List<VerisureDoorWindows.DoorWindow> doorWindowList = thing.getData().getInstallation().getDoorWindows();
+            doorWindowList.forEach(doorWindow -> {
+                VerisureDoorWindows dThing = new VerisureDoorWindows();
+                VerisureDoorWindows.Installation inst = new VerisureDoorWindows.Installation();
+                List<VerisureDoorWindows.DoorWindow> list = new ArrayList<VerisureDoorWindows.DoorWindow>();
+                list.add(doorWindow);
+                inst.setDoorWindows(list);
+                VerisureDoorWindows.Data data = new VerisureDoorWindows.Data();
+                data.setInstallation(inst);
+                dThing.setData(data);
+                // Set unique deviceID
+                String deviceId = doorWindow.getDevice().getDeviceLabel();
+                if (deviceId != null) {
+                    // Set location
+                    dThing.setLocation(doorWindow.getDevice().getArea());
+                    notifyListenersIfChanged(dThing, installation, deviceId);
                 }
-            } else {
-                logger.warn("Failed to update UserPresenceStatus thing: {}, thing.getData: {}", thing, thing.getData());
-            }
+            });
+        } else {
+            logger.debug("Failed to update DoorWindowStatus thing, is null!");
+        }
+    }
+
+    private synchronized void updateBroadbandConnectionStatus(Class<? extends VerisureThing> jsonClass,
+            VerisureInstallation inst) {
+        BigDecimal installationId = inst.getInstallationId();
+        String url = START_GRAPHQL;
+        String operation = "Broadband";
+        String query = "query " + operation
+                + "($giid: String!) {\n installation(giid: $giid) {\n broadband {\n testDate\n isBroadbandConnected\n __typename\n }\n __typename\n}\n}\n";
+
+        String queryQLBroadbandConnection = createOperationJSON(operation, installationId, query);
+        logger.debug("Quering API for broadband connection status");
+
+        VerisureThing thing = postJSONVerisureAPI(url, queryQLBroadbandConnection, jsonClass);
+        logger.debug("REST Response ({})", thing);
+
+        if (thing != null) {
+            // Set unique deviceID
+            String deviceId = "bc" + installationId.toString();
+            notifyListenersIfChanged(thing, inst, deviceId);
+        } else {
+            logger.debug("Failed to update BroadbandConnection, thing i null!");
+        }
+    }
+
+    private synchronized void updateUserPresenceStatus(Class<? extends VerisureThing> jsonClass,
+            VerisureInstallation installation) {
+        BigDecimal installationId = installation.getInstallationId();
+        String url = START_GRAPHQL;
+        String operation = "userTrackings";
+        String query = "query " + operation
+                + "($giid: String!) {\ninstallation(giid: $giid) {\n userTrackings {\n isCallingUser\n webAccount\n status\n xbnContactId\n currentLocationName\n deviceId\n name\n currentLocationTimestamp\n deviceName\n currentLocationId\n __typename\n}\n __typename\n}\n}\n";
+
+        String queryQLUserPresence = createOperationJSON(operation, installationId, query);
+        logger.debug("Quering API for user presence status");
+
+        VerisureUserPresences thing = (VerisureUserPresences) postJSONVerisureAPI(url, queryQLUserPresence, jsonClass);
+        logger.debug("REST Response ({})", thing);
+
+        if (thing != null) {
+            List<VerisureUserPresences.UserTracking> userTrackingList = thing.getData().getInstallation()
+                    .getUserTrackings();
+            userTrackingList.forEach(userTracking -> {
+                String localUserTrackingStatus = userTracking.getStatus();
+                if (localUserTrackingStatus != null && localUserTrackingStatus.equals("ACTIVE")) {
+                    VerisureUserPresences upThing = new VerisureUserPresences();
+                    VerisureUserPresences.Installation inst = new VerisureUserPresences.Installation();
+                    List<VerisureUserPresences.UserTracking> list = new ArrayList<VerisureUserPresences.UserTracking>();
+                    list.add(userTracking);
+                    inst.setUserTrackings(list);
+                    VerisureUserPresences.Data data = new VerisureUserPresences.Data();
+                    data.setInstallation(inst);
+                    upThing.setData(data);
+                    // Set unique deviceID
+                    String deviceId = "up" + userTracking.getWebAccount() + installationId.toString();
+                    notifyListenersIfChanged(upThing, installation, deviceId);
+                }
+            });
+        } else {
+            logger.debug("Failed to update UserPresenceStatus, thing is null!");
+        }
+    }
+
+    private synchronized void updateMiceDetectionStatus(Class<? extends VerisureThing> jsonClass,
+            VerisureInstallation installation) {
+        BigDecimal installationId = installation.getInstallationId();
+        String url = START_GRAPHQL;
+        String operation = "Mouse";
+        String query = "query " + operation
+                + "($giid: String!) {\n installation(giid: $giid) {\n mice {\n device {\n deviceLabel\n area\n gui {\n support\n __typename\n}\n __typename\n}\n type\n detections {\n count\n gatewayTime\n nodeTime\n duration\n __typename\n}\n __typename\n}\n __typename\n}\n}\n";
+
+        String queryQLMiceDetection = createOperationJSON(operation, installationId, query);
+        logger.debug("Quering API for mice detection status");
+
+        VerisureMiceDetection thing = (VerisureMiceDetection) postJSONVerisureAPI(url, queryQLMiceDetection, jsonClass);
+        logger.debug("REST Response ({})", thing);
+
+        if (thing != null) {
+            List<VerisureMiceDetection.Mouse> miceList = thing.getData().getInstallation().getMice();
+            miceList.forEach(mouse -> {
+                VerisureMiceDetection miceThing = new VerisureMiceDetection();
+                VerisureMiceDetection.Installation inst = new VerisureMiceDetection.Installation();
+                List<VerisureMiceDetection.Mouse> list = new ArrayList<VerisureMiceDetection.Mouse>();
+                list.add(mouse);
+                inst.setMice(list);
+                VerisureMiceDetection.Data data = new VerisureMiceDetection.Data();
+                data.setInstallation(inst);
+                miceThing.setData(data);
+                // Set unique deviceID
+                String deviceId = mouse.getDevice().getDeviceLabel();
+                logger.debug("Mouse id: {} for thing: {}", deviceId, mouse);
+                if (deviceId != null) {
+                    // Set location
+                    miceThing.setLocation(mouse.getDevice().getArea());
+                    notifyListenersIfChanged(miceThing, installation, deviceId);
+                }
+            });
+        } else {
+            logger.debug("Failed to update Mice Detection Status, thing is null!");
+        }
+    }
+
+    @NonNullByDefault
+    private final class VerisureInstallation {
+        private @Nullable String installationName;
+        private BigDecimal installationId = new BigDecimal(0);
+        private @Nullable String pinCode;
+
+        public @Nullable String getPinCode() {
+            return pinCode;
+        }
+
+        public void setPinCode(@Nullable String pinCode) {
+            this.pinCode = pinCode;
+        }
+
+        public VerisureInstallation() {
+        }
+
+        public BigDecimal getInstallationId() {
+            return installationId;
+        }
+
+        public @Nullable String getInstallationName() {
+            return installationName;
+        }
+
+        public void setInstallationId(BigDecimal installationId) {
+            this.installationId = installationId;
+        }
+
+        public void setInstallationName(@Nullable String installationName) {
+            this.installationName = installationName;
+        }
+    }
+
+    @NonNullByDefault
+    private static class Operation {
+
+        @SuppressWarnings("unused")
+        private @Nullable String operationName;
+        @SuppressWarnings("unused")
+        private Variables variables = new Variables();
+        @SuppressWarnings("unused")
+        private @Nullable String query;
+
+        public void setOperationName(String operationName) {
+            this.operationName = operationName;
+        }
+
+        public void setVariables(Variables variables) {
+            this.variables = variables;
+        }
+
+        public void setQuery(String query) {
+            this.query = query;
+        }
+    }
+
+    @NonNullByDefault
+    private static class Variables {
+
+        @SuppressWarnings("unused")
+        private @Nullable String giid;
+
+        public void setGiid(String giid) {
+            this.giid = giid;
         }
     }
 }

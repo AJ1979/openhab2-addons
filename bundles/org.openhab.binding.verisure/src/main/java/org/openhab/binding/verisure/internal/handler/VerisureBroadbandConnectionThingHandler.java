@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -18,14 +18,12 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.library.types.StringType;
+import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
-import org.openhab.binding.verisure.internal.model.VerisureBroadbandConnectionsJSON;
-import org.openhab.binding.verisure.internal.model.VerisureThingJSON;
+import org.openhab.binding.verisure.internal.model.VerisureBroadbandConnections;
 
 /**
  * Handler for the Broadband COnnection thing type that Verisure provides.
@@ -34,7 +32,7 @@ import org.openhab.binding.verisure.internal.model.VerisureThingJSON;
  *
  */
 @NonNullByDefault
-public class VerisureBroadbandConnectionThingHandler extends VerisureThingHandler {
+public class VerisureBroadbandConnectionThingHandler extends VerisureThingHandler<VerisureBroadbandConnections> {
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections
             .singleton(THING_TYPE_BROADBAND_CONNECTION);
@@ -44,24 +42,22 @@ public class VerisureBroadbandConnectionThingHandler extends VerisureThingHandle
     }
 
     @Override
-    public synchronized void update(@Nullable VerisureThingJSON thing) {
-        logger.debug("update on thing: {}", thing);
-        updateStatus(ThingStatus.ONLINE);
-        if (getThing().getThingTypeUID().equals(THING_TYPE_BROADBAND_CONNECTION)) {
-            VerisureBroadbandConnectionsJSON obj = (VerisureBroadbandConnectionsJSON) thing;
-            if (obj != null) {
-                updateBroadbandConnection(obj);
-            }
-        } else {
-            logger.warn("Can't handle this thing typeuid: {}", getThing().getThingTypeUID());
-        }
+    public Class<VerisureBroadbandConnections> getVerisureThingClass() {
+        return VerisureBroadbandConnections.class;
     }
 
-    private void updateBroadbandConnection(VerisureBroadbandConnectionsJSON vbcJSON) {
+    @Override
+    public synchronized void update(VerisureBroadbandConnections thing) {
+        logger.debug("update on thing: {}", thing);
+        updateStatus(ThingStatus.ONLINE);
+        updateBroadbandConnection(thing);
+    }
+
+    private void updateBroadbandConnection(VerisureBroadbandConnections vbcJSON) {
         updateTimeStamp(vbcJSON.getData().getInstallation().getBroadband().getTestDate());
         ChannelUID cuid = new ChannelUID(getThing().getUID(), CHANNEL_CONNECTED);
-        updateState(cuid,
-                new StringType(vbcJSON.getData().getInstallation().getBroadband().isBroadbandConnected().toString()));
+        boolean broadbandConnected = vbcJSON.getData().getInstallation().getBroadband().isBroadbandConnected();
+        updateState(cuid, OnOffType.from(broadbandConnected));
         super.update(vbcJSON);
     }
 
