@@ -145,7 +145,6 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
             logger.error("Exception: {}", e.getMessage());
         }
         if (session != null) {
-            session.dispose();
             session = null;
         }
     }
@@ -178,7 +177,6 @@ public class VWWeConnectBridgeHandler extends BaseBridgeHandler {
         stopAutomaticRefresh();
         stopImmediateRefresh();
         if (session != null) {
-            session.dispose();
             session = null;
         }
     }

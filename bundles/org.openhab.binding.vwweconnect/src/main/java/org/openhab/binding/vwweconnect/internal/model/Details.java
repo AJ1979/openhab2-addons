@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.vwweconnect.internal.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -29,23 +30,15 @@ import org.eclipse.jdt.annotation.Nullable;
 @NonNullByDefault
 public class Details {
 
-    private @Nullable VehicleDetails vehicleDetails;
+    private VehicleDetails vehicleDetails = new VehicleDetails();
     private @Nullable String errorCode;
 
-    public @Nullable VehicleDetails getVehicleDetails() {
+    public VehicleDetails getVehicleDetails() {
         return vehicleDetails;
-    }
-
-    public void setVehicleDetails(VehicleDetails vehicleDetails) {
-        this.vehicleDetails = vehicleDetails;
     }
 
     public @Nullable String getErrorCode() {
         return errorCode;
-    }
-
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
     }
 
     @Override
@@ -75,77 +68,45 @@ public class Details {
     @NonNullByDefault
     public class VehicleDetails {
 
-        private @Nullable List<String> lastConnectionTimeStamp;
+        private List<String> lastConnectionTimeStamp = new ArrayList<>();
         private double distanceCovered = BaseVehicle.UNDEFINED;
         private double range = BaseVehicle.UNDEFINED;
         private @Nullable String serviceInspectionData;
         private @Nullable String oilInspectionData;
-        private @Nullable Boolean showOil;
-        private @Nullable Boolean showService;
-        private @Nullable Boolean flightMode;
+        private boolean showOil;
+        private boolean showService;
+        private boolean flightMode;
 
-        public @Nullable List<String> getLastConnectionTimeStamp() {
+        public List<String> getLastConnectionTimeStamp() {
             return lastConnectionTimeStamp;
-        }
-
-        public void setLastConnectionTimeStamp(List<String> lastConnectionTimeStamp) {
-            this.lastConnectionTimeStamp = lastConnectionTimeStamp;
         }
 
         public double getDistanceCovered() {
             return distanceCovered;
         }
 
-        public void setDistanceCovered(double distanceCovered) {
-            this.distanceCovered = distanceCovered;
-        }
-
         public double getRange() {
             return range;
-        }
-
-        public void setRange(double range) {
-            this.range = range;
         }
 
         public @Nullable String getServiceInspectionData() {
             return serviceInspectionData;
         }
 
-        public void setServiceInspectionData(String serviceInspectionData) {
-            this.serviceInspectionData = serviceInspectionData;
-        }
-
         public @Nullable String getOilInspectionData() {
             return oilInspectionData;
         }
 
-        public void setOilInspectionData(String oilInspectionData) {
-            this.oilInspectionData = oilInspectionData;
-        }
-
-        public @Nullable Boolean getShowOil() {
+        public boolean getShowOil() {
             return showOil;
         }
 
-        public void setShowOil(Boolean showOil) {
-            this.showOil = showOil;
-        }
-
-        public @Nullable Boolean getShowService() {
+        public boolean getShowService() {
             return showService;
         }
 
-        public void setShowService(Boolean showService) {
-            this.showService = showService;
-        }
-
-        public @Nullable Boolean getFlightMode() {
+        public boolean getFlightMode() {
             return flightMode;
-        }
-
-        public void setFlightMode(Boolean flightMode) {
-            this.flightMode = flightMode;
         }
 
         @Override

@@ -52,12 +52,12 @@ import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.core.types.UnDefType;
 import org.eclipse.smarthome.io.net.http.HttpUtil;
+import org.openhab.binding.vwweconnect.internal.VWWeConnectSession;
 import org.openhab.binding.vwweconnect.internal.action.VWWeConnectActions;
 import org.openhab.binding.vwweconnect.internal.model.BaseVehicle;
 import org.openhab.binding.vwweconnect.internal.model.Details.VehicleDetails;
 import org.openhab.binding.vwweconnect.internal.model.HeaterStatus;
 import org.openhab.binding.vwweconnect.internal.model.Location;
-import org.openhab.binding.vwweconnect.internal.model.Location.Position;
 import org.openhab.binding.vwweconnect.internal.model.Status.VehicleStatusData;
 import org.openhab.binding.vwweconnect.internal.model.Trips;
 import org.openhab.binding.vwweconnect.internal.model.Trips.TripStatistic;
@@ -69,7 +69,7 @@ import org.openhab.binding.vwweconnect.internal.wrapper.VehiclePositionWrapper;
 import com.jayway.jsonpath.JsonPath;
 
 /**
- * Handler for the Smart Lock Device thing type that VWCarNet provides.
+ * Handler for the Vehicle thing type that VWWeConnect provides.
  *
  * @author Jan Gustafsson - Initial contribution
  *
@@ -115,22 +115,21 @@ public class VehicleHandler extends VWWeConnectHandler {
     }
 
     @Override
-    public synchronized void update(@Nullable BaseVehicle vehicle) {
+    public synchronized void update(BaseVehicle vehicle) {
         logger.debug("update on vehicle: {}", vehicle);
-        if (vehicle != null) {
-            if (getThing().getThingTypeUID().equals(VEHICLE_THING_TYPE)) {
-                Vehicle obj = (Vehicle) vehicle;
-                updateVehicleStatus(obj);
-                updateStatus(ThingStatus.ONLINE);
-            } else {
-                logger.warn("Can't handle this thing typeuid: {}", getThing().getThingTypeUID());
-            }
+
+        if (getThing().getThingTypeUID().equals(VEHICLE_THING_TYPE)) {
+            Vehicle obj = (Vehicle) vehicle;
+            updateVehicleStatus(obj);
+            logger.debug("update status to ONLINE for vehicle: {}", vehicle);
+            updateStatus(ThingStatus.ONLINE);
         } else {
-            logger.warn("Thing JSON is null: {}", getThing().getThingTypeUID());
+            logger.warn("Can't handle this thing typeuid: {}", getThing().getThingTypeUID());
         }
     }
 
     private void updateVehicleStatus(Vehicle vehicleJSON) {
+        logger.debug("update vehicle status");
         CompleteVehicleJson vehicle = vehicleJSON.getCompleteVehicleJson();
         VehicleDetails vehicleDetails = vehicleJSON.getVehicleDetails().getVehicleDetails();
         VehicleStatusData vehicleStatus = vehicleJSON.getVehicleStatus().getVehicleStatusData();
@@ -138,24 +137,18 @@ public class VehicleHandler extends VWWeConnectHandler {
         Location vehicleLocation = vehicleJSON.getVehicleLocation();
         HeaterStatus vehicleHeaterStatus = vehicleJSON.getHeaterStatus();
 
-        if (vehicle != null) {
-            getThing().getChannels().stream().map(Channel::getUID)
-                    .filter(channelUID -> isLinked(channelUID) && !LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
-                    .forEach(channelUID -> {
-                        State state = getValue(channelUID.getIdWithoutGroup(), vehicle, vehicleDetails, vehicleStatus,
-                                trips, vehicleLocation, vehicleHeaterStatus);
-                        updateState(channelUID, state);
-                    });
-            updateLastTrip(trips);
-        } else {
-            logger.warn("Update vehicle status failed vehicle: {}, details: {}, status: {}, heater status {}", vehicle,
-                    vehicleDetails, vehicleStatus, vehicleHeaterStatus);
-        }
+        getThing().getChannels().stream().map(Channel::getUID)
+                .filter(channelUID -> isLinked(channelUID) && !LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
+                .forEach(channelUID -> {
+                    State state = getValue(channelUID.getIdWithoutGroup(), vehicle, vehicleDetails, vehicleStatus,
+                            trips, vehicleLocation, vehicleHeaterStatus);
+                    updateState(channelUID, state);
+                });
+        updateLastTrip(trips);
     }
 
-    public State getValue(String channelId, CompleteVehicleJson vehicle, @Nullable VehicleDetails vehicleDetails,
-            @Nullable VehicleStatusData vehicleStatus, @Nullable Trips trips, @Nullable Location vehicleLocation,
-            @Nullable HeaterStatus vehicleHeaterStatus) {
+    public State getValue(String channelId, CompleteVehicleJson vehicle, VehicleDetails vehicleDetails,
+            VehicleStatusData vehicleStatus, Trips trips, Location vehicleLocation, HeaterStatus vehicleHeaterStatus) {
         switch (channelId) {
             case MODEL:
                 return new StringType(vehicle.getModel());
@@ -174,256 +167,128 @@ public class VehicleHandler extends VWWeConnectHandler {
                 RawType image = HttpUtil.downloadImage(vehicle.getImageUrl());
                 return image != null ? image : UnDefType.UNDEF;
             case ENGINE_TYPE_COMBUSTIAN:
-                return vehicle.getEngineTypeCombustian() ? OnOffType.ON : OnOffType.OFF;
+                return OnOffType.from(vehicle.getEngineTypeCombustian());
             case ENGINE_TYPE_ELECTRIC:
-                return vehicle.getEngineTypeElectric() ? OnOffType.ON : OnOffType.OFF;
+                return OnOffType.from(vehicle.getEngineTypeElectric());
             case FUEL_LEVEL:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getFuelLevel() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<>(vehicleStatus.getFuelLevel(), SmartHomeUnits.PERCENT)
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getFuelLevel() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<>(vehicleStatus.getFuelLevel(), SmartHomeUnits.PERCENT)
+                        : UnDefType.UNDEF;
             case FUEL_CONSUMPTION:
-                if (trips != null) {
-                    return trips.getRtsViewModel().getLongTermData()
-                            .getAverageFuelConsumption() != BaseVehicle.UNDEFINED
-                                    ? new DecimalType(
-                                            trips.getRtsViewModel().getLongTermData().getAverageFuelConsumption() / 10)
-                                    : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return trips.getRtsViewModel().getLongTermData().getAverageFuelConsumption() != BaseVehicle.UNDEFINED
+                        ? new DecimalType(trips.getRtsViewModel().getLongTermData().getAverageFuelConsumption() / 10)
+                        : UnDefType.UNDEF;
             case FUEL_RANGE:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getFuelRange() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<Length>(vehicleStatus.getFuelRange(), KILO(SIUnits.METRE))
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getFuelRange() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<Length>(vehicleStatus.getFuelRange(), KILO(SIUnits.METRE))
+                        : UnDefType.UNDEF;
             case FUEL_ALERT:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getFuelRange() < 100 ? OnOffType.ON : OnOffType.OFF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getFuelRange() != BaseVehicle.UNDEFINED
+                        ? OnOffType.from(vehicleStatus.getFuelRange() < 100)
+                        : UnDefType.UNDEF;
             case CNG_LEVEL:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCngFuelLevel() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<>(vehicleStatus.getCngFuelLevel(), SmartHomeUnits.PERCENT)
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getCngFuelLevel() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<>(vehicleStatus.getCngFuelLevel(), SmartHomeUnits.PERCENT)
+                        : UnDefType.UNDEF;
             case CNG_CONSUMPTION:
-                if (trips != null) {
-                    return trips.getRtsViewModel().getLongTermData().getAverageCngConsumption() != BaseVehicle.UNDEFINED
-                            ? new DecimalType(trips.getRtsViewModel().getLongTermData().getAverageCngConsumption() / 10)
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return trips.getRtsViewModel().getLongTermData().getAverageCngConsumption() != BaseVehicle.UNDEFINED
+                        ? new DecimalType(trips.getRtsViewModel().getLongTermData().getAverageCngConsumption() / 10)
+                        : UnDefType.UNDEF;
             case CNG_RANGE:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCngRange() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<Length>(vehicleStatus.getCngRange(), KILO(SIUnits.METRE))
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getCngRange() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<Length>(vehicleStatus.getCngRange(), KILO(SIUnits.METRE))
+                        : UnDefType.UNDEF;
             case CNG_ALERT:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCngRange() < 100 ? OnOffType.ON : OnOffType.OFF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getCngRange() != BaseVehicle.UNDEFINED
+                        ? OnOffType.from(vehicleStatus.getCngRange() < 100)
+                        : UnDefType.UNDEF;
             case BATTERY_LEVEL:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getBatteryLevel() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<>(vehicleStatus.getBatteryLevel(), SmartHomeUnits.PERCENT)
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getBatteryLevel() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<>(vehicleStatus.getBatteryLevel(), SmartHomeUnits.PERCENT)
+                        : UnDefType.UNDEF;
             case ELECTRIC_CONSUMPTION:
-                if (trips != null) {
-                    return trips.getRtsViewModel().getLongTermData()
-                            .getAverageElectricConsumption() != BaseVehicle.UNDEFINED ? new DecimalType(
-                                    trips.getRtsViewModel().getLongTermData().getAverageElectricConsumption() / 10)
-                                    : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return trips.getRtsViewModel().getLongTermData()
+                        .getAverageElectricConsumption() != BaseVehicle.UNDEFINED
+                                ? new DecimalType(
+                                        trips.getRtsViewModel().getLongTermData().getAverageElectricConsumption() / 10)
+                                : UnDefType.UNDEF;
             case BATTERY_RANGE:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getBatteryRange() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<Length>(vehicleStatus.getBatteryRange(), KILO(SIUnits.METRE))
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getBatteryRange() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<Length>(vehicleStatus.getBatteryRange(), KILO(SIUnits.METRE))
+                        : UnDefType.UNDEF;
             case BATTERY_ALERT:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getBatteryRange() < 100 ? OnOffType.ON : OnOffType.OFF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleStatus.getBatteryRange() != BaseVehicle.UNDEFINED
+                        ? OnOffType.from(vehicleStatus.getBatteryRange() < 100)
+                        : UnDefType.UNDEF;
             case TOTAL_TRIP_DISTANCE:
-                if (trips != null) {
-                    return trips.getRtsViewModel().getLongTermData().getTripLength() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<Length>(trips.getRtsViewModel().getLongTermData().getTripLength(),
-                                    KILO(SIUnits.METRE))
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return trips.getRtsViewModel().getLongTermData().getTripLength() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<Length>(trips.getRtsViewModel().getLongTermData().getTripLength(),
+                                KILO(SIUnits.METRE))
+                        : UnDefType.UNDEF;
             case TOTAL_TRIP_DURATION:
-                if (trips != null) {
-                    return trips.getRtsViewModel().getLongTermData().getTripDuration() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<Time>(trips.getRtsViewModel().getLongTermData().getTripDuration(),
-                                    SmartHomeUnits.MINUTE)
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return trips.getRtsViewModel().getLongTermData().getTripDuration() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<Time>(trips.getRtsViewModel().getLongTermData().getTripDuration(),
+                                SmartHomeUnits.MINUTE)
+                        : UnDefType.UNDEF;
             case TOTAL_AVERAGE_SPEED:
-                if (trips != null) {
-                    return trips.getRtsViewModel().getLongTermData().getAverageSpeed() != BaseVehicle.UNDEFINED
-                            ? new QuantityType<Speed>(trips.getRtsViewModel().getLongTermData().getAverageSpeed(),
-                                    SIUnits.KILOMETRE_PER_HOUR)
-                            : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return trips.getRtsViewModel().getLongTermData().getAverageSpeed() != BaseVehicle.UNDEFINED
+                        ? new QuantityType<Speed>(trips.getRtsViewModel().getLongTermData().getAverageSpeed(),
+                                SIUnits.KILOMETRE_PER_HOUR)
+                        : UnDefType.UNDEF;
             case SERVICE_INSPECTION:
-                if (vehicleDetails != null) {
-                    return new StringType(vehicleDetails.getServiceInspectionData());
-                }
-                return UnDefType.NULL;
+                return new StringType(vehicleDetails.getServiceInspectionData());
             case OIL_INSPECTION:
-                if (vehicleDetails != null) {
-                    return new StringType(vehicleDetails.getOilInspectionData());
-                }
-                return UnDefType.NULL;
+                return new StringType(vehicleDetails.getOilInspectionData());
             case TRUNK:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getDoors().getTrunk() != null
-                            ? vehicleStatus.getCarRenderData().getDoors().getTrunk()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getDoors().getTrunk();
             case RIGHT_BACK:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getDoors().getRightBack() != null
-                            ? vehicleStatus.getCarRenderData().getDoors().getRightBack()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getDoors().getRightBack();
             case LEFT_BACK:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getDoors().getLeftBack() != null
-                            ? vehicleStatus.getCarRenderData().getDoors().getLeftBack()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getDoors().getLeftBack();
             case RIGHT_FRONT:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getDoors().getRightFront() != null
-                            ? vehicleStatus.getCarRenderData().getDoors().getRightFront()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getDoors().getRightFront();
             case LEFT_FRONT:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getDoors().getLeftFront() != null
-                            ? vehicleStatus.getCarRenderData().getDoors().getLeftFront()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getDoors().getLeftFront();
             case HOOD:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getHood() != null
-                            ? vehicleStatus.getCarRenderData().getHood()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getHood();
             case ROOF:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getRoof() != null
-                            ? vehicleStatus.getCarRenderData().getRoof()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getRoof();
             case SUN_ROOF:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getSunroof() != null
-                            ? vehicleStatus.getCarRenderData().getSunroof()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getSunroof();
             case DOORS_LOCKED:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getLockData().getDoorsLocked() != null
-                            ? vehicleStatus.getLockData().getDoorsLocked()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getLockData().getDoorsLocked();
             case TRUNK_LOCKED:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getLockData().getTrunk() != null ? vehicleStatus.getLockData().getTrunk()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getLockData().getTrunk();
             case RIGHT_BACK_WND:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getWindows().getRightBack() != null
-                            ? vehicleStatus.getCarRenderData().getWindows().getRightBack()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getWindows().getRightBack();
             case LEFT_BACK_WND:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getWindows().getLeftBack() != null
-                            ? vehicleStatus.getCarRenderData().getWindows().getLeftBack()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getWindows().getLeftBack();
             case RIGHT_FRONT_WND:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getWindows().getRightFront() != null
-                            ? vehicleStatus.getCarRenderData().getWindows().getRightFront()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getWindows().getRightFront();
             case LEFT_FRONT_WND:
-                if (vehicleStatus != null) {
-                    return vehicleStatus.getCarRenderData().getWindows().getLeftFront() != null
-                            ? vehicleStatus.getCarRenderData().getWindows().getLeftFront()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleStatus.getCarRenderData().getWindows().getLeftFront();
             case ACTUAL_LOCATION:
-                if (vehicleLocation != null) {
-                    Position localPosition = vehicleLocation.getPosition();
-                    return localPosition != null ? new VehiclePositionWrapper(localPosition).getPosition()
-                            : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleLocation.getPosition().getLat() != BaseVehicle.UNDEFINED
+                        ? new VehiclePositionWrapper(vehicleLocation.getPosition()).getPosition()
+                        : UnDefType.UNDEF;
             case REMOTE_HEATER:
-                if (vehicleHeaterStatus != null) {
-                    return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
-                            : OnOffType.OFF;
-                }
-                return UnDefType.UNDEF;
+                return OnOffType.from(vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive());
             case REMOTE_VENTILATION:
-                if (vehicleHeaterStatus != null) {
-                    return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive() ? OnOffType.ON
-                            : OnOffType.OFF;
-                }
-                return UnDefType.UNDEF;
+                return OnOffType.from(vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().isActive());
             case TEMPERATURE:
-                if (vehicleHeaterStatus != null) {
-                    return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
-                            .getTemperature() != BaseVehicle.UNDEFINED ? new QuantityType<Temperature>(
-                                    vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getTemperature(),
-                                    SIUnits.CELSIUS) : UnDefType.NULL;
-                }
-                return UnDefType.NULL;
+                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
+                        .getTemperature() != BaseVehicle.UNDEFINED
+                                ? new QuantityType<Temperature>(
+                                        vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getTemperature(),
+                                        SIUnits.CELSIUS)
+                                : UnDefType.NULL;
             case REMAINING_TIME:
-                if (vehicleHeaterStatus != null) {
-                    return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
-                            .getRemainingTime() != BaseVehicle.UNDEFINED ? new QuantityType<Time>(
-                                    vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getRemainingTime(),
-                                    SmartHomeUnits.MINUTE) : UnDefType.UNDEF;
-                }
-                return UnDefType.UNDEF;
+                return vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus()
+                        .getRemainingTime() != BaseVehicle.UNDEFINED
+                                ? new QuantityType<Time>(
+                                        vehicleHeaterStatus.getRemoteAuxiliaryHeating().getStatus().getRemainingTime(),
+                                        SmartHomeUnits.MINUTE)
+                                : UnDefType.UNDEF;
         }
         return UnDefType.UNDEF;
     }
@@ -436,45 +301,51 @@ public class VehicleHandler extends VWWeConnectHandler {
     }
 
     public void updateLastTrip(@Nullable Trips trips) {
+        logger.debug("update last trip");
+
         if (trips != null) {
             // Find latest trip ID
             int tripId;
             List<TripStatistic> tripsStat = trips.getRtsViewModel().getTripStatistics();
-            // Do a reverse of the trips
-            Collections.reverse(tripsStat);
-            logger.trace("Last trip stats reversed: {}", tripsStat);
-            Optional<TripStatistic> lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null)
-                    .findFirst();
-            int tripId1 = lastTrip.get().getAggregatedStatistics().getTripId();
-            logger.trace("Last trip ID1: {}", tripId1);
-            // Do another reverse of the trips
-            Collections.reverse(tripsStat);
-            logger.trace("Last trip stats reversed: {}", tripsStat);
-            lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null).findFirst();
-            int tripId2 = lastTrip.get().getAggregatedStatistics().getTripId();
-            logger.trace("Last trip ID2: {}", tripId1);
+            if (tripsStat != null) {
+                // Do a reverse of the trips
+                Collections.reverse(tripsStat);
+                logger.trace("Last trip stats reversed: {}", tripsStat);
+                Optional<TripStatistic> lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null)
+                        .findFirst();
+                int tripId1 = lastTrip.get().getAggregatedStatistics().getTripId();
+                logger.trace("Last trip ID1: {}", tripId1);
+                // Do another reverse of the trips
+                Collections.reverse(tripsStat);
+                logger.trace("Last trip stats reversed: {}", tripsStat);
+                lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null).findFirst();
+                int tripId2 = lastTrip.get().getAggregatedStatistics().getTripId();
+                logger.trace("Last trip ID2: {}", tripId1);
 
-            // Find latest trip ID
-            if (tripId2 >= tripId1) {
-                tripId = tripId2;
+                // Find latest trip ID
+                if (tripId2 >= tripId1) {
+                    tripId = tripId2;
+                } else {
+                    tripId = tripId1;
+                }
+                logger.trace("Last trip ID: {}", tripId);
+
+                lastTrip = tripsStat.stream().filter(tripStat -> filterLastTrip(tripStat, tripId)).findFirst();
+
+                Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
+                        .filter(t -> t.getTripId() == tripId).findFirst();
+                logger.debug("Last trip: {}", lastTrip);
+                logger.trace("Last trip stats: {}", lastTripStats);
+
+                getThing().getChannels().stream().map(Channel::getUID)
+                        .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
+                        .forEach(channelUID -> {
+                            State state = getTripValue(channelUID.getIdWithoutGroup(), lastTripStats.get());
+                            updateState(channelUID, state);
+                        });
             } else {
-                tripId = tripId1;
+                logger.debug("Cannot update last trip, tripsStat is null!");
             }
-            logger.trace("Last trip ID: {}", tripId);
-
-            lastTrip = tripsStat.stream().filter(tripStat -> filterLastTrip(tripStat, tripId)).findFirst();
-
-            Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
-                    .filter(t -> t.getTripId() == tripId).findFirst();
-            logger.debug("Last trip: {}", lastTrip);
-            logger.trace("Last trip stats: {}", lastTripStats);
-
-            getThing().getChannels().stream().map(Channel::getUID)
-                    .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
-                    .forEach(channelUID -> {
-                        State state = getTripValue(channelUID.getIdWithoutGroup(), lastTripStats.get());
-                        updateState(channelUID, state);
-                    });
         } else {
             logger.warn("Cannot update last trip, trips is null!");
         }
@@ -529,44 +400,50 @@ public class VehicleHandler extends VWWeConnectHandler {
     }
 
     private boolean sendCommand(String vin, String url, String requestStatusUrl, String data) {
-        ContentResponse httpResponse = session.sendCommand(url, data);
-        if (httpResponse.getStatus() == HttpStatus.OK_200) {
-            logger.debug(" VIN: {} JSON response: {}", vin, httpResponse.getContentAsString());
-            if (!session.isErrorCode(httpResponse.getContentAsString())) {
-                logger.debug("Command {} successfully sent to vehicle!", url);
+        VWWeConnectSession session = getSession();
+        if (session != null) {
+            ContentResponse httpResponse = session.sendCommand(url, data);
+            if (httpResponse != null && httpResponse.getStatus() == HttpStatus.OK_200) {
+                logger.debug(" VIN: {} JSON response: {}", vin, httpResponse.getContentAsString());
+                if (!session.isErrorCode(httpResponse.getContentAsString())) {
+                    logger.debug("Command {} successfully sent to vehicle!", url);
+                } else {
+                    logger.warn("Failed to send {} to the vehicle {} JSON response: {}", url, vin,
+                            httpResponse.getContentAsString());
+                    return false;
+                }
             } else {
-                logger.warn("Failed to send {} to the vehicle {} JSON response: {}", url, vin,
-                        httpResponse.getContentAsString());
+                logger.warn("Failed to send {} to the vehicle {} HTTP response: {}", url, vin,
+                        httpResponse != null ? httpResponse.getStatus() : -1);
                 return false;
             }
-        } else {
-            logger.warn("Failed to send {} to the vehicle {} HTTP response: {}", url, vin, httpResponse.getStatus());
-            return false;
-        }
 
-        try {
-            Thread.sleep(5 * SLEEP_TIME_MILLIS);
-        } catch (InterruptedException e) {
-            logger.warn("InterruptedException caught: {}", e.getMessage(), e);
-        }
-
-        Fields fields = null;
-        httpResponse = session.sendCommand(requestStatusUrl, fields);
-        String content = httpResponse.getContentAsString();
-        logger.debug("Content: {}", content);
-        if (!session.isErrorCode(content)) {
-            String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
-            if (requestStatus != null
-                    && (requestStatus.equals("REQUEST_IN_PROGRESS") || requestStatus.equals("REQUEST_SUCCESSFUL"))) {
-                logger.debug("Command has status {} ", requestStatus);
-            } else {
-                logger.warn("Failed to request status for vehicle {}! Request status: {}", vin, requestStatus);
-                return false;
+            try {
+                Thread.sleep(5 * SLEEP_TIME_MILLIS);
+            } catch (InterruptedException e) {
+                logger.warn("InterruptedException caught: {}", e.getMessage(), e);
             }
-        } else {
-            logger.warn("Failed to request status for vehicle {}! HTTP response: {} Response: {}", vin,
-                    httpResponse.getStatus(), content);
-            return false;
+
+            Fields fields = null;
+            httpResponse = session.sendCommand(requestStatusUrl, fields);
+            if (httpResponse != null) {
+                String content = httpResponse.getContentAsString();
+                logger.debug("Content: {}", content);
+                if (!session.isErrorCode(content)) {
+                    String requestStatus = JsonPath.read(content, PARSE_REQUEST_STATUS);
+                    if (requestStatus != null && (requestStatus.equals("REQUEST_IN_PROGRESS")
+                            || requestStatus.equals("REQUEST_SUCCESSFUL"))) {
+                        logger.debug("Command has status {} ", requestStatus);
+                    } else {
+                        logger.warn("Failed to request status for vehicle {}! Request status: {}", vin, requestStatus);
+                        return false;
+                    }
+                } else {
+                    logger.warn("Failed to request status for vehicle {}! HTTP response: {} Response: {}", vin,
+                            httpResponse.getStatus(), content);
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -579,9 +456,11 @@ public class VehicleHandler extends VWWeConnectHandler {
                 return;
             }
             String vin = config.vin;
+            VWWeConnectSession session = getSession();
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
-                if (vehicle.getVehicleStatus().getVehicleStatusData().getLockData().getDoorsLocked() != controlState) {
+                if (vehicle != null && vehicle.getVehicleStatus().getVehicleStatusData().getLockData()
+                        .getDoorsLocked() != controlState) {
                     String data = "{\"spin\":\"" + bridgeHandler.getSecurePIN() + "\"}";
                     String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + LOCKUNLOCK
                             + action;
@@ -619,9 +498,10 @@ public class VehicleHandler extends VWWeConnectHandler {
                 return;
             }
             String vin = config.vin;
+            VWWeConnectSession session = getSession();
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
-                if (action.contains(REMOTE_HEATER) || action.contains(REMOTE_VENTILATION)) {
+                if (vehicle != null && (action.contains(REMOTE_HEATER) || action.contains(REMOTE_VENTILATION))) {
                     String command = start ? START_HEATER : STOP_HEATER;
                     String data;
                     if (command.equals(START_HEATER)) {
@@ -666,21 +546,24 @@ public class VehicleHandler extends VWWeConnectHandler {
         VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
         if (bridgeHandler != null) {
             String vin = config.vin;
+            VWWeConnectSession session = getSession();
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
-                String data;
-                if (start) {
-                    data = "{\"triggerAction\":\"True\", \"batteryPercent\":\"100\"}";
-                } else {
-                    data = "{\"triggerAction\":\"False\", \"batteryPercent\":\"99\"}";
-                }
-                String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + CHARGE_BATTERY;
-                String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
-                        + REQUEST_STATUS;
-                if (sendCommand(vin, url, requestStatusUrl, data)) {
-                    scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
-                } else {
-                    logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                if (vehicle != null) {
+                    String data;
+                    if (start) {
+                        data = "{\"triggerAction\":\"True\", \"batteryPercent\":\"100\"}";
+                    } else {
+                        data = "{\"triggerAction\":\"False\", \"batteryPercent\":\"99\"}";
+                    }
+                    String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + CHARGE_BATTERY;
+                    String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                            + REQUEST_STATUS;
+                    if (sendCommand(vin, url, requestStatusUrl, data)) {
+                        scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                    } else {
+                        logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                    }
                 }
             }
         }
@@ -694,21 +577,25 @@ public class VehicleHandler extends VWWeConnectHandler {
         VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
         if (bridgeHandler != null) {
             String vin = config.vin;
+            VWWeConnectSession session = getSession();
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
-                String data;
-                if (start) {
-                    data = "{\"triggerAction\":\"True\", \"electricClima\":\"True\"}";
-                } else {
-                    data = "{\"triggerAction\":\"False\", \"electricClima\":\"True\"}";
-                }
-                String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + TRIGGER_CLIMATISATION;
-                String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
-                        + REQUEST_STATUS;
-                if (sendCommand(vin, url, requestStatusUrl, data)) {
-                    scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
-                } else {
-                    logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                if (vehicle != null) {
+                    String data;
+                    if (start) {
+                        data = "{\"triggerAction\":\"True\", \"electricClima\":\"True\"}";
+                    } else {
+                        data = "{\"triggerAction\":\"False\", \"electricClima\":\"True\"}";
+                    }
+                    String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                            + TRIGGER_CLIMATISATION;
+                    String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                            + REQUEST_STATUS;
+                    if (sendCommand(vin, url, requestStatusUrl, data)) {
+                        scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                    } else {
+                        logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                    }
                 }
             }
         }
@@ -722,21 +609,25 @@ public class VehicleHandler extends VWWeConnectHandler {
         VWWeConnectBridgeHandler bridgeHandler = getBridgeHandler();
         if (bridgeHandler != null) {
             String vin = config.vin;
+            VWWeConnectSession session = getSession();
             if (session != null && vin != null) {
                 Vehicle vehicle = (Vehicle) session.getVWWeConnectThing(vin);
-                String data;
-                if (start) {
-                    data = "{\"triggerAction\":\"True\"}";
-                } else {
-                    data = "{\"triggerAction\":\"False\"}";
-                }
-                String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl() + TRIGGER_WINDOW_HEAT;
-                String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
-                        + REQUEST_STATUS;
-                if (sendCommand(vin, url, requestStatusUrl, data)) {
-                    scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
-                } else {
-                    logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                if (vehicle != null) {
+                    String data;
+                    if (start) {
+                        data = "{\"triggerAction\":\"True\"}";
+                    } else {
+                        data = "{\"triggerAction\":\"False\"}";
+                    }
+                    String url = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                            + TRIGGER_WINDOW_HEAT;
+                    String requestStatusUrl = SESSION_BASE + vehicle.getCompleteVehicleJson().getDashboardUrl()
+                            + REQUEST_STATUS;
+                    if (sendCommand(vin, url, requestStatusUrl, data)) {
+                        scheduleImmediateRefresh(REFRESH_DELAY_SECONDS);
+                    } else {
+                        logger.warn("The vehicle {} failed to handle command {} {}", config.vin, url, start);
+                    }
                 }
             }
         }

@@ -28,22 +28,14 @@ import org.eclipse.jdt.annotation.Nullable;
 public class Location {
 
     private @Nullable String errorCode;
-    private @Nullable Position position;
+    private Position position = new Position();
 
     public @Nullable String getErrorCode() {
         return errorCode;
     }
 
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
-    }
-
-    public @Nullable Position getPosition() {
+    public Position getPosition() {
         return position;
-    }
-
-    public void setPosition(Position position) {
-        this.position = position;
     }
 
     @Override
@@ -71,23 +63,15 @@ public class Location {
     @NonNullByDefault
     public class Position {
 
-        private double lat;
-        private double lng;
+        private double lat = BaseVehicle.UNDEFINED;
+        private double lng = BaseVehicle.UNDEFINED;
 
         public double getLat() {
             return lat;
         }
 
-        public void setLat(double lat) {
-            this.lat = lat;
-        }
-
         public double getLng() {
             return lng;
-        }
-
-        public void setLng(double lng) {
-            this.lng = lng;
         }
 
         @Override

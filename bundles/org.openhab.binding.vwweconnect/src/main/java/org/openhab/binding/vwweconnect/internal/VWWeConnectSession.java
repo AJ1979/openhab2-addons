@@ -71,7 +71,6 @@ public class VWWeConnectSession {
     private final Logger logger = LoggerFactory.getLogger(VWWeConnectSession.class);
     private final Gson gson = new GsonBuilder().create();
     private final List<DeviceStatusListener> deviceStatusListeners = new CopyOnWriteArrayList<>();
-    private boolean areWeLoggedOut = true;
 
     private @Nullable String csrf;
     private @Nullable String xCsrfToken;
@@ -99,39 +98,22 @@ public class VWWeConnectSession {
 
     public boolean refresh() {
         logger.debug("VWWeConnectSession:refresh");
-
-        if (!areWeLoggedOut && areWeLoggedIn()) {
+        if (logIn()) {
             if (updateStatus()) {
                 return true;
             }
-        } else {
-            if (logIn()) {
-                if (updateStatus()) {
-                    areWeLoggedOut = false;
-                    return true;
-                }
-            }
         }
-        areWeLoggedOut = true;
         return false;
     }
 
     public boolean requestVehicleStatus() {
         logger.debug("VWWeConnectSession:getVehicleStatus");
 
-        if (!areWeLoggedOut && areWeLoggedIn()) {
+        if (logIn()) {
             if (getVehicleStatus()) {
                 return true;
             }
-        } else {
-            if (logIn()) {
-                if (getVehicleStatus()) {
-                    areWeLoggedOut = false;
-                    return true;
-                }
-            }
         }
-        areWeLoggedOut = true;
         return false;
     }
 
@@ -143,9 +125,6 @@ public class VWWeConnectSession {
     public boolean registerDeviceStatusListener(DeviceStatusListener deviceStatusListener) {
         logger.debug("registerDeviceStatusListener for listener {}", deviceStatusListener);
         return deviceStatusListeners.add(deviceStatusListener);
-    }
-
-    public void dispose() {
     }
 
     public @Nullable BaseVehicle getVWWeConnectThing(String vin) {
@@ -178,24 +157,26 @@ public class VWWeConnectSession {
         return postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
     }
 
-    public boolean isErrorCode(String jsonContent) {
-        String errorCode = JsonPath.read(jsonContent, "$.errorCode");
-        logger.debug("ErrorCode: {}", errorCode);
-        if (errorCode.equals("0")) {
-            return false;
-        } else {
-            try {
-                if (errorCode.equals("1")) {
-                    String errorType = JsonPath.read(jsonContent, "$.errorType");
-                    if (errorType.equals("429")) {
-                        logger.debug(
-                                "Too many requests, switch ignition on/off to be able to communicate fully to vehicle");
+    public boolean isErrorCode(@Nullable String jsonContent) {
+        if (jsonContent != null) {
+            String errorCode = JsonPath.read(jsonContent, "$.errorCode");
+            logger.debug("ErrorCode: {}", errorCode);
+            if (errorCode.equals("0")) {
+                return false;
+            } else {
+                try {
+                    if (errorCode.equals("1")) {
+                        String errorType = JsonPath.read(jsonContent, "$.errorType");
+                        if (errorType.equals("429")) {
+                            logger.debug(
+                                    "Too many requests, switch ignition on/off to be able to communicate fully to vehicle");
+                        }
+                    } else if (errorCode.equals("2")) {
+                        String errorTextCopybookId = JsonPath.read(jsonContent, "$.errorTextCopybookId");
+                        logger.debug("Error: {}", errorTextCopybookId);
                     }
-                } else if (errorCode.equals("2")) {
-                    String errorTextCopybookId = JsonPath.read(jsonContent, "$.errorTextCopybookId");
-                    logger.debug("Error: {}", errorTextCopybookId);
+                } catch (PathNotFoundException e) {
                 }
-            } catch (PathNotFoundException e) {
             }
         }
         return true;
@@ -203,6 +184,9 @@ public class VWWeConnectSession {
 
     private boolean areWeLoggedIn() {
         logger.debug("areWeLoggedIn() - Checking if we are logged in");
+        if (xCsrfToken == null) {
+            return false;
+        }
         String url = authRefUrl + LOGIN_CHECK;
 
         logger.debug("Check for login status, url: {}", url);
@@ -231,17 +215,15 @@ public class VWWeConnectSession {
 
         try {
             httpResponse = httpClient.GET(url);
-            String pattern = "(?m)^\\s*\\r?\\n|\\r?\\n\\s*(?!.*\\r?\\n)";
-            String replacement = "";
-            logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
-                    httpResponse.getContentAsString().replaceAll(pattern, replacement));
+            if (logger.isTraceEnabled()) {
+                String pattern = "(?m)^\\s*\\r?\\n|\\r?\\n\\s*(?!.*\\r?\\n)";
+                String replacement = "";
+                logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                        httpResponse.getContentAsString().replaceAll(pattern, replacement));
+            }
             return httpResponse;
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {} for URL string {}", e, url);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {} for URL string {}", e, url);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {} for URL string {}", e, url);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            logger.warn("Caught Exception {} for URL string {}", e, url);
         }
         return httpResponse;
     }
@@ -264,19 +246,15 @@ public class VWWeConnectSession {
             }
             logger.debug("HTTP GET Request {}.", request);
             httpResponse = request.send();
-            String pattern = "(?m)^\\s*\\r?\\n|\\r?\\n\\s*(?!.*\\r?\\n)";
-            String replacement = "";
-            logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
-                    httpResponse.getContentAsString().replaceAll(pattern, replacement));
+            if (logger.isTraceEnabled()) {
+                String pattern = "(?m)^\\s*\\r?\\n|\\r?\\n\\s*(?!.*\\r?\\n)";
+                String replacement = "";
+                logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                        httpResponse.getContentAsString().replaceAll(pattern, replacement));
+            }
             return httpResponse;
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e.getMessage(), e);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e.getMessage(), e);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e.getMessage(), e);
-        } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e.getMessage(), e);
+        } catch (ExecutionException | InterruptedException | TimeoutException | RuntimeException e) {
+            logger.warn("Caught Exception {}", e.getMessage(), e);
         }
         return null;
     }
@@ -302,17 +280,13 @@ public class VWWeConnectSession {
             }
             logger.debug("HTTP POST Request {}.", request.toString());
             httpResponse = request.send();
-            logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
-                    httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+            if (logger.isTraceEnabled()) {
+                logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                        httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+            }
             return httpResponse;
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e.getMessage(), e);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e.getMessage(), e);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e.getMessage(), e);
-        } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e.getMessage(), e);
+        } catch (ExecutionException | InterruptedException | TimeoutException | RuntimeException e) {
+            logger.warn("Caught Exception {}", e.getMessage(), e);
         }
         return null;
     }
@@ -341,8 +315,11 @@ public class VWWeConnectSession {
 
                 logger.debug("HTTP POST Request {}.", request.toString());
                 httpResponse = request.send();
-                logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
-                        httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+
+                if (logger.isTraceEnabled()) {
+                    logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                            httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+                }
                 return httpResponse;
             } catch (ExecutionException e) {
                 if (count <= RETRIES) {
@@ -353,14 +330,8 @@ public class VWWeConnectSession {
                     count++;
                 }
                 logger.warn("Caught ExecutionException {}", e.getMessage(), e);
-            } catch (InterruptedException e) {
-                logger.warn("Caught InterruptedException {}", e.getMessage(), e);
-                break;
-            } catch (TimeoutException e) {
-                logger.warn("Caught TimeoutException {}", e.getMessage(), e);
-                break;
-            } catch (RuntimeException e) {
-                logger.warn("Caught RuntimeException {}", e.getMessage(), e);
+            } catch (InterruptedException | TimeoutException | RuntimeException e) {
+                logger.warn("Caught Exception {}", e.getMessage(), e);
                 break;
             }
         }
@@ -387,17 +358,13 @@ public class VWWeConnectSession {
             }
             logger.debug("HTTP POST Request {}.", request.toString());
             httpResponse = request.send();
-            logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
-                    httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+            if (logger.isTraceEnabled()) {
+                logger.trace("HTTP Response ({}) Body:{}", httpResponse.getStatus(),
+                        httpResponse.getContentAsString().replaceAll("\n+", "\n"));
+            }
             return httpResponse;
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e.getMessage(), e);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e.getMessage(), e);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e.getMessage(), e);
-        } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e.getMessage(), e);
+        } catch (ExecutionException | InterruptedException | TimeoutException | RuntimeException e) {
+            logger.warn("Caught Exception {}", e.getMessage(), e);
         }
         return null;
     }
@@ -425,22 +392,13 @@ public class VWWeConnectSession {
                 content = httpResponse.getContentAsString();
                 logger.trace("Http response JSON: {}", content);
                 if (isErrorCode(content)) {
-                    logger.warn("Error code on POST: url {}, response {}", url, content);
+                    logger.warn("Error code or JSON is null on POST: url {}, response {}", url, content);
                     return null;
                 }
                 return gson.fromJson(content, jsonClass);
             }
-        } catch (JsonSyntaxException e) {
-            logger.warn("Exception caught {} while parsing JSON response {} for request {}", e.getMessage(), content,
-                    url);
-        } catch (ExecutionException e) {
-            logger.warn("Caught ExecutionException {}", e.getMessage(), e);
-        } catch (InterruptedException e) {
-            logger.warn("Caught InterruptedException {}", e.getMessage(), e);
-        } catch (TimeoutException e) {
-            logger.warn("Caught TimeoutException {}", e.getMessage(), e);
-        } catch (RuntimeException e) {
-            logger.warn("Caught RuntimeException {}", e.getMessage(), e);
+        } catch (ExecutionException | InterruptedException | TimeoutException | RuntimeException e) {
+            logger.warn("Caught Exception {}", e.getMessage(), e);
         }
         return null;
     }
@@ -490,222 +448,223 @@ public class VWWeConnectSession {
     }
 
     private synchronized boolean logIn() {
-        logger.info("Attempting to log in to https://www.portal.volkswagen-we.com");
-        boolean isRedirectLogin = false;
-        Document htmlDocument = null;
-        Element nameInput = null;
-        // Request landing page and get CSRF
-        String url = SESSION_BASE + REQUEST_LANDING_PAGE;
-        logger.debug("Login URL: {}", url);
-        ContentResponse httpResponse = getVWWeConnectAPI(url);
-        if (!checkHttpResponse200(httpResponse)) {
-            if (checkHttpResponse302(httpResponse)) {
-                url = httpResponse.getHeaders().get("location");
-                logger.debug("Redirection to: {}", url);
-                httpResponse = getVWWeConnectAPI(url);
-                if (!checkHttpResponse200(httpResponse)) {
-                    if (checkHttpResponse302(httpResponse)) {
-                        url = httpResponse.getHeaders().get("location");
-                        logger.debug("Redirection to: {}", url);
-                        httpResponse = getVWWeConnectAPI(url);
+        if (!areWeLoggedIn()) {
+            logger.info("Attempting to log in to https://www.portal.volkswagen-we.com");
+            boolean isRedirectLogin = false;
+            Document htmlDocument = null;
+            Element nameInput = null;
+            // Request landing page and get CSRF
+            String url = SESSION_BASE + REQUEST_LANDING_PAGE;
+            logger.debug("Login URL: {}", url);
+            ContentResponse httpResponse = getVWWeConnectAPI(url);
+            if (!checkHttpResponse200(httpResponse)) {
+                if (checkHttpResponse302(httpResponse)) {
+                    url = httpResponse.getHeaders().get("location");
+                    logger.debug("Redirection to: {}", url);
+                    httpResponse = getVWWeConnectAPI(url);
+                    if (!checkHttpResponse200(httpResponse)) {
                         if (checkHttpResponse302(httpResponse)) {
-                            logger.debug("Redirect login!");
-                            isRedirectLogin = true;
-                        } else if (checkHttpResponse200(httpResponse)) {
-                            logger.debug("200 OK, continue to log in! URL: {}", url);
+                            url = httpResponse.getHeaders().get("location");
+                            logger.debug("Redirection to: {}", url);
+                            httpResponse = getVWWeConnectAPI(url);
+                            if (checkHttpResponse302(httpResponse)) {
+                                logger.debug("Redirect login!");
+                                isRedirectLogin = true;
+                            } else if (checkHttpResponse200(httpResponse)) {
+                                logger.debug("200 OK, continue to log in! URL: {}", url);
+                            } else {
+                                logger.debug("Login failed, HTTP response: {}", httpResponse);
+                                return false;
+                            }
                         } else {
                             logger.debug("Login failed, HTTP response: {}", httpResponse);
                             return false;
                         }
-                    } else {
-                        logger.debug("Login failed, HTTP response: {}", httpResponse);
-                        return false;
                     }
                 }
             }
-        }
 
-        if (isRedirectLogin) {
+            if (isRedirectLogin) {
+                url = httpResponse.getHeaders().get("Location");
+                httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+                if (!checkHttpResponse302(httpResponse)) {
+                    logger.debug("Redirect login failed! URL: {}", url);
+                    return false;
+                }
+                url = httpResponse.getHeaders().get("Location");
+            } else {
+                // Parse csrf
+                htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
+                nameInput = htmlDocument.select("meta[name=_csrf]").first();
+                if (nameInput == null) {
+                    logger.debug("Login failed, nameInput is null");
+                    return false;
+                }
+                String csrf = nameInput.attr("content");
+                logger.trace("Found csrf {}", csrf);
+
+                // Request login page and get login URL
+                url = SESSION_BASE + GET_LOGIN_URL;
+                httpResponse = postVWWeConnectAPI(url, null, "portal", csrf);
+                if (httpResponse != null && httpResponse.getStatus() == HttpStatus.OK_200) {
+                    String json = httpResponse.getContentAsString();
+                    JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
+                    url = jsonObject.get("loginURL").getAsJsonObject().get("path").getAsString();
+                } else if (httpResponse != null && httpResponse.getStatus() == HttpStatus.MOVED_TEMPORARILY_302) {
+                    url = httpResponse.getHeaders().get("location");
+                    logger.debug("Redirection to: {}", url);
+                    httpResponse = postVWWeConnectAPI(url, null, "portal", csrf);
+                    String json = httpResponse.getContentAsString();
+                    JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
+                    url = jsonObject.get("loginURL").getAsJsonObject().get("path").getAsString();
+                } else {
+                    logger.debug("Failed to login, HTTP response: {}", httpResponse);
+                    return false;
+                }
+            }
+
+            httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+            if (!checkHttpResponse302(httpResponse)) {
+                logger.debug("Redirect failed! URL: {}", url);
+                return false;
+            }
+
+            url = httpResponse.getHeaders().get("Location");
+            httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+            if (!checkHttpResponse200(httpResponse)) {
+                logger.debug("Redirect failed! URL: {}", url);
+                return false;
+            }
+
+            String previousUrl = url;
+
+            // Get actual login page and get session id and ViewState
+            htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
+            nameInput = htmlDocument.select("input[name=_csrf]").first();
+            String loginCsrf = nameInput.attr("value");
+            logger.trace("Found loginCsrf {}", loginCsrf);
+            nameInput = htmlDocument.select("input[name=relayState]").first();
+            String loginToken = nameInput.attr("value");
+            nameInput = htmlDocument.select("input[name=hmac]").first();
+            String loginHmac = nameInput.attr("value");
+            Element loginForm = htmlDocument.getElementById("emailPasswordForm");
+            url = AUTH_BASE + loginForm.attr("action");
+
+            Fields fields = getFields(userName, password, loginToken, loginHmac, loginCsrf);
+
+            httpResponse = postVWWeConnectAPI(url, fields, previousUrl, loginCsrf);
+            if (!checkHttpResponse303(httpResponse)) {
+                return false;
+            }
+
+            url = httpResponse.getHeaders().get("Location");
+            url = AUTH_BASE + url;
+            httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+            if (!checkHttpResponse200(httpResponse)) {
+                return false;
+            }
+
+            previousUrl = url;
+            htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
+            nameInput = htmlDocument.select("input[name=_csrf]").first();
+            String authCsrf = nameInput.attr("value");
+            logger.trace("Found authCsrf {}", loginCsrf);
+            nameInput = htmlDocument.select("input[name=relayState]").first();
+            String authToken = nameInput.attr("value");
+            nameInput = htmlDocument.select("input[name=hmac]").first();
+            String authHmac = nameInput.attr("value");
+            Element authForm = htmlDocument.getElementById("credentialsForm");
+            if (authForm == null) {
+                logger.warn("Failed to login, check your credentials!");
+                return false;
+            }
+
+            url = AUTH_BASE + authForm.attr("action");
+            fields = getFields(userName, password, authToken, authHmac, authCsrf);
+
+            httpResponse = postVWWeConnectAPI(url, fields, previousUrl, authCsrf);
+            if (!checkHttpResponse302(httpResponse)) {
+                return false;
+            }
+
             url = httpResponse.getHeaders().get("Location");
             httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
             if (!checkHttpResponse302(httpResponse)) {
-                logger.debug("Redirect login failed! URL: {}", url);
                 return false;
             }
+
             url = httpResponse.getHeaders().get("Location");
-        } else {
-            // Parse csrf
+            httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+            if (!checkHttpResponse302(httpResponse)) {
+                return false;
+            }
+
+            url = httpResponse.getHeaders().get("Location");
+            httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+            if (!checkHttpResponse302(httpResponse)) {
+                return false;
+            }
+
+            url = httpResponse.getHeaders().get("Location");
+            previousUrl = url;
+            URI uri;
+            String state = "", code = "", path = "";
+
+            try {
+                uri = new URI(url);
+                String[] queryStrings = uri.getQuery().split("&");
+                for (String query : queryStrings) {
+                    String[] nameValuePair = query.split("=");
+                    if (nameValuePair[0].equals("state")) {
+                        state = nameValuePair[1];
+                    } else if (nameValuePair[0].equals("code")) {
+                        code = nameValuePair[1];
+                    }
+                }
+                path = uri.getPath();
+            } catch (URISyntaxException e) {
+                logger.warn("Failed to login, caught URISyntaxException {}", e.getMessage(), e);
+                return false;
+            }
+
+            fields = new Fields(true);
+            fields.put("_33_WAR_cored5portlet_code", code);
+            fields.put("_33_WAR_cored5portlet_landingPageUrl", "");
+
+            url = SESSION_BASE + path + "?p_auth=" + state
+                    + "&p_p_id=33_WAR_cored5portlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=1&_33_WAR_cored5portlet_javax.portlet.action=getLoginStatus";
+
+            httpResponse = postVWWeConnectAPI(url, fields, previousUrl, authCsrf);
+            if (!checkHttpResponse302(httpResponse)) {
+                return false;
+            }
+
+            url = httpResponse.getHeaders().get("Location");
+            httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
+            if (!checkHttpResponse200(httpResponse)) {
+                return false;
+            }
+
             htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
             nameInput = htmlDocument.select("meta[name=_csrf]").first();
-            if (nameInput == null) {
-                logger.debug("Login failed, nameInput is null");
-                return false;
-            }
-            String csrf = nameInput.attr("content");
-            logger.trace("Found csrf {}", csrf);
+            xCsrfToken = nameInput.attr("content");
+            logger.trace("Found xCsrfToken {}", xCsrfToken);
+            referer = url;
+            authRefUrl = url + "/";
 
-            // Request login page and get login URL
-            url = SESSION_BASE + GET_LOGIN_URL;
-            httpResponse = postVWWeConnectAPI(url, null, "portal", csrf);
-            if (httpResponse != null && httpResponse.getStatus() == HttpStatus.OK_200) {
-                String json = httpResponse.getContentAsString();
-                JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
-                url = jsonObject.get("loginURL").getAsJsonObject().get("path").getAsString();
-            } else if (httpResponse != null && httpResponse.getStatus() == HttpStatus.MOVED_TEMPORARILY_302) {
-                url = httpResponse.getHeaders().get("location");
-                logger.debug("Redirection to: {}", url);
-                httpResponse = postVWWeConnectAPI(url, null, "portal", csrf);
-                String json = httpResponse.getContentAsString();
-                JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
-                url = jsonObject.get("loginURL").getAsJsonObject().get("path").getAsString();
-            } else {
-                logger.debug("Failed to login, HTTP response: {}", httpResponse);
-                return false;
-            }
-        }
-
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (!checkHttpResponse302(httpResponse)) {
-            logger.debug("Redirect failed! URL: {}", url);
-            return false;
-        }
-
-        url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (!checkHttpResponse200(httpResponse)) {
-            logger.debug("Redirect failed! URL: {}", url);
-            return false;
-        }
-
-        String previousUrl = url;
-
-        // Get actual login page and get session id and ViewState
-        htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
-        nameInput = htmlDocument.select("input[name=_csrf]").first();
-        String loginCsrf = nameInput.attr("value");
-        logger.trace("Found loginCsrf {}", loginCsrf);
-        nameInput = htmlDocument.select("input[name=relayState]").first();
-        String loginToken = nameInput.attr("value");
-        nameInput = htmlDocument.select("input[name=hmac]").first();
-        String loginHmac = nameInput.attr("value");
-        Element loginForm = htmlDocument.getElementById("emailPasswordForm");
-        url = AUTH_BASE + loginForm.attr("action");
-
-        Fields fields = getFields(userName, password, loginToken, loginHmac, loginCsrf);
-
-        httpResponse = postVWWeConnectAPI(url, fields, previousUrl, loginCsrf);
-        if (!checkHttpResponse303(httpResponse)) {
-            return false;
-        }
-
-        url = httpResponse.getHeaders().get("Location");
-        url = AUTH_BASE + url;
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (!checkHttpResponse200(httpResponse)) {
-            return false;
-        }
-
-        previousUrl = url;
-        htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
-        nameInput = htmlDocument.select("input[name=_csrf]").first();
-        String authCsrf = nameInput.attr("value");
-        logger.trace("Found authCsrf {}", loginCsrf);
-        nameInput = htmlDocument.select("input[name=relayState]").first();
-        String authToken = nameInput.attr("value");
-        nameInput = htmlDocument.select("input[name=hmac]").first();
-        String authHmac = nameInput.attr("value");
-        Element authForm = htmlDocument.getElementById("credentialsForm");
-        if (authForm == null) {
-            logger.warn("Failed to login, check your credentials!");
-            return false;
-        }
-
-        url = AUTH_BASE + authForm.attr("action");
-        fields = getFields(userName, password, authToken, authHmac, authCsrf);
-
-        httpResponse = postVWWeConnectAPI(url, fields, previousUrl, authCsrf);
-        if (!checkHttpResponse302(httpResponse)) {
-            return false;
-        }
-
-        url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (!checkHttpResponse302(httpResponse)) {
-            return false;
-        }
-
-        url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (!checkHttpResponse302(httpResponse)) {
-            return false;
-        }
-
-        url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (!checkHttpResponse302(httpResponse)) {
-            return false;
-        }
-
-        url = httpResponse.getHeaders().get("Location");
-        previousUrl = url;
-        URI uri;
-        String state = "", code = "", path = "";
-
-        try {
-            uri = new URI(url);
-            String[] queryStrings = uri.getQuery().split("&");
-            for (String query : queryStrings) {
-                String[] nameValuePair = query.split("=");
-                if (nameValuePair[0].equals("state")) {
-                    state = nameValuePair[1];
-                } else if (nameValuePair[0].equals("code")) {
-                    code = nameValuePair[1];
+            CookieStore cookieStore = httpClient.getCookieStore();
+            List<HttpCookie> cookies = cookieStore.get(URI.create(COOKIESTORE));
+            cookies.forEach(cookie -> {
+                logger.debug("Cookie: {}", cookie);
+                if (cookie.getName().equals("GUEST_LANGUAGE_ID")) {
+                    guestLanguageId = cookie.getValue();
+                    logger.debug("Fetching guest language id {} from cookie", guestLanguageId);
                 }
-            }
-            path = uri.getPath();
-        } catch (URISyntaxException e) {
-            logger.warn("Failed to login, caught URISyntaxException {}", e.getMessage(), e);
-            return false;
+            });
+            return true;
+        } else {
+            return true;
         }
-
-        fields = new Fields(true);
-        fields.put("_33_WAR_cored5portlet_code", code);
-        fields.put("_33_WAR_cored5portlet_landingPageUrl", "");
-
-        url = SESSION_BASE + path + "?p_auth=" + state
-                + "&p_p_id=33_WAR_cored5portlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=1&_33_WAR_cored5portlet_javax.portlet.action=getLoginStatus";
-
-        httpResponse = postVWWeConnectAPI(url, fields, previousUrl, authCsrf);
-        if (!checkHttpResponse302(httpResponse)) {
-            return false;
-        }
-
-        url = httpResponse.getHeaders().get("Location");
-        httpResponse = getVWWeConnectAPI(url, Boolean.TRUE);
-        if (!checkHttpResponse200(httpResponse)) {
-            return false;
-        }
-
-        htmlDocument = Jsoup.parse(httpResponse.getContentAsString());
-        nameInput = htmlDocument.select("meta[name=_csrf]").first();
-        xCsrfToken = nameInput.attr("content");
-        logger.trace("Found xCsrfToken {}", xCsrfToken);
-        referer = url;
-        authRefUrl = url + "/";
-
-        CookieStore cookieStore = httpClient.getCookieStore();
-        List<HttpCookie> cookies = cookieStore.get(URI.create(COOKIESTORE));
-        cookies.forEach(cookie -> {
-            logger.debug("Cookie: {}", cookie);
-            if (cookie.getName().equals("GUEST_LANGUAGE_ID")) {
-                guestLanguageId = cookie.getValue();
-                logger.debug("Fetching guest language id {} from cookie", guestLanguageId);
-            }
-        });
-
-        areWeLoggedOut = false;
-
-        return true;
     }
 
     private void notifyListeners(BaseVehicle thing) {
@@ -870,7 +829,7 @@ public class VWWeConnectSession {
                 if (vehicleHeaterStatus != null) {
                     vehicle.setHeaterStatus(vehicleHeaterStatus);
                 } else {
-                    logger.debug("Vehicle heater status is null, no heater installed!");
+                    logger.debug("Vehicle   , no heater installed!");
                 }
 
                 BaseVehicle oldObj = vwWeConnectThings.get(vin);

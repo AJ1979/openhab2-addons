@@ -43,8 +43,6 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
 
     protected final Logger logger = LoggerFactory.getLogger(VWWeConnectHandler.class);
 
-    protected @Nullable VWWeConnectSession session;
-
     protected @NonNullByDefault({}) VehicleConfiguration config;
 
     public VWWeConnectHandler(Thing thing) {
@@ -64,10 +62,13 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
                 }
             }
             String vin = config.vin;
+            VWWeConnectSession session = getSession();
             if (session != null && vin != null) {
                 // In the mean time update vehicle with current status of session
                 BaseVehicle thing = session.getVWWeConnectThing(vin);
-                update(thing);
+                if (thing != null) {
+                    update(thing);
+                }
             }
         } else {
             logger.warn("Unknown command! {}", command);
@@ -83,6 +84,17 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
                 vbh.scheduleImmediateRefresh(refreshDelay);
             }
         }
+    }
+
+    protected @Nullable VWWeConnectSession getSession() {
+        Bridge bridge = getBridge();
+        if (bridge != null) {
+            VWWeConnectBridgeHandler vbh = (VWWeConnectBridgeHandler) bridge.getHandler();
+            if (vbh != null) {
+                return vbh.getSession();
+            }
+        }
+        return null;
     }
 
     @Override
@@ -112,7 +124,7 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
         if (bridge != null) {
             VWWeConnectBridgeHandler vbh = (VWWeConnectBridgeHandler) bridge.getHandler();
             if (vbh != null) {
-                session = vbh.getSession();
+                VWWeConnectSession session = getSession();
                 if (session != null) {
                     session.unregisterDeviceStatusListener(this);
                 }
@@ -128,11 +140,14 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
             if (bridge != null) {
                 VWWeConnectBridgeHandler vbh = (VWWeConnectBridgeHandler) bridge.getHandler();
                 if (vbh != null) {
-                    session = vbh.getSession();
+                    VWWeConnectSession session = getSession();
                     String vin = config.vin;
                     if (session != null && vin != null) {
-                        update(session.getVWWeConnectThing(vin));
-                        session.registerDeviceStatusListener(this);
+                        BaseVehicle vehicle = session.getVWWeConnectThing(vin);
+                        if (vehicle != null) {
+                            update(vehicle);
+                            session.registerDeviceStatusListener(this);
+                        }
                     }
                 }
             }
@@ -155,7 +170,7 @@ public class VWWeConnectHandler extends BaseThingHandler implements DeviceStatus
         }
     }
 
-    public synchronized void update(@Nullable BaseVehicle thing) {
+    public synchronized void update(BaseVehicle thing) {
         logger.debug("Update on base class. {}", thing);
     }
 

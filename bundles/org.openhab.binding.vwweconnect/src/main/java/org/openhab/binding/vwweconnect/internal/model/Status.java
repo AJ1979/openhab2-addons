@@ -32,22 +32,14 @@ import com.google.gson.annotations.SerializedName;
 public class Status {
 
     private @Nullable String errorCode;
-    private @Nullable VehicleStatusData vehicleStatusData;
+    private VehicleStatusData vehicleStatusData = new VehicleStatusData();
 
     public @Nullable String getErrorCode() {
         return errorCode;
     }
 
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
-    }
-
-    public @Nullable VehicleStatusData getVehicleStatusData() {
+    public VehicleStatusData getVehicleStatusData() {
         return vehicleStatusData;
-    }
-
-    public void setVehicleStatusData(VehicleStatusData vehicleStatusData) {
-        this.vehicleStatusData = vehicleStatusData;
     }
 
     @Override
@@ -77,19 +69,19 @@ public class Status {
     @NonNullByDefault
     public class VehicleStatusData {
 
-        private @Nullable Boolean windowStatusSupported;
-        private @Nullable CarRenderData carRenderData;
-        private @Nullable LockData lockData;
-        private @Nullable Object headerData;
+        private boolean windowStatusSupported;
+        private CarRenderData carRenderData = new CarRenderData();
+        private LockData lockData = new LockData();
+        private Object headerData = new Object();
         private @Nullable String requestStatus;
-        private @Nullable Boolean lockDisabled;
-        private @Nullable Boolean unlockDisabled;
-        private @Nullable Boolean rluDisabled;
-        private @Nullable Boolean hideCngFuelLevel;
-        private @Nullable Boolean adBlueEnabled;
+        private boolean lockDisabled;
+        private boolean unlockDisabled;
+        private boolean rluDisabled;
+        private boolean hideCngFuelLevel;
+        private boolean adBlueEnabled;
         private @Nullable String adBlueLevel;
-        private @Nullable Boolean showAdBlueNotification;
-        private @Nullable Boolean rluMibDeactivated;
+        private boolean showAdBlueNotification;
+        private boolean rluMibDeactivated;
         private double totalRange = BaseVehicle.UNDEFINED;
         private double primaryEngineRange = BaseVehicle.UNDEFINED;
         private double fuelRange = BaseVehicle.UNDEFINED;
@@ -100,180 +92,92 @@ public class Status {
         private int batteryLevel = BaseVehicle.UNDEFINED;
         private @Nullable String sliceRootPath;
 
-        public @Nullable Boolean getWindowStatusSupported() {
+        public boolean getWindowStatusSupported() {
             return windowStatusSupported;
         }
 
-        public void setWindowStatusSupported(Boolean windowStatusSupported) {
-            this.windowStatusSupported = windowStatusSupported;
-        }
-
-        public @Nullable CarRenderData getCarRenderData() {
+        public CarRenderData getCarRenderData() {
             return carRenderData;
         }
 
-        public void setCarRenderData(CarRenderData carRenderData) {
-            this.carRenderData = carRenderData;
-        }
-
-        public @Nullable LockData getLockData() {
+        public LockData getLockData() {
             return lockData;
         }
 
-        public void setLockData(LockData lockData) {
-            this.lockData = lockData;
-        }
-
-        public @Nullable Object getHeaderData() {
+        public Object getHeaderData() {
             return headerData;
-        }
-
-        public void setHeaderData(Object headerData) {
-            this.headerData = headerData;
         }
 
         public @Nullable String getRequestStatus() {
             return requestStatus;
         }
 
-        public void setRequestStatus(String requestStatus) {
-            this.requestStatus = requestStatus;
-        }
-
-        public @Nullable Boolean getLockDisabled() {
+        public boolean getLockDisabled() {
             return lockDisabled;
         }
 
-        public void setLockDisabled(Boolean lockDisabled) {
-            this.lockDisabled = lockDisabled;
-        }
-
-        public @Nullable Boolean getUnlockDisabled() {
+        public boolean getUnlockDisabled() {
             return unlockDisabled;
         }
 
-        public void setUnlockDisabled(Boolean unlockDisabled) {
-            this.unlockDisabled = unlockDisabled;
-        }
-
-        public @Nullable Boolean getRluDisabled() {
+        public boolean getRluDisabled() {
             return rluDisabled;
         }
 
-        public void setRluDisabled(Boolean rluDisabled) {
-            this.rluDisabled = rluDisabled;
-        }
-
-        public @Nullable Boolean getHideCngFuelLevel() {
+        public boolean getHideCngFuelLevel() {
             return hideCngFuelLevel;
         }
 
-        public void setHideCngFuelLevel(Boolean hideCngFuelLevel) {
-            this.hideCngFuelLevel = hideCngFuelLevel;
-        }
-
-        public @Nullable Boolean getAdBlueEnabled() {
+        public boolean getAdBlueEnabled() {
             return adBlueEnabled;
-        }
-
-        public void setAdBlueEnabled(Boolean adBlueEnabled) {
-            this.adBlueEnabled = adBlueEnabled;
         }
 
         public @Nullable String getAdBlueLevel() {
             return adBlueLevel;
         }
 
-        public void setAdBlueLevel(@Nullable String adBlueLevel) {
-            this.adBlueLevel = adBlueLevel;
-        }
-
-        public @Nullable Boolean getShowAdBlueNotification() {
+        public boolean getShowAdBlueNotification() {
             return showAdBlueNotification;
         }
 
-        public void setShowAdBlueNotification(Boolean showAdBlueNotification) {
-            this.showAdBlueNotification = showAdBlueNotification;
-        }
-
-        public @Nullable Boolean getRluMibDeactivated() {
+        public boolean getRluMibDeactivated() {
             return rluMibDeactivated;
-        }
-
-        public void setRluMibDeactivated(Boolean rluMibDeactivated) {
-            this.rluMibDeactivated = rluMibDeactivated;
         }
 
         public double getTotalRange() {
             return totalRange;
         }
 
-        public void setTotalRange(double totalRange) {
-            this.totalRange = totalRange;
-        }
-
         public double getPrimaryEngineRange() {
             return primaryEngineRange;
-        }
-
-        public void setPrimaryEngineRange(double primaryEngineRange) {
-            this.primaryEngineRange = primaryEngineRange;
         }
 
         public double getFuelRange() {
             return fuelRange;
         }
 
-        public void setFuelRange(double fuelRange) {
-            this.fuelRange = fuelRange;
-        }
-
         public double getCngRange() {
             return cngRange;
-        }
-
-        public void setCngRange(double cngRange) {
-            this.cngRange = cngRange;
         }
 
         public double getBatteryRange() {
             return batteryRange;
         }
 
-        public void setBatteryRange(double batteryRange) {
-            this.batteryRange = batteryRange;
-        }
-
         public int getFuelLevel() {
             return fuelLevel;
-        }
-
-        public void setFuelLevel(int fuelLevel) {
-            this.fuelLevel = fuelLevel;
         }
 
         public int getCngFuelLevel() {
             return cngFuelLevel;
         }
 
-        public void setCngFuelLevel(int cngFuelLevel) {
-            this.cngFuelLevel = cngFuelLevel;
-        }
-
         public int getBatteryLevel() {
             return batteryLevel;
         }
 
-        public void setBatteryLevel(int batteryLevel) {
-            this.batteryLevel = batteryLevel;
-        }
-
         public @Nullable String getSliceRootPath() {
             return sliceRootPath;
-        }
-
-        public void setSliceRootPath(String sliceRootPath) {
-            this.sliceRootPath = sliceRootPath;
         }
 
         @Override
@@ -331,8 +235,8 @@ public class Status {
 
         private int parkingLights;
         private int hood;
-        private @Nullable Doors doors;
-        private @Nullable Windows windows;
+        private Doors doors = new Doors();
+        private Windows windows = new Windows();
         private int sunroof;
         private int roof;
 
@@ -344,48 +248,24 @@ public class Status {
             return parkingLights;
         }
 
-        public void setParkingLights(int parkingLights) {
-            this.parkingLights = parkingLights;
-        }
-
         public OpenClosedType getHood() {
             return getDoorStatus(hood);
         }
 
-        public void setHood(int hood) {
-            this.hood = hood;
-        }
-
-        public @Nullable Doors getDoors() {
+        public Doors getDoors() {
             return doors;
         }
 
-        public void setDoors(Doors doors) {
-            this.doors = doors;
-        }
-
-        public @Nullable Windows getWindows() {
+        public Windows getWindows() {
             return windows;
-        }
-
-        public void setWindows(Windows windows) {
-            this.windows = windows;
         }
 
         public OpenClosedType getSunroof() {
             return getDoorStatus(sunroof);
         }
 
-        public void setSunroof(int sunroof) {
-            this.sunroof = sunroof;
-        }
-
         public OpenClosedType getRoof() {
             return getDoorStatus(roof);
-        }
-
-        public void setRoof(int roof) {
-            this.roof = roof;
         }
 
         @Override
@@ -437,40 +317,20 @@ public class Status {
             return leftFront;
         }
 
-        public void setLeftFront(int leftFront) {
-            this.leftFront = leftFront;
-        }
-
         public int getRightFront() {
             return rightFront;
-        }
-
-        public void setRightFront(int rightFront) {
-            this.rightFront = rightFront;
         }
 
         public int getLeftBack() {
             return leftBack;
         }
 
-        public void setLeftBack(int leftBack) {
-            this.leftBack = leftBack;
-        }
-
         public int getRightBack() {
             return rightBack;
         }
 
-        public void setRightBack(int rightBack) {
-            this.rightBack = rightBack;
-        }
-
         public OnOffType getTrunk() {
             return trunk == 2 ? OnOffType.ON : OnOffType.OFF;
-        }
-
-        public void setTrunk(int trunk) {
-            this.trunk = trunk;
         }
 
         @Override
@@ -524,48 +384,24 @@ public class Status {
             return getDoorStatus(leftFront);
         }
 
-        public void setLeftFront(int leftFront) {
-            this.leftFront = leftFront;
-        }
-
         public OpenClosedType getRightFront() {
             return getDoorStatus(rightFront);
-        }
-
-        public void setRightFront(int rightFront) {
-            this.rightFront = rightFront;
         }
 
         public OpenClosedType getLeftBack() {
             return getDoorStatus(leftBack);
         }
 
-        public void setLeftBack(int leftBack) {
-            this.leftBack = leftBack;
-        }
-
         public OpenClosedType getRightBack() {
             return getDoorStatus(rightBack);
-        }
-
-        public void setRightBack(int rightBack) {
-            this.rightBack = rightBack;
         }
 
         public OpenClosedType getTrunk() {
             return getDoorStatus(trunk);
         }
 
-        public void setTrunk(int trunk) {
-            this.trunk = trunk;
-        }
-
         public int getNumberOfDoors() {
             return numberOfDoors;
-        }
-
-        public void setNumberOfDoors(int numberOfDoors) {
-            this.numberOfDoors = numberOfDoors;
         }
 
         @Override
@@ -616,32 +452,16 @@ public class Status {
             return getWindowStatus(leftFront);
         }
 
-        public void setLeftFront(int leftFront) {
-            this.leftFront = leftFront;
-        }
-
         public OpenClosedType getRightFront() {
             return getWindowStatus(rightFront);
-        }
-
-        public void setRightFront(int rightFront) {
-            this.rightFront = rightFront;
         }
 
         public OpenClosedType getLeftBack() {
             return getWindowStatus(leftBack);
         }
 
-        public void setLeftBack(int leftBack) {
-            this.leftBack = leftBack;
-        }
-
         public OpenClosedType getRightBack() {
             return getWindowStatus(rightBack);
-        }
-
-        public void setRightBack(int rightBack) {
-            this.rightBack = rightBack;
         }
 
         @Override
@@ -668,6 +488,5 @@ public class Status {
             return new EqualsBuilder().append(leftFront, rhs.leftFront).append(leftBack, rhs.leftBack)
                     .append(rightBack, rhs.rightBack).append(rightFront, rhs.rightFront).isEquals();
         }
-
     }
 }

@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.vwweconnect.internal.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -31,30 +32,18 @@ public class HeaterStatus {
 
     private @Nullable String errorCode;
     private int timerCount;
-    private @Nullable RemoteAuxiliaryHeating remoteAuxiliaryHeating;
+    private RemoteAuxiliaryHeating remoteAuxiliaryHeating = new RemoteAuxiliaryHeating();
 
     public @Nullable String getErrorCode() {
         return errorCode;
-    }
-
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
     }
 
     public int getTimerCount() {
         return timerCount;
     }
 
-    public void setTimerCount(int timerCount) {
-        this.timerCount = timerCount;
-    }
-
-    public @Nullable RemoteAuxiliaryHeating getRemoteAuxiliaryHeating() {
+    public RemoteAuxiliaryHeating getRemoteAuxiliaryHeating() {
         return remoteAuxiliaryHeating;
-    }
-
-    public void setRemoteAuxiliaryHeating(@Nullable RemoteAuxiliaryHeating remoteAuxiliaryHeating) {
-        this.remoteAuxiliaryHeating = remoteAuxiliaryHeating;
     }
 
     @Override
@@ -84,23 +73,15 @@ public class HeaterStatus {
     @NonNullByDefault
     public class RemoteAuxiliaryHeating {
 
-        private @Nullable Status status;
-        private @Nullable List<Timer> timers;
+        private Status status = new Status();
+        private List<Timer> timers = new ArrayList<>();
 
-        public @Nullable Status getStatus() {
+        public Status getStatus() {
             return status;
         }
 
-        public void setStatus(Status status) {
-            this.status = status;
-        }
-
-        public @Nullable List<Timer> getTimers() {
+        public List<Timer> getTimers() {
             return timers;
-        }
-
-        public void setTimers(@Nullable List<Timer> timers) {
-            this.timers = timers;
         }
 
         @Override
@@ -139,20 +120,8 @@ public class HeaterStatus {
             return active;
         }
 
-        public void setActive(boolean active) {
-            this.active = active;
-        }
-
         public @Nullable String getOperationMode() {
             return operationMode;
-        }
-
-        public void setOperationMode(String operationMode) {
-            this.operationMode = operationMode;
-        }
-
-        public void setOutdoorTemp(String outdoorTemp) {
-            this.outdoorTemp = outdoorTemp;
         }
 
         public @Nullable String getOutdoorTemp() {
@@ -170,10 +139,6 @@ public class HeaterStatus {
 
         public int getRemainingTime() {
             return remainingTime;
-        }
-
-        public void setRemainingTime(int remainingTime) {
-            this.remainingTime = remainingTime;
         }
 
         @Override
@@ -212,16 +177,8 @@ public class HeaterStatus {
             return hours;
         }
 
-        public void setHours(int hours) {
-            this.hours = hours;
-        }
-
         public int getMinutes() {
             return minutes;
-        }
-
-        public void setMinutes(int minutes) {
-            this.minutes = minutes;
         }
 
         @Override
@@ -253,47 +210,27 @@ public class HeaterStatus {
         private int timerId;
         private boolean active;
         private int weekDay;
-        private @Nullable Time time;
+        private Time time = new Time();
         private @Nullable String nextActivationDate;
 
         public int getTimerId() {
             return timerId;
         }
 
-        public void setTimerId(int timerId) {
-            this.timerId = timerId;
-        }
-
         public boolean isActive() {
             return active;
-        }
-
-        public void setActive(boolean active) {
-            this.active = active;
         }
 
         public int getWeekDay() {
             return weekDay;
         }
 
-        public void setWeekDay(int weekDay) {
-            this.weekDay = weekDay;
-        }
-
-        public @Nullable Time getTime() {
+        public Time getTime() {
             return time;
-        }
-
-        public void setTime(Time time) {
-            this.time = time;
         }
 
         public @Nullable String getNextActivationDate() {
             return nextActivationDate;
-        }
-
-        public void setNextActivationDate(String nextActivationDate) {
-            this.nextActivationDate = nextActivationDate;
         }
 
         @Override

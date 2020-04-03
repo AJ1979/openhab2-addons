@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -35,22 +36,14 @@ import org.eclipse.jdt.annotation.Nullable;
 public class Trips {
 
     private @Nullable String errorCode;
-    private @Nullable RtsViewModel rtsViewModel;
+    private RtsViewModel rtsViewModel = new RtsViewModel();
 
     public @Nullable String getErrorCode() {
         return errorCode;
     }
 
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
-    }
-
-    public @Nullable RtsViewModel getRtsViewModel() {
+    public RtsViewModel getRtsViewModel() {
         return rtsViewModel;
-    }
-
-    public void setRtsViewModel(RtsViewModel rtsViewModel) {
-        this.rtsViewModel = rtsViewModel;
     }
 
     @Override
@@ -83,90 +76,50 @@ public class Trips {
         private int month;
         private int year;
         private int firstTripYear;
-        private @Nullable List<TripStatistic> tripStatistics = null;
-        private @Nullable LongTermData longTermData;
-        private @Nullable Object cyclicData;
-        private @Nullable ServiceConfiguration serviceConfiguration;
+        private @Nullable List<TripStatistic> tripStatistics = new ArrayList<>();
+        private LongTermData longTermData = new LongTermData();
+        private Object cyclicData = new Object();
+        private ServiceConfiguration serviceConfiguration = new ServiceConfiguration();
         private boolean tripFromLastRefuelAvailable;
 
         public int getDaysInMonth() {
             return daysInMonth;
         }
 
-        public void setDaysInMonth(int daysInMonth) {
-            this.daysInMonth = daysInMonth;
-        }
-
         public int getFirstWeekday() {
             return firstWeekday;
-        }
-
-        public void setFirstWeekday(int firstWeekday) {
-            this.firstWeekday = firstWeekday;
         }
 
         public int getMonth() {
             return month;
         }
 
-        public void setMonth(int month) {
-            this.month = month;
-        }
-
         public int getYear() {
             return year;
-        }
-
-        public void setYear(int year) {
-            this.year = year;
         }
 
         public int getFirstTripYear() {
             return firstTripYear;
         }
 
-        public void setFirstTripYear(int firstTripYear) {
-            this.firstTripYear = firstTripYear;
-        }
-
         public @Nullable List<TripStatistic> getTripStatistics() {
             return tripStatistics;
         }
 
-        public void setTripStatistics(List<TripStatistic> tripStatistics) {
-            this.tripStatistics = tripStatistics;
-        }
-
-        public @Nullable LongTermData getLongTermData() {
+        public LongTermData getLongTermData() {
             return longTermData;
         }
 
-        public void setLongTermData(LongTermData longTermData) {
-            this.longTermData = longTermData;
-        }
-
-        public @Nullable Object getCyclicData() {
+        public Object getCyclicData() {
             return cyclicData;
         }
 
-        public void setCyclicData(Object cyclicData) {
-            this.cyclicData = cyclicData;
-        }
-
-        public @Nullable ServiceConfiguration getServiceConfiguration() {
+        public ServiceConfiguration getServiceConfiguration() {
             return serviceConfiguration;
-        }
-
-        public void setServiceConfiguration(ServiceConfiguration serviceConfiguration) {
-            this.serviceConfiguration = serviceConfiguration;
         }
 
         public boolean isTripFromLastRefuelAvailable() {
             return tripFromLastRefuelAvailable;
-        }
-
-        public void setTripFromLastRefuelAvailable(boolean tripFromLastRefuelAvailable) {
-            this.tripFromLastRefuelAvailable = tripFromLastRefuelAvailable;
         }
 
         @Override
@@ -214,7 +167,7 @@ public class Trips {
         private double tripLength = BaseVehicle.UNDEFINED;
         private @Nullable String timestamp;
         private @Nullable String tripDurationFormatted;
-        private @Nullable Object recuperation;
+        private Object recuperation = new Object();
         private double averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;
         private double totalElectricConsumption = BaseVehicle.UNDEFINED;
         private @Nullable String longFormattedTimestamp;
@@ -223,104 +176,52 @@ public class Trips {
             return tripId;
         }
 
-        public void setTripId(int tripId) {
-            this.tripId = tripId;
-        }
-
         public double getAverageElectricConsumption() {
             return averageElectricConsumption;
-        }
-
-        public void setAverageElectricConsumption(double averageElectricConsumption) {
-            this.averageElectricConsumption = averageElectricConsumption;
         }
 
         public double getAverageFuelConsumption() {
             return averageFuelConsumption;
         }
 
-        public void setAverageFuelConsumption(double averageFuelConsumption) {
-            this.averageFuelConsumption = averageFuelConsumption;
-        }
-
         public double getAverageCngConsumption() {
             return averageCngConsumption;
-        }
-
-        public void setAverageCngConsumption(double averageCngConsumption) {
-            this.averageCngConsumption = averageCngConsumption;
         }
 
         public double getAverageSpeed() {
             return averageSpeed;
         }
 
-        public void setAverageSpeed(double averageSpeed) {
-            this.averageSpeed = averageSpeed;
-        }
-
         public int getTripDuration() {
             return tripDuration;
-        }
-
-        public void setTripDuration(int tripDuration) {
-            this.tripDuration = tripDuration;
         }
 
         public double getTripLength() {
             return tripLength;
         }
 
-        public void setTripLength(double tripLength) {
-            this.tripLength = tripLength;
-        }
-
         public @Nullable String getTimestamp() {
             return timestamp;
-        }
-
-        public void setTimestamp(String timestamp) {
-            this.timestamp = timestamp;
         }
 
         public @Nullable String getTripDurationFormatted() {
             return tripDurationFormatted;
         }
 
-        public void setTripDurationFormatted(String tripDurationFormatted) {
-            this.tripDurationFormatted = tripDurationFormatted;
-        }
-
-        public @Nullable Object getRecuperation() {
+        public Object getRecuperation() {
             return recuperation;
-        }
-
-        public void setRecuperation(Object recuperation) {
-            this.recuperation = recuperation;
         }
 
         public double getAverageAuxiliaryConsumption() {
             return averageAuxiliaryConsumption;
         }
 
-        public void setAverageAuxiliaryConsumption(double averageAuxiliaryConsumption) {
-            this.averageAuxiliaryConsumption = averageAuxiliaryConsumption;
-        }
-
         public double getTotalElectricConsumption() {
             return totalElectricConsumption;
         }
 
-        public void setTotalElectricConsumption(double totalElectricConsumption) {
-            this.totalElectricConsumption = totalElectricConsumption;
-        }
-
         public @Nullable String getLongFormattedTimestamp() {
             return longFormattedTimestamp;
-        }
-
-        public void setLongFormattedTimestamp(String longFormattedTimestamp) {
-            this.longFormattedTimestamp = longFormattedTimestamp;
         }
 
         @Override
@@ -379,113 +280,61 @@ public class Trips {
         private double tripLength;
         private @Nullable String timestamp;
         private @Nullable String tripDurationFormatted;
-        private @Nullable Object recuperation;
+        private Object recuperation = new Object();
         private double averageAuxiliaryConsumption;
         private double totalElectricConsumption;
-        private @Nullable Object longFormattedTimestamp;
+        private Object longFormattedTimestamp = new Object();
 
         public int getTripId() {
             return tripId;
-        }
-
-        public void setTripId(int tripId) {
-            this.tripId = tripId;
         }
 
         public double getAverageElectricConsumption() {
             return averageElectricConsumption;
         }
 
-        public void setAverageElectricConsumption(double averageElectricConsumption) {
-            this.averageElectricConsumption = averageElectricConsumption;
-        }
-
         public double getAverageFuelConsumption() {
             return averageFuelConsumption;
-        }
-
-        public void setAverageFuelConsumption(double averageFuelConsumption) {
-            this.averageFuelConsumption = averageFuelConsumption;
         }
 
         public double getAverageCngConsumption() {
             return averageCngConsumption;
         }
 
-        public void setAverageCngConsumption(double averageCngConsumption) {
-            this.averageCngConsumption = averageCngConsumption;
-        }
-
         public double getAverageSpeed() {
             return averageSpeed;
-        }
-
-        public void setAverageSpeed(double averageSpeed) {
-            this.averageSpeed = averageSpeed;
         }
 
         public int getTripDuration() {
             return tripDuration;
         }
 
-        public void setTripDuration(int tripDuration) {
-            this.tripDuration = tripDuration;
-        }
-
         public double getTripLength() {
             return tripLength;
-        }
-
-        public void setTripLength(double tripLength) {
-            this.tripLength = tripLength;
         }
 
         public @Nullable String getTimestamp() {
             return timestamp;
         }
 
-        public void setTimestamp(String timestamp) {
-            this.timestamp = timestamp;
-        }
-
         public @Nullable String getTripDurationFormatted() {
             return tripDurationFormatted;
         }
 
-        public void setTripDurationFormatted(String tripDurationFormatted) {
-            this.tripDurationFormatted = tripDurationFormatted;
-        }
-
-        public @Nullable Object getRecuperation() {
+        public Object getRecuperation() {
             return recuperation;
-        }
-
-        public void setRecuperation(Object recuperation) {
-            this.recuperation = recuperation;
         }
 
         public double getAverageAuxiliaryConsumption() {
             return averageAuxiliaryConsumption;
         }
 
-        public void setAverageAuxiliaryConsumption(double averageAuxiliaryConsumption) {
-            this.averageAuxiliaryConsumption = averageAuxiliaryConsumption;
-        }
-
         public double getTotalElectricConsumption() {
             return totalElectricConsumption;
         }
 
-        public void setTotalElectricConsumption(double totalElectricConsumption) {
-            this.totalElectricConsumption = totalElectricConsumption;
-        }
-
         public @Nullable Object getLongFormattedTimestamp() {
             return longFormattedTimestamp;
-        }
-
-        public void setLongFormattedTimestamp(Object longFormattedTimestamp) {
-            this.longFormattedTimestamp = longFormattedTimestamp;
         }
 
         @Override
@@ -549,72 +398,36 @@ public class Trips {
             return electricConsumption;
         }
 
-        public void setElectricConsumption(boolean electricConsumption) {
-            this.electricConsumption = electricConsumption;
-        }
-
         public boolean isTriptypeShort() {
             return triptypeShort;
-        }
-
-        public void setTriptypeShort(boolean triptypeShort) {
-            this.triptypeShort = triptypeShort;
         }
 
         public boolean isAuxiliaryConsumption() {
             return auxiliaryConsumption;
         }
 
-        public void setAuxiliaryConsumption(boolean auxiliaryConsumption) {
-            this.auxiliaryConsumption = auxiliaryConsumption;
-        }
-
         public boolean isFuelOverallConsumption() {
             return fuelOverallConsumption;
-        }
-
-        public void setFuelOverallConsumption(boolean fuelOverallConsumption) {
-            this.fuelOverallConsumption = fuelOverallConsumption;
         }
 
         public boolean isTriptypeCyclic() {
             return triptypeCyclic;
         }
 
-        public void setTriptypeCyclic(boolean triptypeCyclic) {
-            this.triptypeCyclic = triptypeCyclic;
-        }
-
         public boolean isElectricOverallConsumption() {
             return electricOverallConsumption;
-        }
-
-        public void setElectricOverallConsumption(boolean electricOverallConsumption) {
-            this.electricOverallConsumption = electricOverallConsumption;
         }
 
         public boolean isTriptypeLong() {
             return triptypeLong;
         }
 
-        public void setTriptypeLong(boolean triptypeLong) {
-            this.triptypeLong = triptypeLong;
-        }
-
         public boolean isCngOverallConsumption() {
             return cngOverallConsumption;
         }
 
-        public void setCngOverallConsumption(boolean cngOverallConsumption) {
-            this.cngOverallConsumption = cngOverallConsumption;
-        }
-
         public boolean isRecuperation() {
             return recuperation;
-        }
-
-        public void setRecuperation(boolean recuperation) {
-            this.recuperation = recuperation;
         }
 
         @Override
@@ -657,23 +470,15 @@ public class Trips {
     @NonNullByDefault
     public class TripStatistic {
 
-        private @Nullable AggregatedStatistics aggregatedStatistics;
-        private @Nullable List<TripStatisticDetail> tripStatistics;
+        private AggregatedStatistics aggregatedStatistics = new AggregatedStatistics();
+        private List<TripStatisticDetail> tripStatistics = new ArrayList<>();
 
-        public @Nullable AggregatedStatistics getAggregatedStatistics() {
+        public AggregatedStatistics getAggregatedStatistics() {
             return aggregatedStatistics;
         }
 
-        public void setAggregatedStatistics(AggregatedStatistics aggregatedStatistics) {
-            this.aggregatedStatistics = aggregatedStatistics;
-        }
-
-        public @Nullable List<TripStatisticDetail> getTripStatistics() {
+        public List<TripStatisticDetail> getTripStatistics() {
             return tripStatistics;
-        }
-
-        public void setTripStatistics(List<TripStatisticDetail> tripStatistics) {
-            this.tripStatistics = tripStatistics;
         }
 
         @Override
@@ -713,7 +518,7 @@ public class Trips {
         private double tripLength = BaseVehicle.UNDEFINED;
         private @Nullable String timestamp;
         private @Nullable String tripDurationFormatted;
-        private @Nullable Object recuperation;
+        private Object recuperation = new Object();
         private int averageAuxiliaryConsumption = BaseVehicle.UNDEFINED;
         private int totalElectricConsumption = BaseVehicle.UNDEFINED;
         private @Nullable String longFormattedTimestamp;
@@ -722,104 +527,52 @@ public class Trips {
             return tripId;
         }
 
-        public void setTripId(int tripId) {
-            this.tripId = tripId;
-        }
-
         public double getAverageElectricConsumption() {
             return averageElectricConsumption;
-        }
-
-        public void setAverageElectricConsumption(double averageElectricConsumption) {
-            this.averageElectricConsumption = averageElectricConsumption;
         }
 
         public double getAverageFuelConsumption() {
             return averageFuelConsumption;
         }
 
-        public void setAverageFuelConsumption(double averageFuelConsumption) {
-            this.averageFuelConsumption = averageFuelConsumption;
-        }
-
         public double getAverageCngConsumption() {
             return averageCngConsumption;
-        }
-
-        public void setAverageCngConsumption(double averageCngConsumption) {
-            this.averageCngConsumption = averageCngConsumption;
         }
 
         public double getAverageSpeed() {
             return averageSpeed;
         }
 
-        public void setAverageSpeed(double averageSpeed) {
-            this.averageSpeed = averageSpeed;
-        }
-
         public int getTripDuration() {
             return tripDuration;
-        }
-
-        public void setTripDuration(int tripDuration) {
-            this.tripDuration = tripDuration;
         }
 
         public double getTripLength() {
             return tripLength;
         }
 
-        public void setTripLength(double tripLength) {
-            this.tripLength = tripLength;
-        }
-
         public @Nullable String getTimestamp() {
             return timestamp;
-        }
-
-        public void setTimestamp(String timestamp) {
-            this.timestamp = timestamp;
         }
 
         public @Nullable String getTripDurationFormatted() {
             return tripDurationFormatted;
         }
 
-        public void setTripDurationFormatted(String tripDurationFormatted) {
-            this.tripDurationFormatted = tripDurationFormatted;
-        }
-
-        public @Nullable Object getRecuperation() {
+        public Object getRecuperation() {
             return recuperation;
-        }
-
-        public void setRecuperation(Object recuperation) {
-            this.recuperation = recuperation;
         }
 
         public int getAverageAuxiliaryConsumption() {
             return averageAuxiliaryConsumption;
         }
 
-        public void setAverageAuxiliaryConsumption(int averageAuxiliaryConsumption) {
-            this.averageAuxiliaryConsumption = averageAuxiliaryConsumption;
-        }
-
         public int getTotalElectricConsumption() {
             return totalElectricConsumption;
         }
 
-        public void setTotalElectricConsumption(int totalElectricConsumption) {
-            this.totalElectricConsumption = totalElectricConsumption;
-        }
-
         public @Nullable String getLongFormattedTimestamp() {
             return longFormattedTimestamp;
-        }
-
-        public void setLongFormattedTimestamp(String longFormattedTimestamp) {
-            this.longFormattedTimestamp = longFormattedTimestamp;
         }
 
         public @Nullable ZonedDateTime getStartTimestamp() {
@@ -892,6 +645,5 @@ public class Trips {
                     .append(tripDurationFormatted, rhs.tripDurationFormatted).append(timestamp, rhs.timestamp)
                     .isEquals();
         }
-
     }
 }
