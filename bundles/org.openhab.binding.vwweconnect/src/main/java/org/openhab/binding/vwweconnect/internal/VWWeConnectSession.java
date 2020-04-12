@@ -41,6 +41,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.openhab.binding.vwweconnect.internal.model.BaseVehicle;
 import org.openhab.binding.vwweconnect.internal.model.Details;
+import org.openhab.binding.vwweconnect.internal.model.EManager;
 import org.openhab.binding.vwweconnect.internal.model.HeaterStatus;
 import org.openhab.binding.vwweconnect.internal.model.Location;
 import org.openhab.binding.vwweconnect.internal.model.Status;
@@ -158,7 +159,7 @@ public class VWWeConnectSession {
     }
 
     public boolean isErrorCode(@Nullable String jsonContent) {
-        if (jsonContent != null) {
+        if (jsonContent != null && !jsonContent.equals("")) {
             String errorCode = JsonPath.read(jsonContent, "$.errorCode");
             logger.debug("ErrorCode: {}", errorCode);
             if (errorCode.equals("0")) {
@@ -392,7 +393,7 @@ public class VWWeConnectSession {
                 content = httpResponse.getContentAsString();
                 logger.trace("Http response JSON: {}", content);
                 if (isErrorCode(content)) {
-                    logger.warn("Error code or JSON is null on POST: url {}, response {}", url, content);
+                    logger.warn("Error code or JSON is null or empty on POST: url {}, response {}", url, content);
                     return null;
                 }
                 return gson.fromJson(content, jsonClass);
@@ -788,14 +789,14 @@ public class VWWeConnectSession {
             HeaterStatus vehicleHeaterStatus = postJSONVWWeConnectAPI(url, fields, HeaterStatus.class);
             logger.debug("API Response ({})", vehicleHeaterStatus);
 
-            // Query API for electric vehicle status if enginetype electric
+            EManager eManager = null;
+            String eManagerJSON = "{\"errorCode\":\"0\",\"EManager\":{\"rbc\":{\"status\":{\"batteryPercentage\":100,\"chargingState\":\"OFF\",\"chargingRemaningHour\":\"2\",\"chargingRemaningMinute\":\"28\",\"chargingReason\":\"INVALID\",\"pluginState\":\"DISCONNECTED\",\"lockState\":\"UNLOCKED\",\"extPowerSupplyState\":\"UNAVAILABLE\",\"range\":\"7\",\"electricRange\":216,\"combustionRange\":null,\"combinedRange\":216,\"rlzeUp\":false},\"settings\":{\"chargerMaxCurrent\":16,\"maxAmpere\":32,\"maxCurrentReduced\":false}},\"rpc\":{\"status\":{\"climatisationState\":\"OFF\",\"climatisationRemaningTime\":10,\"windowHeatingStateFront\":\"OFF\",\"windowHeatingStateRear\":\"OFF\",\"climatisationReason\":null,\"windowHeatingAvailable\":true},\"settings\":{\"targetTemperature\":\"26\",\"climatisationWithoutHVPower\":true,\"electric\":true},\"climaterActionState\":\"AVAILABLE\",\"auAvailable\":false},\"rdt\":{\"status\":{\"timers\":[{\"timerId\":1,\"timerProfileId\":1,\"timerStatus\":\"NOT_EXPIRED\",\"timerChargeScheduleStatus\":\"IDLE\",\"timerClimateScheduleStatus\":\"IDLE\",\"timerExpStatusTimestamp\":\"11.04.2020\",\"timerProgrammedStatus\":\"NOT_PROGRAMMED\",\"schedule\":{\"type\":2,\"start\":{\"hours\":12,\"minutes\":0},\"end\":{\"hours\":null,\"minutes\":null},\"index\":null,\"daypicker\":[\"Y\",\"Y\",\"Y\",\"Y\",\"Y\",\"Y\",\"Y\"],\"startDateActive\":\"12.04.2020\",\"endDateActive\":null},\"startDateActive\":\"12.04.2020\",\"timeRangeActive\":\"12:00\"},{\"timerId\":2,\"timerProfileId\":1,\"timerStatus\":\"NOT_EXPIRED\",\"timerChargeScheduleStatus\":\"IDLE\",\"timerClimateScheduleStatus\":\"IDLE\",\"timerExpStatusTimestamp\":\"11.04.2020\",\"timerProgrammedStatus\":\"NOT_PROGRAMMED\",\"schedule\":{\"type\":2,\"start\":{\"hours\":12,\"minutes\":0},\"end\":{\"hours\":null,\"minutes\":null},\"index\":null,\"daypicker\":[\"Y\",\"Y\",\"Y\",\"Y\",\"Y\",\"Y\",\"Y\"],\"startDateActive\":\"12.04.2020\",\"endDateActive\":null},\"startDateActive\":\"12.04.2020\",\"timeRangeActive\":\"12:00\"},{\"timerId\":3,\"timerProfileId\":1,\"timerStatus\":\"NOT_EXPIRED\",\"timerChargeScheduleStatus\":\"IDLE\",\"timerClimateScheduleStatus\":\"IDLE\",\"timerExpStatusTimestamp\":\"11.04.2020\",\"timerProgrammedStatus\":\"NOT_PROGRAMMED\",\"schedule\":{\"type\":2,\"start\":{\"hours\":12,\"minutes\":0},\"end\":{\"hours\":null,\"minutes\":null},\"index\":null,\"daypicker\":[\"Y\",\"Y\",\"Y\",\"Y\",\"Y\",\"Y\",\"Y\"],\"startDateActive\":\"12.04.2020\",\"endDateActive\":null},\"startDateActive\":\"12.04.2020\",\"timeRangeActive\":\"12:00\"}],\"profiles\":[{\"profileId\":1,\"profileName\":\"Standard\",\"timeStamp\":\"11.04.2020\",\"charging\":true,\"climatisation\":false,\"targetChargeLevel\":100,\"nightRateActive\":false,\"nightRateTimeStart\":\"23:00\",\"nightRateTimeEnd\":\"23:00\",\"chargeMaxCurrent\":16,\"heaterSource\":\"ELECTRIC\"}]},\"settings\":{\"minChargeLimit\":100,\"lowerLimitMax\":100},\"auxHeatingAllowed\":false,\"auxHeatingEnabled\":false},\"actionPending\":false,\"rdtAvailable\":true}}";
+            eManager = gson.fromJson(eManagerJSON, EManager.class);
+            // Query API for electric vehicle status if engine type electric
             if (vehicle.getCompleteVehicleJson().getEngineTypeElectric()) {
                 url = SESSION_BASE + dashboardUrl + EMANAGER_GET_EMANAGER;
-                httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
-                if (httpResponse != null) {
-                    content = httpResponse.getContentAsString();
-                    logger.debug("Emanager Get Emanager: {}", content);
-                }
+                eManager = postJSONVWWeConnectAPI(url, fields, EManager.class);
+                logger.debug("API Response ({})", eManager);
 
                 url = SESSION_BASE + dashboardUrl + EMANAGER_GET_NOTIFICATIONS;
                 httpResponse = postJSONVWWeConnectAPI(url, fields, referer, xCsrfToken);
@@ -830,6 +831,11 @@ public class VWWeConnectSession {
                     vehicle.setHeaterStatus(vehicleHeaterStatus);
                 } else {
                     logger.debug("Vehicle   , no heater installed!");
+                }
+                if (eManager != null) {
+                    vehicle.setEManager(eManager);
+                } else {
+                    logger.debug("No electric vehicle");
                 }
 
                 BaseVehicle oldObj = vwWeConnectThings.get(vin);

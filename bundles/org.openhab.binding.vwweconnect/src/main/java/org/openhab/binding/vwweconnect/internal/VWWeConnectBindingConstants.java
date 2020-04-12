@@ -77,6 +77,13 @@ public class VWWeConnectBindingConstants {
     public static final String ELECTRIC_CONSUMPTION = "electricConsumption";
     public static final String BATTERY_ALERT = "batteryAlert";
     public static final String BATTERY_RANGE = "batteryRange";
+    public static final String CHARGING_STATE = "chargingState";
+    public static final String CHARGING_REMAINING_HOUR = "chargingRemainingHour";
+    public static final String CHARGING_REMAINING_MINUTE = "chargingRemainingMinute";
+    public static final String CHARGING_REASON = "chargingReason";
+    public static final String PLUGIN_STATE = "pluginState";
+    public static final String LOCK_STATE = "lockState";
+    public static final String EXTERNAL_POWER_SUPPLY_STATE = "extPowerSupplyState";
 
     // Location
     public static final String ACTUAL_LOCATION = "location";
@@ -157,7 +164,7 @@ public class VWWeConnectBindingConstants {
     public static final String STOP_HEATER = "stop";
 
     // Electric car URLs
-    public static final String EMANAGER_GET_EMANAGER = "-/emanager/get-emanager";
+    public static final String EMANAGER_GET_EMANAGER = "/-/emanager/get-emanager";
     public static final String EMANAGER_GET_NOTIFICATIONS = "/-/emanager/get-notifications";
 
     // Electric car Action URLs

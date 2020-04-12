@@ -194,6 +194,13 @@
 				<label>Distance Left</label>
 				<description>Distance left with given battery level</description>
 			</channel>
+			<channel id="chargingState" typeId="chargingState" />
+			<channel id="chargingRemainingHour" typeId="chargingRemainingHour" />
+			<channel id="chargingRemainingMinute" typeId="chargingRemainingMinute" />
+			<channel id="chargingReason" typeId="chargingReason" />
+			<channel id="pluginState" typeId="pluginState" />
+			<channel id="lockState" typeId="lockState" />
+			<channel id="extPowerSupplyState" typeId="extPowerSupplyState" />
 		</channels>
 	</channel-group-type>
 
@@ -298,6 +305,55 @@
 		<label>Average Electric Consumption</label>
 		<description>Indicates the average Electric consumption in A/100km</description>
 		<state pattern="%.1f A/100km" readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="chargingState" advanced="true">
+		<item-type>Switch </item-type>
+		<label>Charging State</label>
+		<description>Indicates if the vehicle is charging.</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="chargingRemainingHour" advanced="true">
+		<item-type>Number:Time</item-type>
+		<label>Charging Remaining Hour</label>
+		<description>Indicates charging remaining time in hours.</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="chargingRemainingMinute" advanced="true">
+		<item-type>Number:Time</item-type>
+		<label>Charging Remaining Minute</label>
+		<description>Indicates charging remaining time in minutes.</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="chargingReason" advanced="true">
+		<item-type>String</item-type>
+		<label>Charging Reason</label>
+		<description>Indicates charging reason.</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="pluginState" advanced="true">
+		<item-type>String</item-type>
+		<label>Plugin State</label>
+		<description>Indicates plugin state.</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="lockState" advanced="true">
+		<item-type>String</item-type>
+		<label>Lock State</label>
+		<description>Indicates lock state.</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="extPowerSupplyState" advanced="true">
+		<item-type>String</item-type>
+		<label>External Power Supply State</label>
+		<description>Indicates external power supply state.</description>
+		<state readOnly="true"></state>
 	</channel-type>
 
 	<channel-type id="auxiliaryConsumption" advanced="true">

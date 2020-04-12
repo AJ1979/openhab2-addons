@@ -56,6 +56,7 @@ import org.openhab.binding.vwweconnect.internal.VWWeConnectSession;
 import org.openhab.binding.vwweconnect.internal.action.VWWeConnectActions;
 import org.openhab.binding.vwweconnect.internal.model.BaseVehicle;
 import org.openhab.binding.vwweconnect.internal.model.Details.VehicleDetails;
+import org.openhab.binding.vwweconnect.internal.model.EManager;
 import org.openhab.binding.vwweconnect.internal.model.HeaterStatus;
 import org.openhab.binding.vwweconnect.internal.model.Location;
 import org.openhab.binding.vwweconnect.internal.model.Status.VehicleStatusData;
@@ -136,19 +137,21 @@ public class VehicleHandler extends VWWeConnectHandler {
         Trips trips = vehicleJSON.getTrips();
         Location vehicleLocation = vehicleJSON.getVehicleLocation();
         HeaterStatus vehicleHeaterStatus = vehicleJSON.getHeaterStatus();
+        EManager eManager = vehicleJSON.getEManager();
 
         getThing().getChannels().stream().map(Channel::getUID)
                 .filter(channelUID -> isLinked(channelUID) && !LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
                 .forEach(channelUID -> {
                     State state = getValue(channelUID.getIdWithoutGroup(), vehicle, vehicleDetails, vehicleStatus,
-                            trips, vehicleLocation, vehicleHeaterStatus);
+                            trips, vehicleLocation, vehicleHeaterStatus, eManager);
                     updateState(channelUID, state);
                 });
         updateLastTrip(trips);
     }
 
     public State getValue(String channelId, CompleteVehicleJson vehicle, VehicleDetails vehicleDetails,
-            VehicleStatusData vehicleStatus, Trips trips, Location vehicleLocation, HeaterStatus vehicleHeaterStatus) {
+            VehicleStatusData vehicleStatus, Trips trips, Location vehicleLocation, HeaterStatus vehicleHeaterStatus,
+            EManager eManager) {
         switch (channelId) {
             case MODEL:
                 return new StringType(vehicle.getModel());
@@ -220,6 +223,32 @@ public class VehicleHandler extends VWWeConnectHandler {
                 return vehicleStatus.getBatteryRange() != BaseVehicle.UNDEFINED
                         ? OnOffType.from(vehicleStatus.getBatteryRange() < 100)
                         : UnDefType.UNDEF;
+            case CHARGING_STATE:
+                String chargingState = eManager.getEManager().getRbc().getStatus().getChargingState();
+                return chargingState != null ? OnOffType.from(chargingState.equals("ON")) : UnDefType.UNDEF;
+            case CHARGING_REMAINING_HOUR:
+                String chargingRemainingHour = eManager.getEManager().getRbc().getStatus().getChargingRemaningHour();
+                return chargingRemainingHour != null && !chargingRemainingHour.equals("")
+                        ? new QuantityType<Time>(Integer.parseInt(chargingRemainingHour), SmartHomeUnits.HOUR)
+                        : UnDefType.UNDEF;
+            case CHARGING_REMAINING_MINUTE:
+                String chargingRemainingMinute = eManager.getEManager().getRbc().getStatus()
+                        .getChargingRemaningMinute();
+                return chargingRemainingMinute != null && !chargingRemainingMinute.equals("")
+                        ? new QuantityType<Time>(Integer.parseInt(chargingRemainingMinute), SmartHomeUnits.MINUTE)
+                        : UnDefType.UNDEF;
+            case CHARGING_REASON:
+                String chargingReason = eManager.getEManager().getRbc().getStatus().getChargingReason();
+                return chargingReason != null ? new StringType(chargingReason) : UnDefType.UNDEF;
+            case PLUGIN_STATE:
+                String pluginState = eManager.getEManager().getRbc().getStatus().getPluginState();
+                return pluginState != null ? new StringType(pluginState) : UnDefType.UNDEF;
+            case LOCK_STATE:
+                String lockState = eManager.getEManager().getRbc().getStatus().getLockState();
+                return lockState != null ? new StringType(lockState) : UnDefType.UNDEF;
+            case EXTERNAL_POWER_SUPPLY_STATE:
+                String externalPowerSupplyState = eManager.getEManager().getRbc().getStatus().getExtPowerSupplyState();
+                return externalPowerSupplyState != null ? new StringType(externalPowerSupplyState) : UnDefType.UNDEF;
             case TOTAL_TRIP_DISTANCE:
                 return trips.getRtsViewModel().getLongTermData().getTripLength() != BaseVehicle.UNDEFINED
                         ? new QuantityType<Length>(trips.getRtsViewModel().getLongTermData().getTripLength(),
@@ -311,38 +340,42 @@ public class VehicleHandler extends VWWeConnectHandler {
                 // Do a reverse of the trips
                 Collections.reverse(tripsStat);
                 logger.trace("Last trip stats reversed: {}", tripsStat);
-                Optional<TripStatistic> lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null)
-                        .findFirst();
-                int tripId1 = lastTrip.get().getAggregatedStatistics().getTripId();
-                logger.trace("Last trip ID1: {}", tripId1);
-                // Do another reverse of the trips
-                Collections.reverse(tripsStat);
-                logger.trace("Last trip stats reversed: {}", tripsStat);
-                lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null).findFirst();
-                int tripId2 = lastTrip.get().getAggregatedStatistics().getTripId();
-                logger.trace("Last trip ID2: {}", tripId1);
+                if (tripsStat.size() != 0) {
+                    Optional<TripStatistic> lastTrip = tripsStat.stream()
+                            .filter(tripStatistics -> tripStatistics != null).findFirst();
+                    int tripId1 = lastTrip.get().getAggregatedStatistics().getTripId();
+                    logger.trace("Last trip ID1: {}", tripId1);
+                    // Do another reverse of the trips
+                    Collections.reverse(tripsStat);
+                    logger.trace("Last trip stats reversed: {}", tripsStat);
+                    lastTrip = tripsStat.stream().filter(tripStatistics -> tripStatistics != null).findFirst();
+                    int tripId2 = lastTrip.get().getAggregatedStatistics().getTripId();
+                    logger.trace("Last trip ID2: {}", tripId1);
 
-                // Find latest trip ID
-                if (tripId2 >= tripId1) {
-                    tripId = tripId2;
+                    // Find latest trip ID
+                    if (tripId2 >= tripId1) {
+                        tripId = tripId2;
+                    } else {
+                        tripId = tripId1;
+                    }
+                    logger.trace("Last trip ID: {}", tripId);
+
+                    lastTrip = tripsStat.stream().filter(tripStat -> filterLastTrip(tripStat, tripId)).findFirst();
+
+                    Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
+                            .filter(t -> t.getTripId() == tripId).findFirst();
+                    logger.debug("Last trip: {}", lastTrip);
+                    logger.trace("Last trip stats: {}", lastTripStats);
+
+                    getThing().getChannels().stream().map(Channel::getUID).filter(
+                            channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
+                            .forEach(channelUID -> {
+                                State state = getTripValue(channelUID.getIdWithoutGroup(), lastTripStats.get());
+                                updateState(channelUID, state);
+                            });
                 } else {
-                    tripId = tripId1;
+                    logger.debug("Cannot update last trip, tripsStat length is 0!");
                 }
-                logger.trace("Last trip ID: {}", tripId);
-
-                lastTrip = tripsStat.stream().filter(tripStat -> filterLastTrip(tripStat, tripId)).findFirst();
-
-                Optional<TripStatisticDetail> lastTripStats = lastTrip.get().getTripStatistics().stream()
-                        .filter(t -> t.getTripId() == tripId).findFirst();
-                logger.debug("Last trip: {}", lastTrip);
-                logger.trace("Last trip stats: {}", lastTripStats);
-
-                getThing().getChannels().stream().map(Channel::getUID)
-                        .filter(channelUID -> isLinked(channelUID) && LAST_TRIP_GROUP.equals(channelUID.getGroupId()))
-                        .forEach(channelUID -> {
-                            State state = getTripValue(channelUID.getIdWithoutGroup(), lastTripStats.get());
-                            updateState(channelUID, state);
-                        });
             } else {
                 logger.debug("Cannot update last trip, tripsStat is null!");
             }

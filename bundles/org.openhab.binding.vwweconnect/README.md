@@ -102,6 +102,13 @@ Any side effects using this binding is the responsibility of the person installi
 | electric#electricConsumption         | Number               | Electric consumption                    |
 | electric#batteryAlert                | Switch               | Battery alert (< 10%)                   | 
 | electric#batteryRange                | Number:Length        | Battery range                           |  
+| electric#chargingState               | Switch               | Charging state                          |
+| electric#chargingRemainingHour       | Number:Time          | Remaining charging time in hours        |
+| electric#chargingRemainingMinute     | Number:Time          | Remaining charging time in minute       |
+| electric#chargingReason              | String               | Charging reason                         |
+| electric#pluginState                 | String               | Plugin state                            |
+| electric#lockState                   | String               | Lock state                              |
+| electric#extPowerSupplyState         | String               | External power supply state             |
 | doors#trunk                          | Contact              | Trunk status                            |
 | doors#rightBack                      | Contact              | Right back door status                  |
 | doors#leftBack                       | Contact              | Left back door status                   |

@@ -42,6 +42,7 @@ public class Vehicle extends BaseVehicle {
     private Trips trips = new Trips();
     private Location vehicleLocation = new Location();
     private HeaterStatus heaterStatus = new HeaterStatus();
+    private EManager eManager = new EManager();
 
     public @Nullable String getErrorCode() {
         return errorCode;
@@ -89,6 +90,14 @@ public class Vehicle extends BaseVehicle {
 
     public void setVehicleLocation(Location vehicleLocation) {
         this.vehicleLocation = vehicleLocation;
+    }
+
+    public EManager getEManager() {
+        return eManager;
+    }
+
+    public void setEManager(EManager eManager) {
+        this.eManager = eManager;
     }
 
     @Override
